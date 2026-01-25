@@ -1,0 +1,191 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: #0a0e17;
+  color: #f3f4f6;
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111827;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* Background pattern */
+.bg-vault-pattern {
+  background-image: 
+    radial-gradient(ellipse at top, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
+    linear-gradient(rgba(6, 182, 212, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(6, 182, 212, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 40px 40px, 40px 40px;
+}
+
+/* Glowing border effect */
+.glow-border {
+  position: relative;
+}
+
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(6, 182, 212, 0.5), rgba(6, 182, 212, 0.1), rgba(6, 182, 212, 0.5));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Card hover effect */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px rgba(6, 182, 212, 0.15);
+}
+
+/* Gradient text */
+.gradient-text {
+  background: linear-gradient(135deg, #06b6d4, #22d3ee, #67e8f9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Button glow */
+.btn-glow {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+.btn-glow:hover {
+  box-shadow: 0 0 30px rgba(6, 182, 212, 0.5);
+}
+
+/* Danger button glow */
+.btn-danger-glow {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+  transition: box-shadow 0.3s ease;
+}
+
+.btn-danger-glow:hover {
+  box-shadow: 0 0 30px rgba(239, 68, 68, 0.5);
+}
+
+/* Mood bar gradient */
+.mood-gradient {
+  background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+}
+
+/* Stage badge gradients */
+.stage-egg { background: linear-gradient(135deg, #6b7280, #9ca3af); }
+.stage-baby { background: linear-gradient(135deg, #059669, #34d399); }
+.stage-teen { background: linear-gradient(135deg, #2563eb, #60a5fa); }
+.stage-adult { background: linear-gradient(135deg, #7c3aed, #a78bfa); }
+.stage-legendary { background: linear-gradient(135deg, #d97706, #fbbf24); }
+.stage-dead { background: linear-gradient(135deg, #374151, #4b5563); }
+
+/* Rarity glow effects */
+.rarity-common { box-shadow: 0 0 10px rgba(156, 163, 175, 0.3); }
+.rarity-rare { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+.rarity-epic { box-shadow: 0 0 20px rgba(168, 85, 247, 0.5); }
+.rarity-legendary { 
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.6);
+  animation: legendaryPulse 2s ease-in-out infinite;
+}
+
+@keyframes legendaryPulse {
+  0%, 100% { box-shadow: 0 0 25px rgba(245, 158, 11, 0.6); }
+  50% { box-shadow: 0 0 35px rgba(245, 158, 11, 0.8); }
+}
+
+/* Toast animation */
+.toast-enter {
+  animation: toastEnter 0.3s ease-out forwards;
+}
+
+@keyframes toastEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Modal backdrop */
+.modal-backdrop {
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.7);
+}
+
+/* Progress bar animation */
+.progress-bar {
+  background: linear-gradient(90deg, #06b6d4, #22d3ee);
+  transition: width 0.5s ease;
+}
+
+/* Guardian container */
+.guardian-container {
+  filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.3));
+}
+
+.guardian-dead {
+  filter: grayscale(1) brightness(0.5);
+}
+
+/* Input focus */
+input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.5);
+}
+
+/* Number input hide arrows */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type='number'] {
+  -moz-appearance: textfield;
+}
