@@ -1,6 +1,6 @@
 # 🐣 YieldPets
 
-A Tamagotchi-style NFT "Yield Pet" that grows when you deposit USDC into a yield vault. Built for hackathons.
+A Tamagotchi-style NFT "Yield Pet" that grows when you deposit PYUSD0 into a yield vault. Built for hackathons.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
