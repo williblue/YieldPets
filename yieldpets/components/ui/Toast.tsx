@@ -12,34 +12,34 @@ interface ToastProps {
 
 export function Toast({ id, message, type, onClose }: ToastProps) {
   const icons = {
-    success: <CheckCircle className="w-5 h-5 text-vault-success" />,
-    error: <AlertCircle className="w-5 h-5 text-vault-danger" />,
-    warning: <AlertTriangle className="w-5 h-5 text-vault-warning" />,
-    info: <Info className="w-5 h-5 text-vault-accent" />,
-    levelup: <Sparkles className="w-5 h-5 text-yellow-400" />,
+    success: <CheckCircle className="w-5 h-5 text-pastel-success" />,
+    error: <AlertCircle className="w-5 h-5 text-pastel-danger" />,
+    warning: <AlertTriangle className="w-5 h-5 text-pastel-warning" />,
+    info: <Info className="w-5 h-5 text-pastel-pink" />,
+    levelup: <Sparkles className="w-5 h-5 text-pastel-lavender" />,
   };
 
   const backgrounds = {
-    success: 'border-vault-success/30 bg-vault-success/10',
-    error: 'border-vault-danger/30 bg-vault-danger/10',
-    warning: 'border-vault-warning/30 bg-vault-warning/10',
-    info: 'border-vault-accent/30 bg-vault-accent/10',
-    levelup: 'border-yellow-400/30 bg-yellow-400/10',
+    success: 'border-pastel-success bg-pastel-mint/30',
+    error: 'border-pastel-danger bg-pastel-danger/20',
+    warning: 'border-pastel-warning bg-pastel-warning/30',
+    info: 'border-pastel-pink bg-pastel-pink/20',
+    levelup: 'border-pastel-lavender bg-pastel-lavender/30',
   };
 
   return (
     <div
       className={`
-        toast-enter flex items-center gap-3 px-4 py-3 rounded-xl border
+        toast-enter flex items-center gap-3 px-4 py-3 rounded-full border-2
         ${backgrounds[type]}
-        shadow-lg backdrop-blur-sm
+        shadow-lg backdrop-blur-sm bg-white/95
       `}
     >
       {icons[type]}
-      <span className="text-white font-medium flex-1">{message}</span>
+      <span className="text-pastel-text font-semibold flex-1">{message}</span>
       <button
         onClick={() => onClose(id)}
-        className="text-vault-muted hover:text-white transition-colors"
+        className="text-pastel-textLight hover:text-pastel-pink transition-colors"
       >
         <X className="w-4 h-4" />
       </button>

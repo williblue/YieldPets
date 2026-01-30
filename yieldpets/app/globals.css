@@ -19,8 +19,8 @@ html {
 
 body {
   font-family: var(--font-body);
-  background-color: #0a0e17;
-  color: #f3f4f6;
+  background-color: #E8F4F8;
+  color: #4A5568;
   min-height: 100vh;
 }
 
@@ -31,24 +31,24 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #111827;
+  background: #FFF9F5;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #374151;
+  background: #FFB5C5;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #4b5563;
+  background: #FF9AB5;
 }
 
 /* Background pattern */
 .bg-vault-pattern {
-  background-image: 
-    radial-gradient(ellipse at top, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
-    linear-gradient(rgba(6, 182, 212, 0.02) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(6, 182, 212, 0.02) 1px, transparent 1px);
+  background-image:
+    radial-gradient(ellipse at top, rgba(255, 181, 197, 0.15) 0%, transparent 50%),
+    linear-gradient(rgba(168, 216, 234, 0.1) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 216, 234, 0.1) 1px, transparent 1px);
   background-size: 100% 100%, 40px 40px, 40px 40px;
 }
 
@@ -78,12 +78,12 @@ body {
 
 .card-hover:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 40px rgba(6, 182, 212, 0.15);
+  box-shadow: 0 8px 24px rgba(255, 181, 197, 0.2);
 }
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #06b6d4, #22d3ee, #67e8f9);
+  background: linear-gradient(135deg, #FFB5C5, #D4B5F9, #A8D8EA);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -91,12 +91,13 @@ body {
 
 /* Button glow */
 .btn-glow {
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
-  transition: box-shadow 0.3s ease;
+  box-shadow: 0 4px 14px rgba(255, 181, 197, 0.4);
+  transition: all 0.3s ease;
 }
 
 .btn-glow:hover {
-  box-shadow: 0 0 30px rgba(6, 182, 212, 0.5);
+  box-shadow: 0 6px 20px rgba(255, 181, 197, 0.6);
+  transform: translateY(-1px);
 }
 
 /* Danger button glow */
@@ -176,7 +177,7 @@ body {
 /* Input focus */
 input:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.5);
+  box-shadow: 0 0 0 3px rgba(255, 181, 197, 0.4);
 }
 
 /* Number input hide arrows */

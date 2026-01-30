@@ -13,8 +13,8 @@ export function Card({ children, className = '', glow = false, hover = false }: 
   return (
     <div
       className={`
-        bg-vault-card border border-vault-border rounded-2xl p-6
-        ${glow ? 'glow-border animate-pulse-glow' : ''}
+        bg-white border-2 border-pastel-border rounded-3xl p-6 shadow-md
+        ${glow ? 'shadow-lg shadow-pastel-pink/30' : ''}
         ${hover ? 'card-hover cursor-pointer' : ''}
         ${className}
       `}
@@ -34,7 +34,7 @@ export function CardHeader({ children, className = '' }: { children: React.React
 
 export function CardTitle({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <h3 className={`font-display font-bold text-xl text-white ${className}`}>
+    <h3 className={`font-display font-bold text-xl text-pastel-text ${className}`}>
       {children}
     </h3>
   );

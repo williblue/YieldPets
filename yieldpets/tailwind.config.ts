@@ -9,16 +9,34 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        // Pastel mobile game theme
+        pastel: {
+          sky: '#E8F4F8',      // Light blue background
+          cream: '#FFF9F5',     // Cream/off-white
+          pink: '#FFB5C5',      // Soft pink
+          pinkDark: '#FF9AB5',  // Darker pink for hover
+          blue: '#A8D8EA',      // Pastel blue
+          lavender: '#D4B5F9',  // Soft purple
+          peach: '#FFD4C4',     // Peach accent
+          mint: '#B5EAD7',      // Mint green
+          text: '#4A5568',      // Dark gray text
+          textLight: '#718096', // Light gray text
+          border: '#E2E8F0',    // Border color
+          success: '#81E6D9',   // Pastel success
+          warning: '#FBD38D',   // Pastel warning
+          danger: '#FC8181',    // Pastel danger
+        },
+        // Keep old vault colors for backwards compatibility
         vault: {
-          bg: '#0a0e17',
-          card: '#111827',
-          border: '#1f2937',
-          accent: '#06b6d4',
-          accentDark: '#0891b2',
-          success: '#10b981',
-          warning: '#f59e0b',
-          danger: '#ef4444',
-          muted: '#6b7280',
+          bg: '#E8F4F8',
+          card: '#FFFFFF',
+          border: '#E2E8F0',
+          accent: '#FFB5C5',
+          accentDark: '#FF9AB5',
+          success: '#81E6D9',
+          warning: '#FBD38D',
+          danger: '#FC8181',
+          muted: '#718096',
         },
       },
       fontFamily: {

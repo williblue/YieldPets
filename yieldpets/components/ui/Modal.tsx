@@ -40,20 +40,20 @@ export function Modal({ isOpen, onClose, title, children, size = 'md' }: ModalPr
       />
       
       {/* Modal content */}
-      <div 
+      <div
         className={`
-          relative bg-vault-card border border-vault-border rounded-2xl p-6
+          relative bg-white border-2 border-pastel-pink rounded-3xl p-6
           w-full ${sizes[size]} animate-scale-in
-          shadow-2xl shadow-vault-accent/10
+          shadow-2xl shadow-pastel-pink/20
         `}
       >
         {/* Header */}
         {title && (
           <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display font-bold text-xl text-white">{title}</h2>
+            <h2 className="font-display font-bold text-xl text-pastel-text">{title}</h2>
             <button
               onClick={onClose}
-              className="text-vault-muted hover:text-white transition-colors p-1"
+              className="text-pastel-textLight hover:text-pastel-pink transition-colors p-1 rounded-full hover:bg-pastel-cream"
             >
               <X className="w-5 h-5" />
             </button>

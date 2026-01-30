@@ -35,9 +35,9 @@ export function StageIndicator({ stage, size = 'md', showLabel = true }: StageIn
 
   return (
     <div className="flex items-center gap-2">
-      <div 
+      <div
         className={`
-          ${sizes[size]} rounded-lg flex items-center justify-center
+          ${sizes[size]} rounded-full flex items-center justify-center shadow-sm
           stage-${stage}
         `}
       >
@@ -46,9 +46,8 @@ export function StageIndicator({ stage, size = 'md', showLabel = true }: StageIn
         </div>
       </div>
       {showLabel && (
-        <span 
-          className="font-semibold"
-          style={{ color: STAGE_COLORS[stage] }}
+        <span
+          className="font-bold text-pastel-text"
         >
           {STAGE_NAMES[stage]}
         </span>
@@ -66,11 +65,11 @@ export function StageProgress({ currentStage }: { currentStage: GuardianStage })
     <div className="flex items-center gap-1">
       {stages.map((stage, index) => (
         <React.Fragment key={stage}>
-          <div 
+          <div
             className={`
-              w-8 h-8 rounded-lg flex items-center justify-center transition-all
-              ${index <= currentIndex ? `stage-${stage}` : 'bg-vault-border'}
-              ${index === currentIndex ? 'ring-2 ring-white ring-offset-2 ring-offset-vault-card' : ''}
+              w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm
+              ${index <= currentIndex ? `stage-${stage}` : 'bg-pastel-border'}
+              ${index === currentIndex ? 'ring-2 ring-pastel-pink ring-offset-2 ring-offset-white scale-110' : ''}
             `}
             title={STAGE_NAMES[stage]}
           >
@@ -79,8 +78,8 @@ export function StageProgress({ currentStage }: { currentStage: GuardianStage })
             </span>
           </div>
           {index < stages.length - 1 && (
-            <div 
-              className={`w-6 h-1 rounded ${index < currentIndex ? 'bg-vault-accent' : 'bg-vault-border'}`}
+            <div
+              className={`w-6 h-1 rounded-full ${index < currentIndex ? 'bg-gradient-to-r from-pastel-pink to-pastel-lavender' : 'bg-pastel-border'}`}
             />
           )}
         </React.Fragment>

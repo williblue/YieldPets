@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { AppProvider } from '@/components/providers/AppProvider';
-import { TopNav } from '@/components/layout/TopNav';
+import { TopHUD } from '@/components/layout/TopHUD';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { ToastContainer } from '@/components/ui/Toast';
 import { ConfettiCanvas } from '@/components/ui/Confetti';
 import './globals.css';
@@ -16,21 +17,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-vault-bg text-white antialiased">
+    <html lang="en">
+      <body className="min-h-screen bg-pastel-sky text-pastel-text antialiased">
         <AppProvider>
           <div className="flex flex-col min-h-screen">
-            <TopNav />
-            <main className="flex-1 container mx-auto px-4 py-6 max-w-6xl">
+            <TopHUD />
+            <main className="flex-1 container mx-auto px-4 pt-20 pb-24 max-w-lg">
               {children}
             </main>
-            <footer className="border-t border-vault-border py-4 mt-auto">
-              <div className="container mx-auto px-4 max-w-6xl">
-                <p className="text-center text-vault-muted text-sm">
-                  YieldPets — Your guardian awaits 🛡️
-                </p>
-              </div>
-            </footer>
+            <BottomNav />
           </div>
           <ToastContainer />
           <ConfettiCanvas />

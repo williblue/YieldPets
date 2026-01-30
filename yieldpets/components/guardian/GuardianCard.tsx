@@ -33,14 +33,14 @@ export function GuardianCard({
   const isDead = guardian.stage === 'dead';
 
   return (
-    <Card className={`relative overflow-hidden ${isDead ? 'border-vault-danger/30' : ''}`}>
+    <Card className={`relative overflow-hidden ${isDead ? 'border-pastel-danger' : ''}`}>
       {/* Background glow */}
       {!isDead && (
-        <div 
-          className="absolute inset-0 opacity-10 pointer-events-none"
+        <div
+          className="absolute inset-0 opacity-5 pointer-events-none"
           style={{
             background: `radial-gradient(circle at 50% 30%, ${
-              guardian.stage === 'legendary' ? '#fbbf24' : '#06b6d4'
+              guardian.stage === 'legendary' ? '#D4B5F9' : '#FFB5C5'
             } 0%, transparent 50%)`
           }}
         />
@@ -56,9 +56,9 @@ export function GuardianCard({
 
       <CardContent>
         {/* Guardian visualization */}
-        <div className="flex justify-center py-4">
-          <GuardianSVG 
-            stage={guardian.stage} 
+        <div className="flex justify-center py-6 bg-gradient-to-br from-pastel-cream to-pastel-peach/20 rounded-3xl mb-4 border border-pastel-border">
+          <GuardianSVG
+            stage={guardian.stage}
             mood={guardian.mood}
             equippedArmor={equippedArmor}
             size={180}
@@ -67,16 +67,16 @@ export function GuardianCard({
 
         {isDead && (
           <div className="text-center py-4">
-            <p className="text-vault-danger font-semibold">Your guardian has perished</p>
-            <p className="text-vault-muted text-sm mt-1">Deposit USDC to revive</p>
+            <p className="text-pastel-danger font-bold">Your guardian has perished</p>
+            <p className="text-pastel-textLight text-sm mt-1">Deposit USDC to revive</p>
           </div>
         )}
 
         {showDetails && !isDead && (
-          <div className="space-y-4 mt-4">
+          <div className="space-y-4">
             {/* Stage progress */}
             <div>
-              <p className="text-sm text-vault-muted mb-2">Evolution Progress</p>
+              <p className="text-sm text-pastel-textLight font-semibold mb-2">Evolution Progress</p>
               <StageProgress currentStage={guardian.stage} />
             </div>
 
@@ -84,19 +84,19 @@ export function GuardianCard({
             <MoodMeter mood={guardian.mood} />
 
             {/* Stats */}
-            <div className="grid grid-cols-2 gap-4 pt-2">
-              <div className="flex items-center gap-2">
-                <Zap className="w-4 h-4 text-vault-accent" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center gap-2 bg-pastel-cream rounded-2xl p-3 border border-pastel-border">
+                <Zap className="w-4 h-4 text-pastel-pink" />
                 <div>
-                  <p className="text-xs text-vault-muted">Growth Score</p>
-                  <p className="font-semibold text-white">{growthScore.toFixed(1)}</p>
+                  <p className="text-xs text-pastel-textLight font-medium">Growth</p>
+                  <p className="font-bold text-pastel-text">{growthScore.toFixed(1)}</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-vault-accent" />
+              <div className="flex items-center gap-2 bg-pastel-cream rounded-2xl p-3 border border-pastel-border">
+                <Clock className="w-4 h-4 text-pastel-blue" />
                 <div>
-                  <p className="text-xs text-vault-muted">Time Locked</p>
-                  <p className="font-semibold text-white">{formatDuration(daysLocked)}</p>
+                  <p className="text-xs text-pastel-textLight font-medium">Locked</p>
+                  <p className="font-bold text-pastel-text">{formatDuration(daysLocked)}</p>
                 </div>
               </div>
             </div>
