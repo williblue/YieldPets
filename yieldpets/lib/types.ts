@@ -1,4 +1,4 @@
-// Core data types for YieldGotchi
+// Core data types for YieldPets
 
 export type GuardianStage = 'egg' | 'baby' | 'teen' | 'adult' | 'legendary' | 'dead';
 

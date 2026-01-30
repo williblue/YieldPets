@@ -1,7 +1,7 @@
 import NonFungibleToken from "./core/NonFungibleToken.cdc"
 import MetadataViews from "./core/MetadataViews.cdc"
 
-/// ArmorNFT - Collectible equipment pieces for YieldGotchi
+/// ArmorNFT - Collectible equipment pieces for YieldPets
 ///
 /// Armor is unlocked by claiming yield from the vault
 /// Each piece has a rarity and slot (head, body, weapon, pet)
@@ -157,7 +157,7 @@ access(all) contract ArmorNFT: NonFungibleToken {
                         name: self.name,
                         description: self.rarity.rawValue.toString().concat(" ").concat(self.slot.rawValue.toString()).concat(" armor"),
                         thumbnail: MetadataViews.HTTPFile(
-                            url: "https://yieldgotchi.io/armor/".concat(self.id.toString())
+                            url: "https://yieldpets.io/armor/".concat(self.id.toString())
                         )
                     )
             }

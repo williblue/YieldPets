@@ -28,7 +28,7 @@ export default function DashboardPage() {
         </div>
         
         <h1 className="text-4xl font-display font-bold mb-4 gradient-text">
-          Welcome to YieldGotchi
+          Welcome to YieldPets
         </h1>
         <p className="text-vault-muted max-w-md mb-8">
           Mint your Vault Guardian, deposit USDC, and watch it grow. 

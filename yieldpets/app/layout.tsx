@@ -6,7 +6,7 @@ import { ConfettiCanvas } from '@/components/ui/Confetti';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'YieldGotchi | Grow Your Guardian',
+  title: 'YieldPets | Grow Your Guardian',
   description: 'A Tamagotchi-style NFT vault guardian that grows with your deposits',
 };
 
@@ -27,7 +27,7 @@ export default function RootLayout({
             <footer className="border-t border-vault-border py-4 mt-auto">
               <div className="container mx-auto px-4 max-w-6xl">
                 <p className="text-center text-vault-muted text-sm">
-                  YieldGotchi — Your guardian awaits 🛡️
+                  YieldPets — Your guardian awaits 🛡️
                 </p>
               </div>
             </footer>

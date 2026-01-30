@@ -28,7 +28,7 @@ export function TopNav() {
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <span className="font-display font-bold text-xl gradient-text">
-              YieldGotchi
+              YieldPets
             </span>
           </Link>
 

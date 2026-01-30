@@ -1,14 +1,14 @@
 import NonFungibleToken from "./core/NonFungibleToken.cdc"
 import MetadataViews from "./core/MetadataViews.cdc"
 
-/// YieldGotchi - NFT Vault Guardian that evolves based on DeFi activity
+/// YieldPets - NFT Vault Guardian that evolves based on DeFi activity
 ///
 /// Each Guardian NFT has:
 /// - Evolution stages (egg -> baby -> teen -> adult -> legendary -> dead)
 /// - Mood system (0-100)
 /// - Growth score based on vault principal and time locked
 /// - Equipped armor pieces
-access(all) contract YieldGotchi: NonFungibleToken {
+access(all) contract YieldPets: NonFungibleToken {
 
     // ========================================
     // Events
@@ -139,7 +139,7 @@ access(all) contract YieldGotchi: NonFungibleToken {
             self.growthScore = approximateLog * daysLocked
 
             // Update stage based on new growth score
-            let newStage = YieldGotchi.calculateStage(growthScore: self.growthScore, principal: principal)
+            let newStage = YieldPets.calculateStage(growthScore: self.growthScore, principal: principal)
             if newStage != self.stage {
                 let oldStage = self.stage
                 self.stage = newStage
@@ -187,9 +187,9 @@ access(all) contract YieldGotchi: NonFungibleToken {
                 case Type<MetadataViews.Display>():
                     return MetadataViews.Display(
                         name: self.name,
-                        description: "YieldGotchi Guardian - ".concat(self.stage.rawValue.toString()),
+                        description: "YieldPets Guardian - ".concat(self.stage.rawValue.toString()),
                         thumbnail: MetadataViews.HTTPFile(
-                            url: "https://yieldgotchi.io/metadata/".concat(self.id.toString())
+                            url: "https://yieldpets.io/metadata/".concat(self.id.toString())
                         )
                     )
             }
@@ -197,7 +197,7 @@ access(all) contract YieldGotchi: NonFungibleToken {
         }
 
         access(all) fun createEmptyCollection(): @{NonFungibleToken.Collection} {
-            return <-YieldGotchi.createEmptyCollection(nftType: Type<@YieldGotchi.NFT>())
+            return <-YieldPets.createEmptyCollection(nftType: Type<@YieldPets.NFT>())
         }
     }
 
@@ -224,10 +224,10 @@ access(all) contract YieldGotchi: NonFungibleToken {
             return &self.ownedNFTs[id]
         }
 
-        access(all) fun borrowYieldGotchi(id: UInt64): &YieldGotchi.NFT? {
+        access(all) fun borrowYieldPets(id: UInt64): &YieldPets.NFT? {
             if self.ownedNFTs[id] != nil {
                 let ref = &self.ownedNFTs[id] as &{NonFungibleToken.NFT}?
-                return ref as! &YieldGotchi.NFT
+                return ref as! &YieldPets.NFT
             }
             return nil
         }
@@ -240,7 +240,7 @@ access(all) contract YieldGotchi: NonFungibleToken {
         }
 
         access(all) fun deposit(token: @{NonFungibleToken.NFT}) {
-            let token <- token as! @YieldGotchi.NFT
+            let token <- token as! @YieldPets.NFT
             let id = token.id
             let oldToken <- self.ownedNFTs[id] <- token
             emit Deposit(id: id, to: self.owner?.address)
@@ -248,15 +248,15 @@ access(all) contract YieldGotchi: NonFungibleToken {
         }
 
         access(all) view fun getSupportedNFTTypes(): {Type: Bool} {
-            return {Type<@YieldGotchi.NFT>(): true}
+            return {Type<@YieldPets.NFT>(): true}
         }
 
         access(all) view fun isSupportedNFTType(type: Type): Bool {
-            return type == Type<@YieldGotchi.NFT>()
+            return type == Type<@YieldPets.NFT>()
         }
 
         access(all) fun createEmptyCollection(): @{NonFungibleToken.Collection} {
-            return <-YieldGotchi.createEmptyCollection(nftType: Type<@YieldGotchi.NFT>())
+            return <-YieldPets.createEmptyCollection(nftType: Type<@YieldPets.NFT>())
         }
     }
 
@@ -267,7 +267,7 @@ access(all) contract YieldGotchi: NonFungibleToken {
     access(all) resource NFTMinter {
         access(all) fun mintNFT(recipient: &{NonFungibleToken.CollectionPublic}, name: String) {
             let newNFT <- create NFT(
-                id: YieldGotchi.totalSupply,
+                id: YieldPets.totalSupply,
                 name: name
             )
 
@@ -275,7 +275,7 @@ access(all) contract YieldGotchi: NonFungibleToken {
             emit GuardianMinted(id: guardianId, name: name, owner: recipient.owner!.address)
 
             recipient.deposit(token: <-newNFT)
-            YieldGotchi.totalSupply = YieldGotchi.totalSupply + 1
+            YieldPets.totalSupply = YieldPets.totalSupply + 1
         }
     }
 
@@ -294,9 +294,9 @@ access(all) contract YieldGotchi: NonFungibleToken {
     init() {
         self.totalSupply = 0
 
-        self.CollectionStoragePath = /storage/YieldGotchiCollection
-        self.CollectionPublicPath = /public/YieldGotchiCollection
-        self.MinterStoragePath = /storage/YieldGotchiMinter
+        self.CollectionStoragePath = /storage/YieldPetsCollection
+        self.CollectionPublicPath = /public/YieldPetsCollection
+        self.MinterStoragePath = /storage/YieldPetsMinter
 
         // Create and save minter resource
         self.account.storage.save(<-create NFTMinter(), to: self.MinterStoragePath)

@@ -1,4 +1,4 @@
-# 🐣 YieldGotchi
+# 🐣 YieldPets
 
 A Tamagotchi-style NFT "Yield Guardian" that grows when you deposit USDC into a yield vault. Built for hackathons.
 
@@ -8,16 +8,16 @@ A Tamagotchi-style NFT "Yield Guardian" that grows when you deposit USDC into a 
 
 ## 🎮 Concept
 
-Your **YieldGotchi** is an NFT that evolves based on your DeFi activity:
-- **Deposit USDC** → Gotchi grows and levels up
-- **Keep funds locked** → Gotchi mood improves
-- **Earn yield** → Unlock armor/accessories for your Gotchi
-- **Withdraw** → Gotchi may de-level or die ☠️
+Your **YieldPet** is an NFT that evolves based on your DeFi activity:
+- **Deposit USDC** → Pet grows and levels up
+- **Keep funds locked** → Pet mood improves
+- **Earn yield** → Unlock armor/accessories for your Pet
+- **Withdraw** → Pet may de-level or die ☠️
 
 ## 🌟 Features
 
 - **6 Evolution Stages**: Egg → Baby → Teen → Adult → Legendary (+ Dead state)
-- **Mood System**: Gotchi expressions change based on mood (0-100)
+- **Mood System**: Pet expressions change based on mood (0-100)
 - **Real-time Yield Ticker**: Watch your yield accrue in real-time
 - **Armor System**: 4 slots (head, body, weapon, pet) with 4 rarity tiers
 - **Scary Withdrawals**: Warnings show projected stage after withdrawal
@@ -39,15 +39,15 @@ npm run dev
 ## 📁 Project Structure
 
 ```
-yieldgotchi/
+yieldpets/
 ├── app/                    # Next.js App Router pages
 │   ├── page.tsx           # Dashboard (home)
-│   ├── mint/page.tsx      # Mint gotchi flow
+│   ├── mint/page.tsx      # Mint pet flow
 │   ├── vault/page.tsx     # Deposit/withdraw
 │   ├── armory/page.tsx    # Armor management
 │   └── profile/page.tsx   # Settings & history
 ├── components/
-│   ├── guardian/          # Gotchi display components
+│   ├── guardian/          # Pet display components
 │   ├── vault/             # Vault interaction forms
 │   ├── armory/            # Armor grid & slots
 │   ├── activity/          # Activity timeline

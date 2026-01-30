@@ -1,7 +1,7 @@
-# YieldGotchi — Product Spec
+# YieldPets — Product Spec
 
 ## Overview
-YieldGotchi is a gamified DeFi interface where users deposit USDC into a yield vault to grow a "Vault Guardian" NFT. Principal earns yield; yield unlocks cosmetic Armor upgrades. Withdrawing principal harms the Guardian.
+YieldPets is a gamified DeFi interface where users deposit USDC into a yield vault to grow a "Vault Guardian" NFT. Principal earns yield; yield unlocks cosmetic Armor upgrades. Withdrawing principal harms the Guardian.
 
 ---
 
@@ -31,7 +31,7 @@ YieldGotchi is a gamified DeFi interface where users deposit USDC into a yield v
 ## State Model
 
 ### Where Data Lives
-- **localStorage** — All state persisted client-side under `yieldgotchi_state`
+- **localStorage** — All state persisted client-side under `yieldpets_state`
 - **React Context** — Global app state synced with localStorage
 
 ### Data Entities
@@ -232,7 +232,7 @@ hooks/
 # Folder Structure
 
 ```
-yieldgotchi/
+yieldpets/
 ├── app/
 │   ├── globals.css
 │   ├── layout.tsx

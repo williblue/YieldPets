@@ -94,4 +94,4 @@ export const STAGE_COLORS: Record<GuardianStage, string> = {
 };
 
 // Local storage key
-export const STORAGE_KEY = 'yieldgotchi_state';
+export const STORAGE_KEY = 'yieldpets_state';

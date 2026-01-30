@@ -1,6 +1,6 @@
 # 🐣 YieldPets
 
-A Tamagotchi-style NFT "Yield Pet" that grows when you deposit PYUSD0 into a yield vault. Built for hackathons.
+A Tamagotchi-style NFT "Yield Guardian" that grows when you deposit PYUSD0 into a yield vault. Built for hackathons.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
@@ -12,7 +12,7 @@ Your **YieldPet** is an NFT that evolves based on your DeFi activity:
 
 - **Deposit PYUSD0** → Pet grows and levels up
 - **Keep funds locked** → Pet mood improves
-- **Earn yield** → Unlock armor/accessories for your pet
+- **Earn yield** → Unlock armor/accessories for your Pet
 - **Withdraw** → Pet may de-level or die ☠️
 
 ## 🌟 Features
