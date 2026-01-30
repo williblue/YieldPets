@@ -2,25 +2,32 @@
 node_modules/
 .pnp/
 .pnp.js
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 
 # Build outputs
 .next/
 out/
 build/
 dist/
+*.js.map
 
 # Testing
 coverage/
+.nyc_output/
 
 # Misc
 .DS_Store
 *.pem
 Thumbs.db
+*.log
 
 # Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 
 # Local env files
 .env
@@ -28,6 +35,8 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+*.key
+*.env.*
 
 # Vercel
 .vercel
@@ -41,3 +50,26 @@ next-env.d.ts
 .vscode/
 *.swp
 *.swo
+*.sublime-*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Cadence
+.flow.json.backup
+flow.json.backup
+cadence/transactions/*.private.cdc
+cadence/scripts/*.private.cdc
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+tmp/
+temp/
