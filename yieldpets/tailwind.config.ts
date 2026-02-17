@@ -42,6 +42,9 @@ const config: Config = {
       fontFamily: {
         display: ['var(--font-display)', 'system-ui', 'sans-serif'],
         body: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        nunito: ['var(--font-nunito)', 'system-ui', 'sans-serif'],
+        fredoka: ['var(--font-fredoka)', 'system-ui', 'sans-serif'],
+        varela: ['var(--font-varela)', 'system-ui', 'sans-serif'],
       },
       animation: {
         'float': 'float 3s ease-in-out infinite',

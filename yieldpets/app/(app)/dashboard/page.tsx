@@ -7,7 +7,6 @@ import { VaultCard } from '@/components/vault/VaultCard';
 import { ActivityTimeline } from '@/components/activity/ActivityTimeline';
 import { EquipSlots } from '@/components/armory/EquipSlots';
 import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
 import { Wallet, Sparkles, ArrowRight, Shield, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 

@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { X, CheckCircle, AlertTriangle, AlertCircle, Info, Sparkles } from 'lucide-react';
+import { useApp } from '@/components/providers/AppProvider';
 
 interface ToastProps {
   id: string;
@@ -47,7 +48,7 @@ export function Toast({ id, message, type, onClose }: ToastProps) {
   );
 }
 
-export function ToastContainer({ toasts, onClose }: { toasts: ToastProps['type'] extends string ? Array<{ id: string; message: string; type: ToastProps['type'] }> : never; onClose: (id: string) => void }) {
+function ToastContainerInner({ toasts, onClose }: { toasts: ToastProps['type'] extends string ? Array<{ id: string; message: string; type: ToastProps['type'] }> : never; onClose: (id: string) => void }) {
   return (
     <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
       {toasts.map(toast => (
@@ -55,4 +56,10 @@ export function ToastContainer({ toasts, onClose }: { toasts: ToastProps['type']
       ))}
     </div>
   );
+}
+
+// Wrapper component that connects to AppProvider
+export function ToastContainer() {
+  const { toasts, removeToast } = useApp();
+  return <ToastContainerInner toasts={toasts} onClose={removeToast} />;
 }

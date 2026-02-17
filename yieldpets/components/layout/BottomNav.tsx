@@ -9,7 +9,7 @@ export function BottomNav() {
   const pathname = usePathname();
 
   const navItems = [
-    { href: '/', label: 'Home', icon: Home },
+    { href: '/dashboard', label: 'Home', icon: Home },
     { href: '/vault', label: 'Vault', icon: Vault },
     { href: '/mint', label: 'Mint', icon: Sparkles },
     { href: '/armory', label: 'Armory', icon: Shield },
