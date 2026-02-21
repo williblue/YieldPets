@@ -122,10 +122,10 @@ export default function IsometricRoom({
         style={{
           position: "absolute",
           left: "50%",
-          bottom: 140,
+          bottom: 280,
           transform: "translateX(-50%)",
-          width: 120,
-          height: 120,
+          width: 60,
+          height: 60,
           zIndex: 5,
           display: "flex",
           alignItems: "center",
@@ -145,7 +145,7 @@ export default function IsometricRoom({
           <img
             src={room.pet.imageUrl}
             alt={room.pet.petName}
-            style={{ maxWidth: 120, maxHeight: 120, objectFit: "contain" }}
+            style={{ maxWidth: 60, maxHeight: 60, objectFit: "contain" }}
             onError={() => setPetImageError(true)}
           />
         )}

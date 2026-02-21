@@ -17,8 +17,8 @@ const MOCK_HUD: HUDState = {
 
 const MOCK_ROOM: RoomState = {
   pet: {
-    imageUrl: "",
-    petName: "Shiba",
+    imageUrl: "/Subject.png",
+    petName: "Sprout",
   },
   furniture: [],
   roomTheme: "default",
