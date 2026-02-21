@@ -98,8 +98,6 @@ export default function Home() {
 
         <ActionBar
           onFeed={() => console.log("Feed tapped")}
-          onPlant={() => console.log("Plant tapped")}
-          onHeart={() => console.log("Heart tapped")}
         />
 
         <BottomNavBar activeTab={activeTab} onTabChange={setActiveTab} />
