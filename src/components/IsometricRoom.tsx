@@ -29,40 +29,19 @@ export default function IsometricRoom({
         zIndex: 1,
       }}
     >
-      {/* Sky background */}
-      <div
+      {/* Sky + clouds background */}
+      <img
+        src="/cloud_bg_mobile.png"
+        alt=""
         style={{
           position: "absolute",
           inset: 0,
-          background: "linear-gradient(180deg, #BDD8EE 0%, #D8EEF8 100%)",
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          pointerEvents: "none",
         }}
       />
-
-      {/* Clouds */}
-      <svg
-        style={{ position: "absolute", inset: 0, opacity: 0.85 }}
-        width="428"
-        height={canvasHeight}
-        viewBox={`0 0 428 ${canvasHeight}`}
-        fill="none"
-      >
-        <ellipse cx="60" cy="520" rx="70" ry="28" fill="#FFFFFF" />
-        <ellipse cx="110" cy="515" rx="55" ry="22" fill="#FFFFFF" />
-        <ellipse cx="30" cy="525" rx="45" ry="18" fill="#FFFFFF" />
-
-        <ellipse cx="350" cy="540" rx="65" ry="25" fill="#FFFFFF" />
-        <ellipse cx="390" cy="535" rx="50" ry="20" fill="#FFFFFF" />
-
-        <ellipse cx="200" cy="620" rx="90" ry="30" fill="#FFFFFF" />
-        <ellipse cx="280" cy="625" rx="70" ry="25" fill="#FFFFFF" />
-        <ellipse cx="130" cy="625" rx="60" ry="22" fill="#FFFFFF" />
-
-        <ellipse cx="70" cy="660" rx="80" ry="28" fill="#FFFFFF" />
-        <ellipse cx="140" cy="665" rx="60" ry="22" fill="#FFFFFF" />
-
-        <ellipse cx="370" cy="660" rx="70" ry="26" fill="#FFFFFF" />
-        <ellipse cx="320" cy="665" rx="55" ry="20" fill="#FFFFFF" />
-      </svg>
 
       {/* Isometric room PNG */}
       <img
