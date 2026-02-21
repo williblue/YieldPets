@@ -63,17 +63,33 @@ export default function Home() {
         overflow: "hidden",
         display: "flex",
         justifyContent: "center",
-        background: "#FFFFFF",
+        background: "#BDD8EE",
       }}
     >
       <div
         style={{
           width: 428,
-          height: 926,
+          maxWidth: "100%",
+          height: "100dvh",
           position: "relative",
           overflow: "hidden",
         }}
       >
+        {/* Full-screen cloud background */}
+        <img
+          src="/cloud_bg_mobile.png"
+          alt=""
+          style={{
+            position: "absolute",
+            inset: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            pointerEvents: "none",
+            zIndex: 0,
+          }}
+        />
+
         <HUDBar state={hudState} />
 
         <div style={{ paddingTop: 52 }}>

@@ -29,20 +29,6 @@ export default function IsometricRoom({
         zIndex: 1,
       }}
     >
-      {/* Sky + clouds background */}
-      <img
-        src="/cloud_bg_mobile.png"
-        alt=""
-        style={{
-          position: "absolute",
-          inset: 0,
-          width: "100%",
-          height: "100%",
-          objectFit: "cover",
-          pointerEvents: "none",
-        }}
-      />
-
       {/* Isometric room PNG */}
       <img
         src="/iso_room.png"
