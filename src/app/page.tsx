@@ -6,6 +6,7 @@ import IsometricRoom from "@/components/IsometricRoom";
 import ActionBar from "@/components/ActionBar";
 import BottomNavBar from "@/components/BottomNavBar";
 import FurnitureModal from "@/components/FurnitureModal";
+import StartScreen from "@/components/StartScreen";
 import { HUDState, RoomState, FurnitureItem, NavTab } from "@/types";
 
 const MOCK_HUD: HUDState = {
@@ -25,6 +26,8 @@ const MOCK_ROOM: RoomState = {
 };
 
 export default function Home() {
+  const [showStart, setShowStart] = useState(true);
+  const [startVisible, setStartVisible] = useState(true);
   const [hudState, setHudState] = useState<HUDState>({
     ...MOCK_HUD,
     loading: true,
@@ -41,6 +44,12 @@ export default function Home() {
     }, 600);
     return () => clearTimeout(timer);
   }, []);
+
+  const handlePlay = () => {
+    // Fade out start screen (ease-in 180ms), then unmount
+    setStartVisible(false);
+    setTimeout(() => setShowStart(false), 200);
+  };
 
   const handleFurnitureTap = (item: FurnitureItem) => {
     if (debounceRef.current) return;
@@ -103,6 +112,24 @@ export default function Home() {
         <BottomNavBar activeTab={activeTab} onTabChange={setActiveTab} />
 
         <FurnitureModal item={selectedFurniture} onClose={handleModalClose} />
+
+        {/* Start screen overlay */}
+        {showStart && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 300,
+              opacity: startVisible ? 1 : 0,
+              pointerEvents: startVisible ? "auto" : "none",
+              transition: startVisible
+                ? "opacity 220ms ease-out"
+                : "opacity 180ms ease-in",
+            }}
+          >
+            <StartScreen onPlay={handlePlay} />
+          </div>
+        )}
       </div>
     </div>
   );

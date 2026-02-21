@@ -28,7 +28,7 @@ src/
   components/
     HUDBar.tsx        — gold nuggets, hearts, shield display
     IsometricRoom.tsx — isometric room with pet + furniture
-    ActionBar.tsx     — feed button, plant icon, heart icon
+    ActionBar.tsx     — feed button
     BottomNavBar.tsx  — 5-tab navigation
     FurnitureModal.tsx — furniture inspect modal
   types/
