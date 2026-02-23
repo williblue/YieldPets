@@ -7,6 +7,8 @@ interface NavItem {
   label: string;
 }
 
+const disabledTabs: NavTab[] = ["build", "shop", "friends"];
+
 const navItems: NavItem[] = [
   { key: "pet", label: "Pet" },
   { key: "build", label: "Build" },
@@ -115,12 +117,14 @@ export default function BottomNavBar({ activeTab, onTabChange }: BottomNavBarPro
     >
       {navItems.map((item) => {
         const isActive = activeTab === item.key;
+        const isDisabled = disabledTabs.includes(item.key);
         const Icon = iconMap[item.key];
 
         return (
           <button
             key={item.key}
-            onClick={() => onTabChange(item.key)}
+            onClick={() => !isDisabled && onTabChange(item.key)}
+            disabled={isDisabled}
             style={{
               width: columnWidth,
               height: 72,
@@ -130,10 +134,15 @@ export default function BottomNavBar({ activeTab, onTabChange }: BottomNavBarPro
               justifyContent: "center",
               background: "transparent",
               border: "none",
-              cursor: "pointer",
+              cursor: isDisabled ? "default" : "pointer",
               padding: 0,
               gap: 2,
-              color: isActive ? "var(--nav-icon-active)" : "var(--nav-icon-inactive)",
+              color: isDisabled
+                ? "var(--nav-icon-inactive)"
+                : isActive
+                  ? "var(--nav-icon-active)"
+                  : "var(--nav-icon-inactive)",
+              opacity: isDisabled ? 0.35 : 1,
             }}
           >
             <div
@@ -144,7 +153,7 @@ export default function BottomNavBar({ activeTab, onTabChange }: BottomNavBarPro
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                background: isActive ? "rgba(240, 144, 152, 0.15)" : "transparent",
+                background: isActive && !isDisabled ? "rgba(240, 144, 152, 0.15)" : "transparent",
                 transition: "background 120ms ease-out",
               }}
             >
@@ -154,12 +163,16 @@ export default function BottomNavBar({ activeTab, onTabChange }: BottomNavBarPro
               style={{
                 fontSize: 11,
                 fontWeight: 700,
-                color: isActive ? "var(--nav-label-active)" : "var(--nav-label)",
+                color: isDisabled
+                  ? "var(--nav-label)"
+                  : isActive
+                    ? "var(--nav-label-active)"
+                    : "var(--nav-label)",
                 marginTop: 2,
                 lineHeight: 1,
               }}
             >
-              {item.label}
+              {isDisabled ? "Soon" : item.label}
             </span>
           </button>
         );
