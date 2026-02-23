@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import * as fcl from "@onflow/fcl";
 import * as t from "@onflow/types";
 import { useAuth } from "@/contexts/AuthProvider";
-import { TRANSFER_FLOW } from "@/lib/flow";
+import { TRANSFER_FLOW, GET_COA_ADDRESS, CREATE_COA } from "@/lib/flow";
 
 export default function WalletScreen() {
   const { address, balance, email, logout, refreshBalance, magicAuthz } =
@@ -15,6 +15,12 @@ export default function WalletScreen() {
   const [sending, setSending] = useState(false);
   const [txStatus, setTxStatus] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  const [coaAddress, setCoaAddress] = useState<string | null>(null);
+  const [coaLoading, setCoaLoading] = useState(true);
+  const [coaCreating, setCoaCreating] = useState(false);
+  const [coaStatus, setCoaStatus] = useState<string | null>(null);
+  const [coaCopied, setCoaCopied] = useState(false);
 
   const truncatedAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -30,6 +36,84 @@ export default function WalletScreen() {
       // Clipboard API may not be available
     }
   }, [address]);
+
+  // Query COA address on mount
+  useEffect(() => {
+    if (!address) {
+      setCoaLoading(false);
+      return;
+    }
+    let cancelled = false;
+
+    const fetchCoa = async () => {
+      setCoaLoading(true);
+      try {
+        const result = await fcl.query({
+          cadence: GET_COA_ADDRESS,
+          args: (arg: typeof fcl.arg) => [arg(address, t.Address)],
+        });
+        if (!cancelled) {
+          setCoaAddress(result ?? null);
+        }
+      } catch {
+        if (!cancelled) setCoaAddress(null);
+      } finally {
+        if (!cancelled) setCoaLoading(false);
+      }
+    };
+
+    fetchCoa();
+    return () => {
+      cancelled = true;
+    };
+  }, [address]);
+
+  const handleCreateCoa = useCallback(async () => {
+    if (!magicAuthz || coaCreating) return;
+    setCoaCreating(true);
+    setCoaStatus("Signing transaction...");
+    try {
+      const txId = await fcl.mutate({
+        cadence: CREATE_COA,
+        limit: 9999,
+        authorizations: [magicAuthz],
+        payer: magicAuthz,
+        proposer: magicAuthz,
+      });
+      setCoaStatus("Waiting for confirmation...");
+      await fcl.tx(txId).onceSealed();
+      setCoaStatus(null);
+
+      // Re-query the COA address
+      if (address) {
+        const result = await fcl.query({
+          cadence: GET_COA_ADDRESS,
+          args: (arg: typeof fcl.arg) => [arg(address, t.Address)],
+        });
+        setCoaAddress(result ?? null);
+      }
+    } catch (err) {
+      console.error("COA creation failed:", err);
+      setCoaStatus("Setup failed. Please try again.");
+    } finally {
+      setCoaCreating(false);
+    }
+  }, [magicAuthz, coaCreating, address]);
+
+  const copyCoaAddress = useCallback(async () => {
+    if (!coaAddress) return;
+    try {
+      await navigator.clipboard.writeText(coaAddress);
+      setCoaCopied(true);
+      setTimeout(() => setCoaCopied(false), 2000);
+    } catch {
+      // Clipboard API may not be available
+    }
+  }, [coaAddress]);
+
+  const truncatedCoaAddress = coaAddress
+    ? `${coaAddress.slice(0, 6)}...${coaAddress.slice(-4)}`
+    : null;
 
   const handleTransfer = useCallback(async () => {
     if (!magicAuthz || !recipient || !amount || sending) return;
@@ -173,6 +257,111 @@ export default function WalletScreen() {
           >
             {copied ? "Copied!" : truncatedAddress}
           </button>
+        </div>
+
+        {/* COA Address card */}
+        <div
+          style={{
+            background: "#FFFFFF",
+            borderRadius: 16,
+            padding: 16,
+            boxShadow: "var(--shadow-card)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: "var(--text-secondary)",
+              textTransform: "uppercase",
+              letterSpacing: 1,
+            }}
+          >
+            COA Address
+          </span>
+
+          {coaLoading ? (
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: "var(--text-secondary)",
+              }}
+            >
+              Loading...
+            </span>
+          ) : coaAddress ? (
+            <button
+              onClick={copyCoaAddress}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: 16,
+                fontWeight: 800,
+                color: "var(--text-primary)",
+                fontFamily: "inherit",
+                padding: "4px 8px",
+                borderRadius: 8,
+              }}
+            >
+              {coaCopied ? "Copied!" : truncatedCoaAddress}
+            </button>
+          ) : (
+            <>
+              {coaStatus && (
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: coaStatus.includes("failed")
+                      ? "#E85878"
+                      : "var(--text-secondary)",
+                    textAlign: "center",
+                  }}
+                >
+                  {coaStatus}
+                </p>
+              )}
+              <button
+                onClick={handleCreateCoa}
+                disabled={coaCreating || !magicAuthz}
+                style={{
+                  height: 40,
+                  paddingLeft: 20,
+                  paddingRight: 20,
+                  borderRadius: 999,
+                  border: "none",
+                  cursor:
+                    coaCreating || !magicAuthz ? "default" : "pointer",
+                  background:
+                    coaCreating || !magicAuthz
+                      ? "#E0D8C8"
+                      : "linear-gradient(180deg, #F8B0B8 0%, #F09098 100%)",
+                  boxShadow:
+                    coaCreating || !magicAuthz
+                      ? "none"
+                      : "0 3px 0px #C07078",
+                  color: "#FFFFFF",
+                  fontFamily: "inherit",
+                  fontWeight: 800,
+                  fontSize: 14,
+                  opacity: coaCreating || !magicAuthz ? 0.6 : 1,
+                  transition:
+                    "transform 80ms ease-out, box-shadow 80ms ease-out, background 80ms ease-out",
+                  userSelect: "none",
+                  WebkitUserSelect: "none",
+                }}
+              >
+                {coaCreating ? "Setting up..." : "Set Up COA"}
+              </button>
+            </>
+          )}
         </div>
 
         {/* Balance card */}
