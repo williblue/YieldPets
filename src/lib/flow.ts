@@ -6,6 +6,48 @@ fcl.config()
   .put("0xFungibleToken", "0xf233dcee88fe0abe")
   .put("0xFlowToken", "0x1654653399040a61");
 
+export const GET_COA_ADDRESS = `
+import EVM from 0xe467b9dd11fa00df
+
+access(all) fun main(address: Address): String? {
+    let acct = getAccount(address)
+    let cap = acct.capabilities.borrow<&EVM.CadenceOwnedAccount>(/public/evm)
+    if cap == nil {
+        return nil
+    }
+    let evmAddr = cap!.address()
+    let bytes = evmAddr.bytes
+    let table: [String] = ["0","1","2","3","4","5","6","7","8","9","a","b","c","d","e","f"]
+    var result = "0x"
+    for byte in bytes {
+        result = result.concat(table[Int(byte / 16)]).concat(table[Int(byte % 16)])
+    }
+    return result
+}
+`;
+
+export const CREATE_COA = `
+import EVM from 0xe467b9dd11fa00df
+
+transaction {
+    prepare(signer: auth(SaveValue, BorrowValue, IssueStorageCapabilityController, PublishCapability) &Account) {
+        if signer.storage.type(at: /storage/evm) == nil {
+            let coa <- EVM.createCadenceOwnedAccount()
+            signer.storage.save(<-coa, to: /storage/evm)
+        }
+
+        if !signer.capabilities.get<&EVM.CadenceOwnedAccount>(/public/evm).check() {
+            let cap = signer.capabilities.storage.issue<&EVM.CadenceOwnedAccount>(/storage/evm)
+            signer.capabilities.publish(cap, at: /public/evm)
+        }
+    }
+
+    execute {
+        log("COA setup complete")
+    }
+}
+`;
+
 export const TRANSFER_FLOW = `
 import FungibleToken from 0xFungibleToken
 import FlowToken from 0xFlowToken
