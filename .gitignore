@@ -73,3 +73,4 @@ cadence/scripts/*.private.cdc
 .cache/
 tmp/
 temp/
+flow.json
