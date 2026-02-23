@@ -7,6 +7,9 @@ import ActionBar from "@/components/ActionBar";
 import BottomNavBar from "@/components/BottomNavBar";
 import FurnitureModal from "@/components/FurnitureModal";
 import StartScreen from "@/components/StartScreen";
+import LoginScreen from "@/components/LoginScreen";
+import WalletScreen from "@/components/WalletScreen";
+import { useAuth } from "@/contexts/AuthProvider";
 import { HUDState, RoomState, FurnitureItem, NavTab } from "@/types";
 
 const MOCK_HUD: HUDState = {
@@ -26,8 +29,11 @@ const MOCK_ROOM: RoomState = {
 };
 
 export default function Home() {
+  const { isLoggedIn, isLoading } = useAuth();
   const [showStart, setShowStart] = useState(true);
   const [startVisible, setStartVisible] = useState(true);
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginVisible, setLoginVisible] = useState(false);
   const [hudState, setHudState] = useState<HUDState>({
     ...MOCK_HUD,
     loading: true,
@@ -45,10 +51,34 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, []);
 
+  // When login succeeds, hide the login screen
+  useEffect(() => {
+    if (isLoggedIn && showLogin) {
+      setLoginVisible(false);
+      setTimeout(() => setShowLogin(false), 200);
+    }
+  }, [isLoggedIn, showLogin]);
+
+  // When user logs out (and start screen is gone), show login screen again
+  useEffect(() => {
+    if (!isLoggedIn && !isLoading && !showStart && !showLogin) {
+      setShowLogin(true);
+      setActiveTab("pet");
+      requestAnimationFrame(() => setLoginVisible(true));
+    }
+  }, [isLoggedIn, isLoading, showStart, showLogin]);
+
   const handlePlay = () => {
-    // Fade out start screen (ease-in 180ms), then unmount
+    // Fade out start screen
     setStartVisible(false);
-    setTimeout(() => setShowStart(false), 200);
+    setTimeout(() => {
+      setShowStart(false);
+      // If not logged in, show login screen
+      if (!isLoggedIn && !isLoading) {
+        setShowLogin(true);
+        requestAnimationFrame(() => setLoginVisible(true));
+      }
+    }, 200);
   };
 
   const handleFurnitureTap = (item: FurnitureItem) => {
@@ -112,6 +142,27 @@ export default function Home() {
         <BottomNavBar activeTab={activeTab} onTabChange={setActiveTab} />
 
         <FurnitureModal item={selectedFurniture} onClose={handleModalClose} />
+
+        {/* Wallet screen overlay (when settings tab active) */}
+        {activeTab === "settings" && isLoggedIn && <WalletScreen />}
+
+        {/* Login screen overlay */}
+        {showLogin && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              zIndex: 250,
+              opacity: loginVisible ? 1 : 0,
+              pointerEvents: loginVisible ? "auto" : "none",
+              transition: loginVisible
+                ? "opacity 220ms ease-out"
+                : "opacity 180ms ease-in",
+            }}
+          >
+            <LoginScreen />
+          </div>
+        )}
 
         {/* Start screen overlay */}
         {showStart && (

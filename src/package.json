@@ -9,6 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@magic-ext/flow": "^28.3.1",
+    "@onflow/fcl": "^1.21.9",
+    "@onflow/types": "^1.5.0",
+    "magic-sdk": "^33.4.1",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3"
