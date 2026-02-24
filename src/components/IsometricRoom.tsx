@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { RoomState, FurnitureItem } from "@/types";
 
 interface IsometricRoomProps {
@@ -8,16 +8,233 @@ interface IsometricRoomProps {
   onFurnitureTap: (item: FurnitureItem) => void;
 }
 
+/* ── Walkable floor (isometric diamond) ────────────────────────── */
+const FLOOR_CX = 214;
+const FLOOR_CY = 280;
+const FLOOR_HW = 85;
+const FLOOR_HH = 50;
+
+/* ── Walk sprite sheet: 4784×329 px, 16 frames in 1 row ──────── */
+const TOTAL_FRAMES = 16;
+const SHEET_W = 4784;
+const SHEET_H = 329;
+const FRAME_W = SHEET_W / TOTAL_FRAMES; // 299
+const PET_W = 72; // display width per frame
+const SCALE = PET_W / FRAME_W; // ≈ 0.2676
+const BG_W = SHEET_W * SCALE; // 1280
+const PET_H = Math.ceil(SHEET_H * SCALE); // 89
+const FRAME_MS = 100; // ms per sprite frame
+
+/* ── Click reaction sprite sheet: 768×140 px, 6 frames in 1 row ─ */
+const CLICK_FRAMES = 6;
+const CLICK_SHEET_W = 768;
+const CLICK_SHEET_H = 140;
+const CLICK_FRAME_W = CLICK_SHEET_W / CLICK_FRAMES; // 128
+const CLICK_SCALE = PET_W / CLICK_FRAME_W;
+const CLICK_PET_H = Math.ceil(CLICK_SHEET_H * CLICK_SCALE); // display height
+const CLICK_BG_W = Math.ceil(CLICK_SHEET_W * CLICK_SCALE); // scaled sheet width
+
+/* ── Movement ──────────────────────────────────────────────────── */
+const SPEED = 0.5;
+const IDLE_MIN = 1400;
+const IDLE_MAX = 3200;
+// Minimum walk distance so one full animation cycle (16 frames) plays
+const MIN_WALK_DIST = Math.ceil((SPEED * 60) * (TOTAL_FRAMES * FRAME_MS / 1000)); // ~96px
+
+function inFloor(x: number, y: number) {
+  return (
+    Math.abs(x - FLOOR_CX) / FLOOR_HW +
+    Math.abs(y - FLOOR_CY) / FLOOR_HH <=
+    1
+  );
+}
+
+function randFloor(from: { x: number; y: number }): { x: number; y: number } {
+  let x: number, y: number;
+  let attempts = 0;
+  do {
+    x = FLOOR_CX + (Math.random() * 2 - 1) * FLOOR_HW * 0.8;
+    y = FLOOR_CY + (Math.random() * 2 - 1) * FLOOR_HH * 0.8;
+    attempts++;
+    if (attempts > 100) break; // fallback to prevent infinite loop
+  } while (
+    !inFloor(x, y) ||
+    Math.sqrt((x - from.x) ** 2 + (y - from.y) ** 2) < MIN_WALK_DIST
+  );
+  return { x, y };
+}
+
 export default function IsometricRoom({
   room,
   onFurnitureTap,
 }: IsometricRoomProps) {
-  const [petImageError, setPetImageError] = useState(false);
   const [failedFurniture, setFailedFurniture] = useState<Set<string>>(
     new Set(),
   );
 
+  const [walking, setWalking] = useState(false);
+  const [facingLeft, setFacingLeft] = useState(false);
+  const [frame, setFrame] = useState(0);
+  const [clicking, setClicking] = useState(false);
+
+  const posRef = useRef({ x: FLOOR_CX, y: FLOOR_CY });
+  const targetRef = useRef<{ x: number; y: number } | null>(null);
+  const rafRef = useRef(0);
+  const idleRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const spriteRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const wasWalkingRef = useRef(false);
+  const petElRef = useRef<HTMLDivElement>(null);
+  const walkLayerRef = useRef<HTMLDivElement>(null);
+
   const canvasHeight = 702;
+
+  const startWalk = useCallback(() => {
+    const target = randFloor(posRef.current);
+    targetRef.current = target;
+    setFacingLeft(target.x < posRef.current.x);
+    setWalking(true);
+
+    // Cycle through all 16 frames while walking
+    spriteRef.current = setInterval(() => {
+      setFrame((f) => (f + 1) % TOTAL_FRAMES);
+    }, FRAME_MS);
+
+    const step = () => {
+      const pos = posRef.current;
+      const t = targetRef.current;
+      if (!t) return;
+
+      const dx = t.x - pos.x;
+      const dy = t.y - pos.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < 2) {
+        posRef.current = { x: t.x, y: t.y };
+        targetRef.current = null;
+        if (spriteRef.current) clearInterval(spriteRef.current);
+        setFrame(0);
+        setWalking(false);
+        if (petElRef.current) {
+          petElRef.current.style.left = `${t.x}px`;
+          petElRef.current.style.bottom = `${t.y}px`;
+        }
+        return;
+      }
+
+      const move = Math.min(SPEED, dist);
+      posRef.current = {
+        x: pos.x + (dx / dist) * move,
+        y: pos.y + (dy / dist) * move,
+      };
+
+      if (petElRef.current) {
+        petElRef.current.style.left = `${posRef.current.x}px`;
+        petElRef.current.style.bottom = `${posRef.current.y}px`;
+      }
+
+      rafRef.current = requestAnimationFrame(step);
+    };
+
+    rafRef.current = requestAnimationFrame(step);
+  }, []);
+
+  /* ── Preload click sprite sheet ──────────────────────────────── */
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/pet_click_sheet.png";
+  }, []);
+
+  /* ── Click handler: pause walk/idle, enter click state ──────── */
+  const handlePetClick = useCallback(() => {
+    if (clicking) return;
+
+    wasWalkingRef.current = walking;
+
+    if (walking) {
+      cancelAnimationFrame(rafRef.current);
+      if (spriteRef.current) clearInterval(spriteRef.current);
+    }
+    if (idleRef.current) clearTimeout(idleRef.current);
+
+    if (walkLayerRef.current) walkLayerRef.current.style.visibility = "hidden";
+    setClicking(true);
+  }, [clicking, walking]);
+
+  /* ── CSS animation end: resume previous state ───────────────── */
+  const handleClickEnd = useCallback(() => {
+    if (walkLayerRef.current) walkLayerRef.current.style.visibility = "visible";
+    setClicking(false);
+
+    if (wasWalkingRef.current) {
+      // Resume walking: restart sprite cycling and movement
+      spriteRef.current = setInterval(() => {
+        setFrame((prev) => (prev + 1) % TOTAL_FRAMES);
+      }, FRAME_MS);
+
+      const step = () => {
+        const pos = posRef.current;
+        const t = targetRef.current;
+        if (!t) {
+          if (spriteRef.current) clearInterval(spriteRef.current);
+          setFrame(0);
+          setWalking(false);
+          return;
+        }
+
+        const dx = t.x - pos.x;
+        const dy = t.y - pos.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (dist < 2) {
+          posRef.current = { x: t.x, y: t.y };
+          targetRef.current = null;
+          if (spriteRef.current) clearInterval(spriteRef.current);
+          setFrame(0);
+          setWalking(false);
+          if (petElRef.current) {
+            petElRef.current.style.left = `${t.x}px`;
+            petElRef.current.style.bottom = `${t.y}px`;
+          }
+          return;
+        }
+
+        const move = Math.min(SPEED, dist);
+        posRef.current = {
+          x: pos.x + (dx / dist) * move,
+          y: pos.y + (dy / dist) * move,
+        };
+
+        if (petElRef.current) {
+          petElRef.current.style.left = `${posRef.current.x}px`;
+          petElRef.current.style.bottom = `${posRef.current.y}px`;
+        }
+
+        rafRef.current = requestAnimationFrame(step);
+      };
+
+      rafRef.current = requestAnimationFrame(step);
+    }
+    // If was idle, the idle useEffect will schedule the next walk
+  }, []);
+
+  useEffect(() => {
+    if (walking || clicking) return;
+    const delay = IDLE_MIN + Math.random() * (IDLE_MAX - IDLE_MIN);
+    idleRef.current = setTimeout(startWalk, delay);
+    return () => {
+      if (idleRef.current) clearTimeout(idleRef.current);
+    };
+  }, [walking, clicking, startWalk]);
+
+  useEffect(() => {
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      if (idleRef.current) clearTimeout(idleRef.current);
+      if (spriteRef.current) clearInterval(spriteRef.current);
+    };
+  }, []);
+
+  const bgX = -frame * PET_W;
 
   return (
     <div
@@ -84,34 +301,46 @@ export default function IsometricRoom({
 
       {/* Pet sprite */}
       <div
+        ref={petElRef}
+        onClick={handlePetClick}
         style={{
           position: "absolute",
-          left: "50%",
-          bottom: 280,
-          transform: "translateX(-50%)",
-          width: 60,
-          height: 60,
+          left: FLOOR_CX,
+          bottom: FLOOR_CY,
+          width: PET_W,
+          height: PET_H,
+          transform: `translateX(-50%) ${facingLeft ? "scaleX(-1)" : ""}`,
           zIndex: 5,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          cursor: "pointer",
         }}
       >
-        {petImageError ? (
+        {/* Walk layer — always rendered */}
+        <div
+          ref={walkLayerRef}
+          style={{
+            width: PET_W,
+            height: PET_H,
+            backgroundImage: "url(/pet_walk_sheet.png)",
+            backgroundSize: `${BG_W}px ${PET_H}px`,
+            backgroundPosition: `${bgX}px 0px`,
+            backgroundRepeat: "no-repeat",
+          }}
+        />
+        {/* Click layer — overlays on top, removed when done */}
+        {clicking && (
           <div
+            className="pet-click-anim"
+            onAnimationEnd={handleClickEnd}
             style={{
-              width: 80,
-              height: 80,
-              borderRadius: "var(--radius-md)",
-              background: "var(--hud-bar-bg)",
+              position: "absolute",
+              left: 0,
+              bottom: 0,
+              width: PET_W,
+              height: CLICK_PET_H,
+              backgroundImage: "url(/pet_click_sheet.png)",
+              backgroundSize: `${CLICK_BG_W}px ${CLICK_PET_H}px`,
+              backgroundRepeat: "no-repeat",
             }}
-          />
-        ) : (
-          <img
-            src={room.pet.imageUrl}
-            alt={room.pet.petName}
-            style={{ maxWidth: 60, maxHeight: 60, objectFit: "contain" }}
-            onError={() => setPetImageError(true)}
           />
         )}
       </div>

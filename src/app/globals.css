@@ -86,3 +86,19 @@ html, body {
   background: #BDD8EE;
   color: var(--text-primary);
 }
+
+/* Pet walk sprite animation — 4 frames in row, using steps */
+@keyframes pet-walk-sprite {
+  from { background-position-x: 0; }
+  to { background-position-x: -320px; }
+}
+
+/* Pet click reaction — 768×140 strip, 6 frames @ 100ms each */
+@keyframes pet-click-sprite {
+  from { background-position-x: 0; }
+  to   { background-position-x: -432px; }
+}
+
+.pet-click-anim {
+  animation: pet-click-sprite 600ms steps(6) forwards;
+}
