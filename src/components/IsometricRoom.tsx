@@ -39,13 +39,13 @@ const SPEED = 0.5;
 const IDLE_MIN = 1400;
 const IDLE_MAX = 3200;
 // Minimum walk distance so one full animation cycle (16 frames) plays
-const MIN_WALK_DIST = Math.ceil((SPEED * 60) * (TOTAL_FRAMES * FRAME_MS / 1000)); // ~96px
+const MIN_WALK_DIST = Math.ceil(
+  SPEED * 60 * ((TOTAL_FRAMES * FRAME_MS) / 1000),
+); // ~96px
 
 function inFloor(x: number, y: number) {
   return (
-    Math.abs(x - FLOOR_CX) / FLOOR_HW +
-    Math.abs(y - FLOOR_CY) / FLOOR_HH <=
-    1
+    Math.abs(x - FLOOR_CX) / FLOOR_HW + Math.abs(y - FLOOR_CY) / FLOOR_HH <= 1
   );
 }
 
@@ -334,7 +334,7 @@ export default function IsometricRoom({
             style={{
               position: "absolute",
               left: 0,
-              bottom: 0,
+              bottom: 2,
               width: PET_W,
               height: CLICK_PET_H,
               backgroundImage: "url(/pet_click_sheet.png)",
