@@ -86,6 +86,8 @@ export default function IsometricRoom({
   const petElRef = useRef<HTMLDivElement>(null);
   const walkLayerRef = useRef<HTMLDivElement>(null);
 
+  const popSfx = useRef<HTMLAudioElement | null>(null);
+
   const canvasHeight = 702;
 
   const startWalk = useCallback(() => {
@@ -138,10 +140,13 @@ export default function IsometricRoom({
     rafRef.current = requestAnimationFrame(step);
   }, []);
 
-  /* ── Preload click sprite sheet ──────────────────────────────── */
+  /* ── Preload click sprite sheet + sound ────────────────────── */
   useEffect(() => {
     const img = new Image();
     img.src = "/pet_click_sheet.png";
+    const audio = new Audio("/bubble_pop.mp3");
+    audio.preload = "auto";
+    popSfx.current = audio;
   }, []);
 
   /* ── Click handler: pause walk/idle, enter click state ──────── */
@@ -155,6 +160,11 @@ export default function IsometricRoom({
       if (spriteRef.current) clearInterval(spriteRef.current);
     }
     if (idleRef.current) clearTimeout(idleRef.current);
+
+    if (popSfx.current) {
+      popSfx.current.currentTime = 0;
+      popSfx.current.play();
+    }
 
     if (walkLayerRef.current) walkLayerRef.current.style.visibility = "hidden";
     setClicking(true);
