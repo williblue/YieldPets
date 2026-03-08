@@ -219,8 +219,11 @@ export default function Home() {
             petName={roomState.pet.petName}
           />
         )}
-        {depositView === "crypto" && isLoggedIn && (
-          <CryptoDepositScreen onBack={() => setDepositView("deposit")} />
+        {/* Mount crypto screen whenever deposit flow is open so QR codes preload */}
+        {depositView !== null && isLoggedIn && (
+          <div style={{ display: depositView === "crypto" ? "contents" : "none" }}>
+            <CryptoDepositScreen onBack={() => setDepositView("deposit")} />
+          </div>
         )}
 
         {/* Wallet screen overlay (when settings tab active) */}
