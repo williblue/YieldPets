@@ -4,6 +4,7 @@ import { useState } from "react";
 
 interface DepositScreenProps {
   onClose: () => void;
+  onCrypto: () => void;
   petName: string;
 }
 
@@ -12,13 +13,29 @@ type Tab = "deposit" | "withdraw";
 const MOCK_BALANCE = 50;
 const MOCK_DAILY_YIELD = 4.32;
 const MOCK_NUGGETS_PER_DAY = 40;
-const YIELD_RATE = MOCK_DAILY_YIELD / MOCK_BALANCE; // per dollar per day
 const NUGGETS_RATE = MOCK_NUGGETS_PER_DAY / MOCK_BALANCE;
 
 const QUICK_AMOUNTS = ["10", "50", "100", "500"];
 
-export default function DepositScreen({ onClose, petName }: DepositScreenProps) {
+const methodCardStyle: React.CSSProperties = {
+  background: "#FFFFFF",
+  borderRadius: 16,
+  padding: 20,
+  boxShadow: "var(--shadow-card)",
+  display: "flex",
+  alignItems: "center",
+  gap: 16,
+  border: "2px solid #ECD8A0",
+  cursor: "pointer",
+  width: "100%",
+  textAlign: "left",
+  fontFamily: "inherit",
+  transition: "border 120ms ease-out, background 120ms ease-out",
+};
+
+export default function DepositScreen({ onClose, onCrypto, petName }: DepositScreenProps) {
   const [tab, setTab] = useState<Tab>("deposit");
+  const [depositMethod, setDepositMethod] = useState<"card" | null>(null);
   const [amount, setAmount] = useState("");
   const [customAmount, setCustomAmount] = useState("");
   const [pressed, setPressed] = useState(false);
@@ -48,6 +65,13 @@ export default function DepositScreen({ onClose, petName }: DepositScreenProps) 
     setAmount("");
   };
 
+  const handleTabSwitch = (t: Tab) => {
+    setTab(t);
+    setDepositMethod(null);
+    setAmount("");
+    setCustomAmount("");
+  };
+
   const labelStyle: React.CSSProperties = {
     fontSize: 12,
     fontWeight: 700,
@@ -62,6 +86,11 @@ export default function DepositScreen({ onClose, petName }: DepositScreenProps) 
     padding: 16,
     boxShadow: "var(--shadow-card)",
   };
+
+  // On deposit tab: show method picker first, then amount after picking credit card
+  // On withdraw tab: show amount directly (withdrawal goes back to wallet)
+  const showAmountSection = tab === "withdraw" || depositMethod === "card";
+  const showMethodPicker = tab === "deposit" && !depositMethod;
 
   return (
     <div
@@ -80,7 +109,15 @@ export default function DepositScreen({ onClose, petName }: DepositScreenProps) 
     >
       {/* Back button */}
       <button
-        onClick={onClose}
+        onClick={() => {
+          if (depositMethod) {
+            setDepositMethod(null);
+            setAmount("");
+            setCustomAmount("");
+          } else {
+            onClose();
+          }
+        }}
         style={{
           position: "absolute",
           top: 16,
@@ -146,11 +183,7 @@ export default function DepositScreen({ onClose, petName }: DepositScreenProps) 
           {(["deposit", "withdraw"] as Tab[]).map((t) => (
             <button
               key={t}
-              onClick={() => {
-                setTab(t);
-                setAmount("");
-                setCustomAmount("");
-              }}
+              onClick={() => handleTabSwitch(t)}
               style={{
                 height: 40,
                 paddingLeft: 20,
@@ -232,208 +265,335 @@ export default function DepositScreen({ onClose, petName }: DepositScreenProps) 
           </div>
         </div>
 
-        {/* Amount Section */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <span style={labelStyle}>
-            {tab === "deposit" ? "Amount to Add" : "Amount to Withdraw"}
-          </span>
+        {/* Deposit Method Picker */}
+        {showMethodPicker && (
+          <>
+            <span style={labelStyle}>Choose how to add funds</span>
 
-          {/* Quick amounts */}
-          <div style={{ display: "flex", gap: 8 }}>
-            {QUICK_AMOUNTS.map((val) => {
-              const selected = amount === val;
-              return (
-                <button
-                  key={val}
-                  onClick={() => handleQuickAmount(val)}
+            {/* Credit Card option */}
+            <button onClick={() => setDepositMethod("card")} style={methodCardStyle}>
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  background: "rgba(240,144,152,0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <rect x="2" y="5" width="20" height="14" rx="3" fill="#F09098" />
+                  <rect x="2" y="9" width="20" height="3" fill="#C07078" />
+                  <rect x="5" y="15" width="6" height="1.5" rx="0.75" fill="#FFFFFF" opacity="0.6" />
+                </svg>
+              </div>
+              <div>
+                <div
                   style={{
-                    flex: 1,
-                    height: 40,
-                    borderRadius: 12,
-                    border: selected ? "2px solid #F09098" : "2px solid #ECD8A0",
-                    background: selected ? "#F09098" : "#FFFFFF",
-                    color: selected ? "#FFFFFF" : "var(--text-primary)",
-                    fontSize: 15,
-                    fontFamily: "inherit",
+                    fontSize: 16,
                     fontWeight: 800,
-                    cursor: "pointer",
-                    transition:
-                      "background 120ms ease-out, color 120ms ease-out, border 120ms ease-out",
+                    color: "var(--text-primary)",
                   }}
                 >
-                  ${val}
-                </button>
-              );
-            })}
-          </div>
+                  Credit Card
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "var(--text-secondary)",
+                    marginTop: 2,
+                  }}
+                >
+                  Buy PYUSD with card
+                </div>
+              </div>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                style={{ marginLeft: "auto", flexShrink: 0 }}
+              >
+                <path
+                  d="M7.5 5L12.5 10L7.5 15"
+                  stroke="#A0A8B8"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
 
-          {/* Custom amount input */}
-          <div style={{ position: "relative" }}>
-            <input
-              type="number"
-              placeholder="Custom amount..."
-              value={customAmount}
-              onChange={handleCustomChange}
-              step="0.01"
-              min="0"
-              style={{
-                width: "100%",
-                height: 48,
-                borderRadius: 12,
-                border: "2px solid #ECD8A0",
-                background: "#FFFFFF",
-                padding: "0 60px 0 16px",
-                fontSize: 15,
-                fontFamily: "inherit",
-                fontWeight: 700,
-                color: "#3C3848",
-                outline: "none",
-                boxSizing: "border-box",
-              }}
-            />
-            <span
-              style={{
-                position: "absolute",
-                right: 16,
-                top: "50%",
-                transform: "translateY(-50%)",
-                fontSize: 14,
-                fontWeight: 700,
-                color: "var(--text-secondary)",
-                pointerEvents: "none",
-              }}
-            >
-              USDC
-            </span>
-          </div>
-        </div>
-
-        {/* After Deposit/Withdraw Preview */}
-        {hasAmount && (
-          <div
-            style={{
-              ...cardStyle,
-              display: "flex",
-              flexDirection: "column",
-              gap: 8,
-            }}
-          >
-            <span style={labelStyle}>
-              {tab === "deposit" ? "After Deposit" : "After Withdrawal"}
-            </span>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span
+            {/* Crypto option */}
+            <button onClick={onCrypto} style={methodCardStyle}>
+              <div
                 style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "var(--text-secondary)",
+                  width: 48,
+                  height: 48,
+                  borderRadius: 12,
+                  background: "rgba(74,144,196,0.12)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
                 }}
               >
-                New balance
-              </span>
-              <span
-                style={{
-                  fontSize: 16,
-                  fontWeight: 800,
-                  color: "var(--text-primary)",
-                }}
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="6" width="18" height="12" rx="2" fill="#4A90C4" />
+                  <circle cx="12" cy="12" r="3.5" fill="#FFFFFF" opacity="0.3" />
+                  <path d="M12 9v6M9 12h6" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 800,
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  Crypto
+                </div>
+                <div
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: "var(--text-secondary)",
+                    marginTop: 2,
+                  }}
+                >
+                  Send PYUSD from a wallet
+                </div>
+              </div>
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                style={{ marginLeft: "auto", flexShrink: 0 }}
               >
-                ${newBalance.toFixed(2)} USDC
-              </span>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: "var(--text-secondary)",
-                }}
-              >
-                Nuggets/day
-              </span>
-              <span
-                style={{
-                  fontSize: 16,
-                  fontWeight: 800,
-                  color: "var(--text-primary)",
-                }}
-              >
-                ~{newNuggets}
-              </span>
-            </div>
-          </div>
+                <path
+                  d="M7.5 5L12.5 10L7.5 15"
+                  stroke="#A0A8B8"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </>
         )}
 
-        {/* CTA Button */}
-        <button
-          disabled={!hasAmount}
-          onMouseDown={() => setPressed(true)}
-          onMouseUp={() => setPressed(false)}
-          onMouseLeave={() => setPressed(false)}
-          onTouchStart={() => setPressed(true)}
-          onTouchEnd={() => setPressed(false)}
-          style={{
-            width: "100%",
-            height: 56,
-            borderRadius: 999,
-            border: "none",
-            cursor: hasAmount ? "pointer" : "default",
-            background: hasAmount
-              ? pressed
-                ? "linear-gradient(180deg, #F09098 0%, #F09098 100%)"
-                : "linear-gradient(180deg, #F8B0B8 0%, #F09098 100%)"
-              : "#E0D8C8",
-            boxShadow: hasAmount
-              ? pressed
-                ? "0 1px 0px #C07078"
-                : "0 4px 0px #C07078"
-              : "none",
-            color: "#FFFFFF",
-            fontFamily: "inherit",
-            fontWeight: 800,
-            fontSize: 17,
-            transform:
-              pressed && hasAmount
-                ? "scale(0.97) translateY(3px)"
-                : "scale(1) translateY(0)",
-            transition: pressed
-              ? "transform 80ms ease-out, box-shadow 80ms ease-out, background 80ms ease-out"
-              : "transform 120ms ease-out, box-shadow 120ms ease-out, background 120ms ease-out",
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            opacity: hasAmount ? 1 : 0.5,
-          }}
-        >
-          {ctaLabel}
-        </button>
+        {/* Amount Section — shown for withdraw tab or after picking credit card */}
+        {showAmountSection && (
+          <>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              <span style={labelStyle}>
+                {tab === "deposit" ? "Amount to Add" : "Amount to Withdraw"}
+              </span>
 
-        {/* Footer note */}
-        <p
-          style={{
-            margin: 0,
-            fontSize: 12,
-            fontWeight: 700,
-            color: "var(--text-secondary)",
-            textAlign: "center",
-            opacity: 0.7,
-          }}
-        >
-          No fees · Funds settle on Flow blockchain
-        </p>
+              {/* Quick amounts */}
+              <div style={{ display: "flex", gap: 8 }}>
+                {QUICK_AMOUNTS.map((val) => {
+                  const selected = amount === val;
+                  return (
+                    <button
+                      key={val}
+                      onClick={() => handleQuickAmount(val)}
+                      style={{
+                        flex: 1,
+                        height: 40,
+                        borderRadius: 12,
+                        border: selected ? "2px solid #F09098" : "2px solid #ECD8A0",
+                        background: selected ? "#F09098" : "#FFFFFF",
+                        color: selected ? "#FFFFFF" : "var(--text-primary)",
+                        fontSize: 15,
+                        fontFamily: "inherit",
+                        fontWeight: 800,
+                        cursor: "pointer",
+                        transition:
+                          "background 120ms ease-out, color 120ms ease-out, border 120ms ease-out",
+                      }}
+                    >
+                      ${val}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Custom amount input */}
+              <div style={{ position: "relative" }}>
+                <input
+                  type="number"
+                  placeholder="Custom amount..."
+                  value={customAmount}
+                  onChange={handleCustomChange}
+                  step="0.01"
+                  min="0"
+                  style={{
+                    width: "100%",
+                    height: 48,
+                    borderRadius: 12,
+                    border: "2px solid #ECD8A0",
+                    background: "#FFFFFF",
+                    padding: "0 60px 0 16px",
+                    fontSize: 15,
+                    fontFamily: "inherit",
+                    fontWeight: 700,
+                    color: "#3C3848",
+                    outline: "none",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <span
+                  style={{
+                    position: "absolute",
+                    right: 16,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: "var(--text-secondary)",
+                    pointerEvents: "none",
+                  }}
+                >
+                  USDC
+                </span>
+              </div>
+            </div>
+
+            {/* After Deposit/Withdraw Preview */}
+            {hasAmount && (
+              <div
+                style={{
+                  ...cardStyle,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 8,
+                }}
+              >
+                <span style={labelStyle}>
+                  {tab === "deposit" ? "After Deposit" : "After Withdrawal"}
+                </span>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    New balance
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 800,
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    ${newBalance.toFixed(2)} USDC
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    Nuggets/day
+                  </span>
+                  <span
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 800,
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    ~{newNuggets}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* CTA Button */}
+            <button
+              disabled={!hasAmount}
+              onMouseDown={() => setPressed(true)}
+              onMouseUp={() => setPressed(false)}
+              onMouseLeave={() => setPressed(false)}
+              onTouchStart={() => setPressed(true)}
+              onTouchEnd={() => setPressed(false)}
+              style={{
+                width: "100%",
+                height: 56,
+                borderRadius: 999,
+                border: "none",
+                cursor: hasAmount ? "pointer" : "default",
+                background: hasAmount
+                  ? pressed
+                    ? "linear-gradient(180deg, #F09098 0%, #F09098 100%)"
+                    : "linear-gradient(180deg, #F8B0B8 0%, #F09098 100%)"
+                  : "#E0D8C8",
+                boxShadow: hasAmount
+                  ? pressed
+                    ? "0 1px 0px #C07078"
+                    : "0 4px 0px #C07078"
+                  : "none",
+                color: "#FFFFFF",
+                fontFamily: "inherit",
+                fontWeight: 800,
+                fontSize: 17,
+                transform:
+                  pressed && hasAmount
+                    ? "scale(0.97) translateY(3px)"
+                    : "scale(1) translateY(0)",
+                transition: pressed
+                  ? "transform 80ms ease-out, box-shadow 80ms ease-out, background 80ms ease-out"
+                  : "transform 120ms ease-out, box-shadow 120ms ease-out, background 120ms ease-out",
+                userSelect: "none",
+                WebkitUserSelect: "none",
+                opacity: hasAmount ? 1 : 0.5,
+              }}
+            >
+              {ctaLabel}
+            </button>
+
+            {/* Footer note */}
+            <p
+              style={{
+                margin: 0,
+                fontSize: 12,
+                fontWeight: 700,
+                color: "var(--text-secondary)",
+                textAlign: "center",
+                opacity: 0.7,
+              }}
+            >
+              No fees · Funds settle on Flow blockchain
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
