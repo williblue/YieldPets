@@ -355,14 +355,14 @@ export default function IsometricRoom({
             position: "absolute",
             left: FLOOR_CX,
             bottom: FLOOR_CY,
-            width: 72,
-            height: 96,
+            width: 120,
+            height: 95,
             zIndex: 5,
             cursor: "pointer",
           }}
         >
           <img
-            src="/egg.svg"
+            src="/egg_without_bush.png"
             alt="Egg"
             style={{
               width: "100%",

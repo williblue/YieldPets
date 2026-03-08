@@ -158,11 +158,19 @@ export default function Home() {
           />
         </div>
 
-        <ActionBar
-          onFeed={() => console.log("Feed tapped")}
-        />
+        {isLoggedIn && (
+          <ActionBar
+            onFeed={() => console.log("Feed tapped")}
+          />
+        )}
 
-        <BottomNavBar activeTab={activeTab} onTabChange={setActiveTab} />
+        <BottomNavBar activeTab={activeTab} onTabChange={(tab) => {
+          if (tab === "settings" && !isLoggedIn) {
+            handleEggTap();
+            return;
+          }
+          setActiveTab(tab);
+        }} />
 
         <FurnitureModal item={selectedFurniture} onClose={handleModalClose} />
 
