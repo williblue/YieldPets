@@ -37,7 +37,7 @@ export default function PetStatsModal({
   const [withdrawPressed, setWithdrawPressed] = useState(false);
 
   const growthRate = game.depositBalance > 0
-    ? ((game.nuggetsPerDay / game.depositBalance) * 100).toFixed(1)
+    ? ((game.yieldPerDay / game.depositBalance) * 100).toFixed(1)
     : "0.0";
 
   const labelStyle: React.CSSProperties = {
@@ -361,16 +361,24 @@ export default function PetStatsModal({
                   </div>
                 </div>
                 {/* Eye toggle */}
-                <button
+                <div
+                  role="button"
+                  tabIndex={0}
                   onClick={(e) => {
                     e.stopPropagation();
                     setBalanceVisible(!balanceVisible);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setBalanceVisible(!balanceVisible);
+                    }
                   }}
                   style={{
                     width: 32,
                     height: 32,
                     borderRadius: 8,
-                    border: "none",
                     background: "transparent",
                     cursor: "pointer",
                     display: "flex",
@@ -408,7 +416,7 @@ export default function PetStatsModal({
                       </>
                     )}
                   </svg>
-                </button>
+                </div>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
                   <path
                     d="M6 4L10 8L6 12"
@@ -509,7 +517,7 @@ export default function PetStatsModal({
                       marginTop: 2,
                     }}
                   >
-                    +{game.nuggetsPerDay.toFixed(2)}
+                    +{game.yieldPerDay.toFixed(2)}
                   </div>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>

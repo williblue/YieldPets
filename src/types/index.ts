@@ -2,12 +2,11 @@ export type GoldNuggets = number;
 
 export type HeartCount = 0 | 1 | 2 | 3 | 4;
 
-export type ShieldScore = number;
 
 export interface HUDState {
   goldNuggets: GoldNuggets;
   hearts: HeartCount;
-  shieldScore: ShieldScore;
+  depositBalance: number;
   loading: boolean;
 }
 

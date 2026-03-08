@@ -296,6 +296,7 @@ function EditableField({
 
 function DeveloperSettings({ onBack }: { onBack: () => void }) {
   const { address, balance, magicAuthz, refreshBalance } = useAuth();
+  const game = useGame();
 
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
@@ -675,6 +676,31 @@ function DeveloperSettings({ onBack }: { onBack: () => void }) {
           }}
         >
           {sending ? "Sending..." : "Send"}
+        </button>
+      </div>
+
+      {/* Reset game state */}
+      <div style={{ paddingTop: 16 }}>
+        <button
+          onClick={() => {
+            if (window.confirm("Reset all game data? This cannot be undone.")) {
+              game.resetState();
+            }
+          }}
+          style={{
+            width: "100%",
+            height: 48,
+            borderRadius: 999,
+            border: "1.5px solid #E85878",
+            background: "transparent",
+            color: "#E85878",
+            fontFamily: "inherit",
+            fontWeight: 800,
+            fontSize: 15,
+            cursor: "pointer",
+          }}
+        >
+          Reset Game State
         </button>
       </div>
     </>

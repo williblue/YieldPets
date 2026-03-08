@@ -14,7 +14,7 @@ import { FOOD_ITEMS, FURNITURE_ITEMS } from "@/data/shopItems";
 
 // ─── Constants ───────────────────────────────────────────────
 const STORAGE_KEY = "yieldpets_game";
-const NUGGETS_PER_USD_PER_DAY = 0.8;
+const YIELD_PER_USD_PER_DAY = 0.8;
 const HEART_DECAY_MS = 8 * 60 * 60 * 1000; // 8 hours
 const FEED_COOLDOWN_MS = 0; // no cooldown
 const FEED_BONUS = 5;
@@ -91,6 +91,7 @@ export interface GameState {
   petName: string;
   trainerName: string;
   transactions: Transaction[];
+  totalYieldEarned: number;
 }
 
 const INITIAL_STATE: GameState = {
@@ -111,6 +112,7 @@ const INITIAL_STATE: GameState = {
   petName: "Sprout",
   trainerName: "Trainer",
   transactions: [],
+  totalYieldEarned: 0,
 };
 
 // ─── Store (external, mutable, subscription-based) ───────────
@@ -171,11 +173,11 @@ function createGameStore() {
     return { hearts: newHearts };
   }
 
-  // ─── Nugget accrual ───────────────────────────────
-  function accrueNuggets(now: number): Partial<GameState> {
+  // ─── Yield accrual (adds to deposit balance) ─────
+  function accrueYield(now: number): Partial<GameState> {
     const elapsed = (now - state.lastTickAt) / 1000; // seconds
     if (elapsed <= 0) return { lastTickAt: now };
-    const rate = state.depositBalance * NUGGETS_PER_USD_PER_DAY; // per day
+    const rate = state.depositBalance * YIELD_PER_USD_PER_DAY; // per day
     const perSecond = rate / 86400;
     const mult = HEART_MULTIPLIERS[state.hearts];
     const earned = perSecond * elapsed * mult;
@@ -185,7 +187,8 @@ function createGameStore() {
       pushTx(makeTx("yield", "Yield harvested", whole));
     }
     return {
-      nuggets: state.nuggets + whole,
+      depositBalance: state.depositBalance + whole,
+      totalYieldEarned: (state.totalYieldEarned ?? 0) + whole,
       nuggetsFloat: newFloat - whole,
       lastTickAt: now,
     };
@@ -232,8 +235,8 @@ function createGameStore() {
     if (Object.keys(heartChanges).length > 0) {
       state = { ...state, ...heartChanges };
     }
-    const nuggetChanges = accrueNuggets(now);
-    set({ ...heartChanges, ...nuggetChanges });
+    const yieldChanges = accrueYield(now);
+    set({ ...heartChanges, ...yieldChanges });
   }
 
   // ─── Actions ──────────────────────────────────────
@@ -350,6 +353,10 @@ function createGameStore() {
     set({ trainerName: name.trim() });
   }
 
+  function resetState() {
+    set({ ...INITIAL_STATE, lastTickAt: Date.now() });
+  }
+
   return {
     get,
     set,
@@ -366,6 +373,7 @@ function createGameStore() {
     withdraw,
     setPetName,
     setTrainerName,
+    resetState,
   };
 }
 
@@ -440,9 +448,9 @@ export function useGame() {
     () => INITIAL_STATE
   );
 
-  const nuggetsPerDay =
+  const yieldPerDay =
     state.depositBalance *
-    NUGGETS_PER_USD_PER_DAY *
+    YIELD_PER_USD_PER_DAY *
     HEART_MULTIPLIERS[state.hearts];
 
   const feedCooldownRemaining = Math.max(0, state.feedCooldownEnd - Date.now());
@@ -450,7 +458,7 @@ export function useGame() {
 
   return {
     ...state,
-    nuggetsPerDay,
+    yieldPerDay,
     feedCooldownRemaining,
     canFeed,
     feed: ctx.store.feed,
@@ -462,6 +470,7 @@ export function useGame() {
     withdraw: ctx.store.withdraw,
     setPetName: ctx.store.setPetName,
     setTrainerName: ctx.store.setTrainerName,
+    resetState: ctx.store.resetState,
     dailyBonus: ctx.dailyBonus,
     dismissDailyBonus: ctx.dismissDailyBonus,
   };

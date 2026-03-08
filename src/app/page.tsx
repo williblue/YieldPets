@@ -49,7 +49,7 @@ export default function Home() {
   const hudState = {
     goldNuggets: displayedNuggets,
     hearts: game.hearts,
-    shieldScore: 0,
+    depositBalance: game.depositBalance,
     loading: false,
   } as const;
 
