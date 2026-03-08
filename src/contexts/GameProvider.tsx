@@ -92,6 +92,7 @@ export interface GameState {
   trainerName: string;
   transactions: Transaction[];
   totalYieldEarned: number;
+  sfxEnabled: boolean;
 }
 
 const INITIAL_STATE: GameState = {
@@ -113,6 +114,7 @@ const INITIAL_STATE: GameState = {
   trainerName: "Trainer",
   transactions: [],
   totalYieldEarned: 0,
+  sfxEnabled: true,
 };
 
 // ─── Store (external, mutable, subscription-based) ───────────
@@ -357,6 +359,10 @@ function createGameStore() {
     set({ ...INITIAL_STATE, lastTickAt: Date.now() });
   }
 
+  function toggleSfx() {
+    set({ sfxEnabled: !state.sfxEnabled });
+  }
+
   return {
     get,
     set,
@@ -374,6 +380,7 @@ function createGameStore() {
     setPetName,
     setTrainerName,
     resetState,
+    toggleSfx,
   };
 }
 
@@ -471,6 +478,7 @@ export function useGame() {
     setPetName: ctx.store.setPetName,
     setTrainerName: ctx.store.setTrainerName,
     resetState: ctx.store.resetState,
+    toggleSfx: ctx.store.toggleSfx,
     dailyBonus: ctx.dailyBonus,
     dismissDailyBonus: ctx.dismissDailyBonus,
   };

@@ -10,20 +10,6 @@ import TransactionHistory from "@/components/TransactionHistory";
 
 // ─── Shared UI helpers ──────────────────────────────────────
 
-function PencilIcon() {
-  return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path
-        d="M11.5 2.5l2 2L5 13H3v-2l8.5-8.5z"
-        stroke="#A08860"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function ChevronRight() {
   return (
     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -167,127 +153,149 @@ function SettingsRow({
   );
 }
 
-// ─── Editable name field ────────────────────────────────────
+// ─── Name edit popup ────────────────────────────────────────
 
-function EditableField({
-  label,
+function NameEditModal({
   value,
   onSave,
+  onClose,
 }: {
-  label: string;
   value: string;
   onSave: (v: string) => void;
+  onClose: () => void;
 }) {
-  const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (editing && inputRef.current) {
+    if (inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
     }
-  }, [editing]);
+  }, []);
 
   const handleSave = () => {
     if (draft.trim()) {
       onSave(draft.trim());
-    } else {
-      setDraft(value);
     }
-    setEditing(false);
+    onClose();
   };
 
   return (
     <div
+      onClick={onClose}
       style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 300,
+        background: "rgba(0,0,0,0.45)",
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
-        width: "100%",
-        minHeight: 52,
-        padding: "6px 0",
+        justifyContent: "center",
+        padding: 24,
       }}
     >
-      <div style={{ flex: 1 }}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: "100%",
+          maxWidth: 340,
+          background: "#FFF8E8",
+          borderRadius: 20,
+          border: "2px solid #ECD8A0",
+          padding: 24,
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}
+      >
         <div
           style={{
-            fontSize: 11,
-            fontWeight: 700,
-            color: "var(--text-secondary)",
-            textTransform: "uppercase",
-            letterSpacing: 0.5,
+            fontSize: 16,
+            fontWeight: 800,
+            color: "var(--text-primary)",
+            textAlign: "center",
           }}
         >
-          {label}:
+          Change pet name
         </div>
-        {editing ? (
+        <div style={{ position: "relative" }}>
           <input
             ref={inputRef}
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
-            onBlur={handleSave}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSave();
-              if (e.key === "Escape") {
-                setDraft(value);
-                setEditing(false);
-              }
+              if (e.key === "Escape") onClose();
             }}
             maxLength={20}
             style={{
               width: "100%",
-              fontSize: 16,
-              fontWeight: 800,
-              color: "var(--text-primary)",
+              height: 48,
+              borderRadius: 999,
+              border: "2px solid #ECD8A0",
+              background: "#FFFFFF",
+              padding: "0 40px 0 20px",
+              fontSize: 15,
               fontFamily: "inherit",
-              border: "none",
-              borderBottom: "2px solid #ECD8A0",
-              background: "transparent",
+              fontWeight: 700,
+              color: "var(--text-primary)",
               outline: "none",
-              padding: "2px 0",
-              marginTop: 2,
+              boxSizing: "border-box",
             }}
           />
-        ) : (
-          <div
-            style={{
-              fontSize: 16,
-              fontWeight: 800,
-              color: "var(--text-primary)",
-              marginTop: 2,
-            }}
-          >
-            {value}
-          </div>
-        )}
+          {draft.length > 0 && (
+            <button
+              onClick={() => {
+                setDraft("");
+                inputRef.current?.focus();
+              }}
+              style={{
+                position: "absolute",
+                right: 12,
+                top: "50%",
+                transform: "translateY(-50%)",
+                width: 20,
+                height: 20,
+                borderRadius: 999,
+                border: "none",
+                background: "#D0CCC0",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 0,
+              }}
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                <path d="M2 2l6 6M8 2l-6 6" stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            </button>
+          )}
+        </div>
+        <button
+          onClick={handleSave}
+          disabled={!draft.trim()}
+          style={{
+            width: "100%",
+            height: 48,
+            borderRadius: 999,
+            border: "none",
+            cursor: draft.trim() ? "pointer" : "default",
+            background: draft.trim()
+              ? "linear-gradient(180deg, #6DC95A 0%, #5BAF48 100%)"
+              : "#E0D8C8",
+            boxShadow: draft.trim() ? "0 3px 0px #3D8A30" : "none",
+            color: "#FFFFFF",
+            fontFamily: "inherit",
+            fontWeight: 800,
+            fontSize: 16,
+            opacity: draft.trim() ? 1 : 0.6,
+          }}
+        >
+          Save
+        </button>
       </div>
-      <button
-        onClick={() => {
-          if (editing) {
-            handleSave();
-          } else {
-            setDraft(value);
-            setEditing(true);
-          }
-        }}
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: 999,
-          border: "2px solid #ECD8A0",
-          background: "#FFF8E8",
-          cursor: "pointer",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 0,
-          flexShrink: 0,
-          marginLeft: 12,
-        }}
-      >
-        <PencilIcon />
-      </button>
     </div>
   );
 }
@@ -715,7 +723,7 @@ export default function WalletScreen() {
 
   const [view, setView] = useState<"main" | "developer" | "transactions">("main");
   const [bgMusic, setBgMusic] = useState(true);
-  const [sfx, setSfx] = useState(false);
+  const [showNameEdit, setShowNameEdit] = useState(false);
 
   return (
     <div
@@ -770,24 +778,12 @@ export default function WalletScreen() {
               </span>
             </div>
 
-            {/* Pet Name + Trainer Name */}
+            {/* Pet Name */}
             <div style={cardStyle}>
-              <EditableField
+              <SettingsRow
                 label="Pet Name"
-                value={game.petName}
-                onSave={game.setPetName}
-              />
-              <div
-                style={{
-                  height: 1,
-                  background: "#F0E8D8",
-                  margin: "4px 0",
-                }}
-              />
-              <EditableField
-                label="Trainer Name"
-                value={game.trainerName}
-                onSave={game.setTrainerName}
+                sublabel={game.petName}
+                onClick={() => setShowNameEdit(true)}
               />
             </div>
 
@@ -838,7 +834,7 @@ export default function WalletScreen() {
                   >
                     Sound Effects
                   </span>
-                  <Toggle on={sfx} onToggle={() => setSfx(!sfx)} />
+                  <Toggle on={game.sfxEnabled ?? true} onToggle={game.toggleSfx} />
                 </div>
               </div>
             </div>
@@ -909,6 +905,14 @@ export default function WalletScreen() {
           </>
         )}
       </div>
+
+      {showNameEdit && (
+        <NameEditModal
+          value={game.petName}
+          onSave={game.setPetName}
+          onClose={() => setShowNameEdit(false)}
+        />
+      )}
     </div>
   );
 }

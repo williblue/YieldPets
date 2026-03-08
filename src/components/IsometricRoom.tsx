@@ -14,6 +14,7 @@ interface IsometricRoomProps {
   onPetMenuAction?: (action: PetAction) => void;
   visualNuggets?: VisualNugget[];
   onCollectNugget?: (id: string) => void;
+  sfxEnabled?: boolean;
 }
 
 /* ── Walkable floor (isometric diamond) ────────────────────────── */
@@ -80,6 +81,7 @@ export default function IsometricRoom({
   onPetMenuAction,
   visualNuggets = [],
   onCollectNugget,
+  sfxEnabled = true,
 }: IsometricRoomProps) {
   const [failedFurniture, setFailedFurniture] = useState<Set<string>>(
     new Set(),
@@ -177,14 +179,14 @@ export default function IsometricRoom({
     }
     if (idleRef.current) clearTimeout(idleRef.current);
 
-    if (popSfx.current) {
+    if (sfxEnabled && popSfx.current) {
       popSfx.current.currentTime = 0;
       popSfx.current.play();
     }
 
     if (walkLayerRef.current) walkLayerRef.current.style.visibility = "hidden";
     setClicking(true);
-  }, [clicking, walking, showRadial]);
+  }, [clicking, walking, showRadial, sfxEnabled]);
 
   /* ── CSS animation end: show radial menu ──────────────────────── */
   const handleClickEnd = useCallback(() => {
@@ -279,7 +281,7 @@ export default function IsometricRoom({
   const handleEggTap = useCallback(() => {
     if (eggTapped) return;
     setEggTapped(true);
-    if (popSfx.current) {
+    if (sfxEnabled && popSfx.current) {
       popSfx.current.currentTime = 0;
       popSfx.current.play();
     }
@@ -287,7 +289,7 @@ export default function IsometricRoom({
       onEggTap?.();
       setEggTapped(false);
     }, 400);
-  }, [eggTapped, onEggTap]);
+  }, [eggTapped, onEggTap, sfxEnabled]);
 
   return (
     <div

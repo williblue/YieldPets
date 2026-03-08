@@ -155,6 +155,7 @@ export default function Home() {
             onPetMenuAction={handlePetMenuAction}
             visualNuggets={visualNuggets}
             onCollectNugget={collectNugget}
+            sfxEnabled={game.sfxEnabled ?? true}
           />
         </div>
 
