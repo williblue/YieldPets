@@ -91,13 +91,7 @@ export default function TransactionHistory({ onBack }: TransactionHistoryProps) 
   const [filter, setFilter] = useState<FilterTab>("all");
   const transactions = game.transactions ?? [];
 
-  const totalYield = useMemo(
-    () =>
-      transactions
-        .filter((tx) => tx.type === "yield")
-        .reduce((sum, tx) => sum + tx.amount, 0),
-    [transactions]
-  );
+  const totalYield = game.totalYieldEarned ?? 0;
 
   const nuggetsEarned = useMemo(
     () =>
