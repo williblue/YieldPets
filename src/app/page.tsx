@@ -227,7 +227,7 @@ export default function Home() {
           <DepositScreen
             onClose={() => setDepositView(null)}
             onCrypto={() => setDepositView("crypto")}
-            petName={roomState.pet.petName}
+            petName={game.petName}
           />
         )}
         {/* Mount crypto screen whenever deposit flow is open so QR codes preload */}
@@ -243,7 +243,7 @@ export default function Home() {
             onClose={() => setShowStats(false)}
             onDeposit={() => { setShowStats(false); setDepositView("deposit"); }}
             onWithdraw={() => { setShowStats(false); setDepositView("deposit"); }}
-            petName={roomState.pet.petName}
+            petName={game.petName}
             petImageUrl={roomState.pet.imageUrl}
           />
         )}

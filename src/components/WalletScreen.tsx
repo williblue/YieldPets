@@ -1,14 +1,300 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import * as fcl from "@onflow/fcl";
 import * as t from "@onflow/types";
 import { useAuth } from "@/contexts/AuthProvider";
+import { useGame } from "@/contexts/GameProvider";
 import { TRANSFER_FLOW, GET_COA_ADDRESS, CREATE_COA } from "@/lib/flow";
 
-export default function WalletScreen() {
-  const { address, balance, email, logout, refreshBalance, magicAuthz } =
-    useAuth();
+// ─── Shared UI helpers ──────────────────────────────────────
+
+function PencilIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path
+        d="M11.5 2.5l2 2L5 13H3v-2l8.5-8.5z"
+        stroke="#A08860"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ChevronRight() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path
+        d="M6 4l4 4-4 4"
+        stroke="var(--text-secondary)"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function BackArrow() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+      <path
+        d="M12.5 15L7.5 10L12.5 5"
+        stroke="#7878A0"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+const sectionLabel: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 700,
+  color: "var(--text-secondary)",
+  textTransform: "uppercase",
+  letterSpacing: 1,
+  marginBottom: 8,
+};
+
+const cardStyle: React.CSSProperties = {
+  background: "#FFFFFF",
+  borderRadius: 16,
+  padding: 16,
+  boxShadow: "var(--shadow-card)",
+};
+
+// ─── Toggle component ───────────────────────────────────────
+
+function Toggle({
+  on,
+  onToggle,
+}: {
+  on: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      style={{
+        width: 48,
+        height: 26,
+        borderRadius: 13,
+        border: "none",
+        background: on ? "#5BAF48" : "#D0D0D8",
+        position: "relative",
+        cursor: "pointer",
+        padding: 0,
+        flexShrink: 0,
+        transition: "background 150ms ease-out",
+      }}
+    >
+      <div
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: 11,
+          background: "#FFFFFF",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+          position: "absolute",
+          top: 2,
+          left: on ? 24 : 2,
+          transition: "left 150ms ease-out",
+        }}
+      />
+    </button>
+  );
+}
+
+// ─── Row item ───────────────────────────────────────────────
+
+function SettingsRow({
+  label,
+  sublabel,
+  onClick,
+  right,
+}: {
+  label: string;
+  sublabel?: string;
+  onClick?: () => void;
+  right?: React.ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        minHeight: 48,
+        padding: "10px 0",
+        background: "transparent",
+        border: "none",
+        cursor: onClick ? "pointer" : "default",
+        fontFamily: "inherit",
+      }}
+    >
+      <div style={{ textAlign: "left" }}>
+        <div
+          style={{
+            fontSize: 15,
+            fontWeight: 700,
+            color: "var(--text-primary)",
+          }}
+        >
+          {label}
+        </div>
+        {sublabel && (
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: "var(--text-secondary)",
+              marginTop: 2,
+            }}
+          >
+            {sublabel}
+          </div>
+        )}
+      </div>
+      {right ?? <ChevronRight />}
+    </button>
+  );
+}
+
+// ─── Editable name field ────────────────────────────────────
+
+function EditableField({
+  label,
+  value,
+  onSave,
+}: {
+  label: string;
+  value: string;
+  onSave: (v: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
+
+  const handleSave = () => {
+    if (draft.trim()) {
+      onSave(draft.trim());
+    } else {
+      setDraft(value);
+    }
+    setEditing(false);
+  };
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        width: "100%",
+        minHeight: 52,
+        padding: "6px 0",
+      }}
+    >
+      <div style={{ flex: 1 }}>
+        <div
+          style={{
+            fontSize: 11,
+            fontWeight: 700,
+            color: "var(--text-secondary)",
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}
+        >
+          {label}:
+        </div>
+        {editing ? (
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onBlur={handleSave}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSave();
+              if (e.key === "Escape") {
+                setDraft(value);
+                setEditing(false);
+              }
+            }}
+            maxLength={20}
+            style={{
+              width: "100%",
+              fontSize: 16,
+              fontWeight: 800,
+              color: "var(--text-primary)",
+              fontFamily: "inherit",
+              border: "none",
+              borderBottom: "2px solid #ECD8A0",
+              background: "transparent",
+              outline: "none",
+              padding: "2px 0",
+              marginTop: 2,
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              fontSize: 16,
+              fontWeight: 800,
+              color: "var(--text-primary)",
+              marginTop: 2,
+            }}
+          >
+            {value}
+          </div>
+        )}
+      </div>
+      <button
+        onClick={() => {
+          if (editing) {
+            handleSave();
+          } else {
+            setDraft(value);
+            setEditing(true);
+          }
+        }}
+        style={{
+          width: 36,
+          height: 36,
+          borderRadius: 999,
+          border: "2px solid #ECD8A0",
+          background: "#FFF8E8",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 0,
+          flexShrink: 0,
+          marginLeft: 12,
+        }}
+      >
+        <PencilIcon />
+      </button>
+    </div>
+  );
+}
+
+// ─── Developer Settings sub-view ────────────────────────────
+
+function DeveloperSettings({ onBack }: { onBack: () => void }) {
+  const { address, balance, magicAuthz, refreshBalance } = useAuth();
 
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
@@ -24,7 +310,7 @@ export default function WalletScreen() {
 
   const truncatedAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
-    : "—";
+    : "\u2014";
 
   const copyAddress = useCallback(async () => {
     if (!address) return;
@@ -37,14 +323,12 @@ export default function WalletScreen() {
     }
   }, [address]);
 
-  // Query COA address on mount
   useEffect(() => {
     if (!address) {
       setCoaLoading(false);
       return;
     }
     let cancelled = false;
-
     const fetchCoa = async () => {
       setCoaLoading(true);
       try {
@@ -52,20 +336,15 @@ export default function WalletScreen() {
           cadence: GET_COA_ADDRESS,
           args: (arg: typeof fcl.arg) => [arg(address, t.Address)],
         });
-        if (!cancelled) {
-          setCoaAddress(result ?? null);
-        }
+        if (!cancelled) setCoaAddress(result ?? null);
       } catch {
         if (!cancelled) setCoaAddress(null);
       } finally {
         if (!cancelled) setCoaLoading(false);
       }
     };
-
     fetchCoa();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [address]);
 
   const handleCreateCoa = useCallback(async () => {
@@ -83,8 +362,6 @@ export default function WalletScreen() {
       setCoaStatus("Waiting for confirmation...");
       await fcl.tx(txId).onceSealed();
       setCoaStatus(null);
-
-      // Re-query the COA address
       if (address) {
         const result = await fcl.query({
           cadence: GET_COA_ADDRESS,
@@ -117,21 +394,17 @@ export default function WalletScreen() {
 
   const handleTransfer = useCallback(async () => {
     if (!magicAuthz || !recipient || !amount || sending) return;
-
     const parsedAmount = parseFloat(amount);
     if (isNaN(parsedAmount) || parsedAmount <= 0) {
       setTxStatus("Invalid amount");
       return;
     }
-
     if (!recipient.startsWith("0x") || recipient.length !== 18) {
       setTxStatus("Invalid Flow address");
       return;
     }
-
     setSending(true);
     setTxStatus("Signing transaction...");
-
     try {
       const txId = await fcl.mutate({
         cadence: TRANSFER_FLOW,
@@ -144,7 +417,6 @@ export default function WalletScreen() {
         payer: magicAuthz,
         proposer: magicAuthz,
       });
-
       setTxStatus("Waiting for confirmation...");
       await fcl.tx(txId).onceSealed();
       setTxStatus("Transfer complete!");
@@ -163,6 +435,262 @@ export default function WalletScreen() {
     recipient.length > 0 && amount.length > 0 && !sending && magicAuthz;
 
   return (
+    <>
+      {/* Header with back */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 4,
+        }}
+      >
+        <button
+          onClick={onBack}
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: 999,
+            border: "2px solid #ECD8A0",
+            background: "#FFF8E8",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 0,
+          }}
+        >
+          <BackArrow />
+        </button>
+        <span
+          style={{
+            fontSize: 18,
+            fontWeight: 900,
+            color: "var(--text-primary)",
+            textTransform: "uppercase",
+            letterSpacing: 1,
+          }}
+        >
+          Developer
+        </span>
+      </div>
+
+      {/* Flow Address */}
+      <div style={cardStyle}>
+        <span style={sectionLabel}>Flow Address</span>
+        <button
+          onClick={copyAddress}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: 16,
+            fontWeight: 800,
+            color: "var(--text-primary)",
+            fontFamily: "inherit",
+            padding: "4px 0",
+            display: "block",
+          }}
+        >
+          {copied ? "Copied!" : truncatedAddress}
+        </button>
+      </div>
+
+      {/* COA Address */}
+      <div style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: 8 }}>
+        <span style={sectionLabel}>COA Address</span>
+        {coaLoading ? (
+          <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)" }}>
+            Loading...
+          </span>
+        ) : coaAddress ? (
+          <button
+            onClick={copyCoaAddress}
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              fontSize: 16,
+              fontWeight: 800,
+              color: "var(--text-primary)",
+              fontFamily: "inherit",
+              padding: "4px 0",
+              textAlign: "left",
+            }}
+          >
+            {coaCopied ? "Copied!" : truncatedCoaAddress}
+          </button>
+        ) : (
+          <>
+            {coaStatus && (
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: coaStatus.includes("failed") ? "#E85878" : "var(--text-secondary)",
+                }}
+              >
+                {coaStatus}
+              </p>
+            )}
+            <button
+              onClick={handleCreateCoa}
+              disabled={coaCreating || !magicAuthz}
+              style={{
+                height: 40,
+                paddingLeft: 20,
+                paddingRight: 20,
+                borderRadius: 999,
+                border: "none",
+                cursor: coaCreating || !magicAuthz ? "default" : "pointer",
+                background:
+                  coaCreating || !magicAuthz
+                    ? "#E0D8C8"
+                    : "linear-gradient(180deg, #F8B0B8 0%, #F09098 100%)",
+                boxShadow: coaCreating || !magicAuthz ? "none" : "0 3px 0px #C07078",
+                color: "#FFFFFF",
+                fontFamily: "inherit",
+                fontWeight: 800,
+                fontSize: 14,
+                opacity: coaCreating || !magicAuthz ? 0.6 : 1,
+              }}
+            >
+              {coaCreating ? "Setting up..." : "Set Up COA"}
+            </button>
+          </>
+        )}
+      </div>
+
+      {/* FLOW Balance */}
+      <div style={{ ...cardStyle, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+        <span style={sectionLabel}>FLOW Balance</span>
+        <span style={{ fontSize: 32, fontWeight: 900, color: "var(--text-primary)" }}>
+          {balance !== null ? balance.toFixed(4) : "\u2014"}
+        </span>
+        <button
+          onClick={() => refreshBalance()}
+          style={{
+            background: "none",
+            border: "none",
+            cursor: "pointer",
+            fontSize: 13,
+            fontWeight: 700,
+            color: "var(--shield-blue)",
+            fontFamily: "inherit",
+            padding: "4px 8px",
+          }}
+        >
+          Refresh
+        </button>
+      </div>
+
+      {/* Send FLOW */}
+      <div style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: 12 }}>
+        <span style={{ fontSize: 14, fontWeight: 800, color: "var(--text-primary)" }}>
+          Send FLOW
+        </span>
+        <input
+          type="text"
+          placeholder="Recipient address (0x...)"
+          value={recipient}
+          onChange={(e) => setRecipient(e.target.value)}
+          disabled={sending}
+          style={{
+            width: "100%",
+            height: 48,
+            borderRadius: 12,
+            border: "2px solid #ECD8A0",
+            background: "#FFFFFF",
+            padding: "0 16px",
+            fontSize: 14,
+            fontFamily: "inherit",
+            fontWeight: 700,
+            color: "#3C3848",
+            outline: "none",
+            opacity: sending ? 0.6 : 1,
+            boxSizing: "border-box",
+          }}
+        />
+        <input
+          type="number"
+          placeholder="Amount"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          disabled={sending}
+          step="0.0001"
+          min="0"
+          style={{
+            width: "100%",
+            height: 48,
+            borderRadius: 12,
+            border: "2px solid #ECD8A0",
+            background: "#FFFFFF",
+            padding: "0 16px",
+            fontSize: 14,
+            fontFamily: "inherit",
+            fontWeight: 700,
+            color: "#3C3848",
+            outline: "none",
+            opacity: sending ? 0.6 : 1,
+            boxSizing: "border-box",
+          }}
+        />
+        {txStatus && (
+          <p
+            style={{
+              margin: 0,
+              fontSize: 13,
+              fontWeight: 700,
+              color: txStatus.includes("complete")
+                ? "#4A90C4"
+                : txStatus.includes("failed") || txStatus.includes("Invalid")
+                  ? "#E85878"
+                  : "var(--text-secondary)",
+              textAlign: "center",
+            }}
+          >
+            {txStatus}
+          </p>
+        )}
+        <button
+          onClick={handleTransfer}
+          disabled={!canSend}
+          style={{
+            width: "100%",
+            height: 48,
+            borderRadius: 999,
+            border: "none",
+            cursor: canSend ? "pointer" : "default",
+            background: canSend
+              ? "linear-gradient(180deg, #F8B0B8 0%, #F09098 100%)"
+              : "#E0D8C8",
+            boxShadow: canSend ? "0 3px 0px #C07078" : "none",
+            color: "#FFFFFF",
+            fontFamily: "inherit",
+            fontWeight: 800,
+            fontSize: 16,
+            opacity: canSend ? 1 : 0.6,
+          }}
+        >
+          {sending ? "Sending..." : "Send"}
+        </button>
+      </div>
+    </>
+  );
+}
+
+// ─── Main Settings Screen ───────────────────────────────────
+
+export default function WalletScreen() {
+  const { email, logout } = useAuth();
+  const game = useGame();
+
+  const [view, setView] = useState<"main" | "developer">("main");
+  const [bgMusic, setBgMusic] = useState(true);
+  const [sfx, setSfx] = useState(false);
+
+  return (
     <div
       style={{
         position: "absolute",
@@ -177,381 +705,177 @@ export default function WalletScreen() {
         overflow: "hidden",
       }}
     >
-      {/* Scrollable content area */}
       <div
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "24px 24px 24px",
+          padding: "24px 20px 24px",
           display: "flex",
           flexDirection: "column",
-          gap: 20,
+          gap: 16,
           WebkitOverflowScrolling: "touch",
         }}
       >
-        {/* Header */}
-        <h2
-          style={{
-            margin: 0,
-            fontSize: 24,
-            fontWeight: 900,
-            color: "var(--text-primary)",
-            textAlign: "center",
-          }}
-        >
-          Wallet
-        </h2>
-
-        {/* Email */}
-        {email && (
-          <p
-            style={{
-              margin: 0,
-              fontSize: 14,
-              fontWeight: 700,
-              color: "var(--text-secondary)",
-              textAlign: "center",
-            }}
-          >
-            {email}
-          </p>
-        )}
-
-        {/* Address card */}
-        <div
-          style={{
-            background: "#FFFFFF",
-            borderRadius: 16,
-            padding: 16,
-            boxShadow: "var(--shadow-card)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "var(--text-secondary)",
-              textTransform: "uppercase",
-              letterSpacing: 1,
-            }}
-          >
-            Flow Address
-          </span>
-          <button
-            onClick={copyAddress}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: 16,
-              fontWeight: 800,
-              color: "var(--text-primary)",
-              fontFamily: "inherit",
-              padding: "4px 8px",
-              borderRadius: 8,
-            }}
-          >
-            {copied ? "Copied!" : truncatedAddress}
-          </button>
-        </div>
-
-        {/* COA Address card */}
-        <div
-          style={{
-            background: "#FFFFFF",
-            borderRadius: 16,
-            padding: 16,
-            boxShadow: "var(--shadow-card)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 8,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "var(--text-secondary)",
-              textTransform: "uppercase",
-              letterSpacing: 1,
-            }}
-          >
-            COA Address
-          </span>
-
-          {coaLoading ? (
-            <span
+        {view === "developer" ? (
+          <DeveloperSettings onBack={() => setView("main")} />
+        ) : (
+          <>
+            {/* Header */}
+            <div
               style={{
-                fontSize: 14,
-                fontWeight: 700,
-                color: "var(--text-secondary)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
               }}
             >
-              Loading...
-            </span>
-          ) : coaAddress ? (
-            <button
-              onClick={copyCoaAddress}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontSize: 16,
-                fontWeight: 800,
-                color: "var(--text-primary)",
-                fontFamily: "inherit",
-                padding: "4px 8px",
-                borderRadius: 8,
-              }}
-            >
-              {coaCopied ? "Copied!" : truncatedCoaAddress}
-            </button>
-          ) : (
-            <>
-              {coaStatus && (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: coaStatus.includes("failed")
-                      ? "#E85878"
-                      : "var(--text-secondary)",
-                    textAlign: "center",
-                  }}
-                >
-                  {coaStatus}
-                </p>
-              )}
-              <button
-                onClick={handleCreateCoa}
-                disabled={coaCreating || !magicAuthz}
+              <span
                 style={{
-                  height: 40,
-                  paddingLeft: 20,
-                  paddingRight: 20,
-                  borderRadius: 999,
-                  border: "none",
-                  cursor:
-                    coaCreating || !magicAuthz ? "default" : "pointer",
-                  background:
-                    coaCreating || !magicAuthz
-                      ? "#E0D8C8"
-                      : "linear-gradient(180deg, #F8B0B8 0%, #F09098 100%)",
-                  boxShadow:
-                    coaCreating || !magicAuthz
-                      ? "none"
-                      : "0 3px 0px #C07078",
-                  color: "#FFFFFF",
-                  fontFamily: "inherit",
-                  fontWeight: 800,
-                  fontSize: 14,
-                  opacity: coaCreating || !magicAuthz ? 0.6 : 1,
-                  transition:
-                    "transform 80ms ease-out, box-shadow 80ms ease-out, background 80ms ease-out",
-                  userSelect: "none",
-                  WebkitUserSelect: "none",
+                  fontSize: 18,
+                  fontWeight: 900,
+                  color: "var(--text-primary)",
+                  textTransform: "uppercase",
+                  letterSpacing: 1,
                 }}
               >
-                {coaCreating ? "Setting up..." : "Set Up COA"}
-              </button>
-            </>
-          )}
-        </div>
+                Settings
+              </span>
+            </div>
 
-        {/* Balance card */}
-        <div
-          style={{
-            background: "#FFFFFF",
-            borderRadius: 16,
-            padding: 20,
-            boxShadow: "var(--shadow-card)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: 4,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "var(--text-secondary)",
-              textTransform: "uppercase",
-              letterSpacing: 1,
-            }}
-          >
-            FLOW Balance
-          </span>
-          <span
-            style={{
-              fontSize: 32,
-              fontWeight: 900,
-              color: "var(--text-primary)",
-            }}
-          >
-            {balance !== null ? balance.toFixed(4) : "—"}
-          </span>
-          <button
-            onClick={() => refreshBalance()}
-            style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              fontSize: 13,
-              fontWeight: 700,
-              color: "var(--shield-blue)",
-              fontFamily: "inherit",
-              padding: "4px 8px",
-            }}
-          >
-            Refresh
-          </button>
-        </div>
+            {/* Pet Name + Trainer Name */}
+            <div style={cardStyle}>
+              <EditableField
+                label="Pet Name"
+                value={game.petName}
+                onSave={game.setPetName}
+              />
+              <div
+                style={{
+                  height: 1,
+                  background: "#F0E8D8",
+                  margin: "4px 0",
+                }}
+              />
+              <EditableField
+                label="Trainer Name"
+                value={game.trainerName}
+                onSave={game.setTrainerName}
+              />
+            </div>
 
-        {/* Transfer section */}
-        <div
-          style={{
-            background: "#FFFFFF",
-            borderRadius: 16,
-            padding: 20,
-            boxShadow: "var(--shadow-card)",
-            display: "flex",
-            flexDirection: "column",
-            gap: 12,
-          }}
-        >
-          <span
-            style={{
-              fontSize: 14,
-              fontWeight: 800,
-              color: "var(--text-primary)",
-            }}
-          >
-            Send FLOW
-          </span>
+            {/* Sound */}
+            <div>
+              <span style={sectionLabel}>Sound</span>
+              <div style={cardStyle}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    minHeight: 44,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    Background Music
+                  </span>
+                  <Toggle on={bgMusic} onToggle={() => setBgMusic(!bgMusic)} />
+                </div>
+                <div
+                  style={{
+                    height: 1,
+                    background: "#F0E8D8",
+                    margin: "4px 0",
+                  }}
+                />
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    minHeight: 44,
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 700,
+                      color: "var(--text-primary)",
+                    }}
+                  >
+                    Sound Effects
+                  </span>
+                  <Toggle on={sfx} onToggle={() => setSfx(!sfx)} />
+                </div>
+              </div>
+            </div>
 
-          <input
-            type="text"
-            placeholder="Recipient address (0x...)"
-            value={recipient}
-            onChange={(e) => setRecipient(e.target.value)}
-            disabled={sending}
-            style={{
-              width: "100%",
-              height: 48,
-              borderRadius: 12,
-              border: "2px solid #ECD8A0",
-              background: "#FFFFFF",
-              padding: "0 16px",
-              fontSize: 14,
-              fontFamily: "inherit",
-              fontWeight: 700,
-              color: "#3C3848",
-              outline: "none",
-              opacity: sending ? 0.6 : 1,
-              boxSizing: "border-box",
-            }}
-          />
+            {/* Savings */}
+            <div>
+              <span style={sectionLabel}>Savings</span>
+              <div style={cardStyle}>
+                <SettingsRow label="Transaction History" />
+              </div>
+            </div>
 
-          <input
-            type="number"
-            placeholder="Amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            disabled={sending}
-            step="0.0001"
-            min="0"
-            style={{
-              width: "100%",
-              height: 48,
-              borderRadius: 12,
-              border: "2px solid #ECD8A0",
-              background: "#FFFFFF",
-              padding: "0 16px",
-              fontSize: 14,
-              fontFamily: "inherit",
-              fontWeight: 700,
-              color: "#3C3848",
-              outline: "none",
-              opacity: sending ? 0.6 : 1,
-              boxSizing: "border-box",
-            }}
-          />
+            {/* Account */}
+            <div>
+              <span style={sectionLabel}>Account</span>
+              <div style={cardStyle}>
+                <SettingsRow
+                  label="Email"
+                  sublabel={email || undefined}
+                />
+              </div>
+            </div>
 
-          {txStatus && (
-            <p
+            {/* Info */}
+            <div>
+              <span style={sectionLabel}>Info</span>
+              <div style={cardStyle}>
+                <SettingsRow label="Credits info" />
+                <div
+                  style={{
+                    height: 1,
+                    background: "#F0E8D8",
+                    margin: "0",
+                  }}
+                />
+                <SettingsRow
+                  label="Developer Settings"
+                  onClick={() => setView("developer")}
+                />
+              </div>
+            </div>
+
+            {/* Sign Out */}
+            <button
+              onClick={logout}
               style={{
-                margin: 0,
-                fontSize: 13,
-                fontWeight: 700,
-                color: txStatus.includes("complete")
-                  ? "#4A90C4"
-                  : txStatus.includes("failed") || txStatus.includes("Invalid")
-                    ? "#E85878"
-                    : "var(--text-secondary)",
-                textAlign: "center",
+                width: "100%",
+                height: 48,
+                borderRadius: 999,
+                border: "2px solid #ECD8A0",
+                cursor: "pointer",
+                background: "transparent",
+                color: "var(--text-secondary)",
+                fontFamily: "inherit",
+                fontWeight: 800,
+                fontSize: 16,
+                transition: "background 120ms ease-out",
+                userSelect: "none",
+                WebkitUserSelect: "none",
+                marginBottom: 8,
               }}
             >
-              {txStatus}
-            </p>
-          )}
-
-          <button
-            onClick={handleTransfer}
-            disabled={!canSend}
-            style={{
-              width: "100%",
-              height: 48,
-              borderRadius: 999,
-              border: "none",
-              cursor: canSend ? "pointer" : "default",
-              background: canSend
-                ? "linear-gradient(180deg, #F8B0B8 0%, #F09098 100%)"
-                : "#E0D8C8",
-              boxShadow: canSend ? "0 3px 0px #C07078" : "none",
-              color: "#FFFFFF",
-              fontFamily: "inherit",
-              fontWeight: 800,
-              fontSize: 16,
-              opacity: canSend ? 1 : 0.6,
-              transition:
-                "transform 80ms ease-out, box-shadow 80ms ease-out, background 80ms ease-out",
-              userSelect: "none",
-              WebkitUserSelect: "none",
-            }}
-          >
-            {sending ? "Sending..." : "Send"}
-          </button>
-        </div>
-
-        {/* Logout */}
-        <button
-          onClick={logout}
-          style={{
-            width: "100%",
-            height: 48,
-            borderRadius: 999,
-            border: "2px solid #ECD8A0",
-            cursor: "pointer",
-            background: "transparent",
-            color: "var(--text-secondary)",
-            fontFamily: "inherit",
-            fontWeight: 800,
-            fontSize: 16,
-            transition: "background 120ms ease-out",
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            marginBottom: 8,
-          }}
-        >
-          Sign Out
-        </button>
+              Sign Out
+            </button>
+          </>
+        )}
       </div>
     </div>
   );

@@ -57,6 +57,8 @@ export interface GameState {
   foodInventory: Record<string, number>;
   ownedFurniture: string[];
   placedFurniture: string[];
+  petName: string;
+  trainerName: string;
 }
 
 const INITIAL_STATE: GameState = {
@@ -74,6 +76,8 @@ const INITIAL_STATE: GameState = {
   foodInventory: {},
   ownedFurniture: [],
   placedFurniture: [],
+  petName: "Sprout",
+  trainerName: "Trainer",
 };
 
 // ─── Store (external, mutable, subscription-based) ───────────
@@ -278,6 +282,16 @@ function createGameStore() {
     set({ depositBalance: Math.max(0, state.depositBalance - amount) });
   }
 
+  function setPetName(name: string) {
+    if (!name.trim()) return;
+    set({ petName: name.trim() });
+  }
+
+  function setTrainerName(name: string) {
+    if (!name.trim()) return;
+    set({ trainerName: name.trim() });
+  }
+
   return {
     get,
     set,
@@ -292,6 +306,8 @@ function createGameStore() {
     removeFurniture,
     deposit,
     withdraw,
+    setPetName,
+    setTrainerName,
   };
 }
 
@@ -386,6 +402,8 @@ export function useGame() {
     removeFurniture: ctx.store.removeFurniture,
     deposit: ctx.store.deposit,
     withdraw: ctx.store.withdraw,
+    setPetName: ctx.store.setPetName,
+    setTrainerName: ctx.store.setTrainerName,
     dailyBonus: ctx.dailyBonus,
     dismissDailyBonus: ctx.dismissDailyBonus,
   };
