@@ -16,7 +16,7 @@ import { FOOD_ITEMS, FURNITURE_ITEMS } from "@/data/shopItems";
 const STORAGE_KEY = "yieldpets_game";
 const NUGGETS_PER_USD_PER_DAY = 0.8;
 const HEART_DECAY_MS = 8 * 60 * 60 * 1000; // 8 hours
-const FEED_COOLDOWN_MS = 1 * 60 * 60 * 1000; // 1 hour
+const FEED_COOLDOWN_MS = 0; // no cooldown
 const FEED_BONUS = 5;
 const TICK_INTERVAL_MS = 10_000; // 10 seconds
 const HEART_MULTIPLIERS: Record<HeartCount, number> = {
@@ -64,7 +64,7 @@ const INITIAL_STATE: GameState = {
   nuggetsFloat: 0,
   lastTickAt: Date.now(),
   depositBalance: 50,
-  hearts: 4,
+  hearts: 0,
   lastFedAt: Date.now(),
   feedCooldownEnd: 0,
   currentStreak: 1,

@@ -356,7 +356,7 @@ export default function PetStatsModal({
                   >
                     {balanceVisible ? game.depositBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "****"}{" "}
                     <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)" }}>
-                      (PYUSD0)
+                      (USD)
                     </span>
                   </div>
                 </div>
