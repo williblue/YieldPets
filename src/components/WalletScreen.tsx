@@ -6,6 +6,7 @@ import * as t from "@onflow/types";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useGame } from "@/contexts/GameProvider";
 import { TRANSFER_FLOW, GET_COA_ADDRESS, CREATE_COA } from "@/lib/flow";
+import TransactionHistory from "@/components/TransactionHistory";
 
 // ─── Shared UI helpers ──────────────────────────────────────
 
@@ -686,7 +687,7 @@ export default function WalletScreen() {
   const { email, logout } = useAuth();
   const game = useGame();
 
-  const [view, setView] = useState<"main" | "developer">("main");
+  const [view, setView] = useState<"main" | "developer" | "transactions">("main");
   const [bgMusic, setBgMusic] = useState(true);
   const [sfx, setSfx] = useState(false);
 
@@ -718,6 +719,8 @@ export default function WalletScreen() {
       >
         {view === "developer" ? (
           <DeveloperSettings onBack={() => setView("main")} />
+        ) : view === "transactions" ? (
+          <TransactionHistory onBack={() => setView("main")} />
         ) : (
           <>
             {/* Header */}
@@ -818,7 +821,10 @@ export default function WalletScreen() {
             <div>
               <span style={sectionLabel}>Savings</span>
               <div style={cardStyle}>
-                <SettingsRow label="Transaction History" />
+                <SettingsRow
+                  label="Transaction History"
+                  onClick={() => setView("transactions")}
+                />
               </div>
             </div>
 

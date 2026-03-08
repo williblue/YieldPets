@@ -41,6 +41,37 @@ function yesterdayStr(): string {
   return d.toISOString().slice(0, 10);
 }
 
+// ─── Transaction log ────────────────────────────────────────
+export type TransactionType =
+  | "yield"
+  | "deposit"
+  | "withdrawal"
+  | "nuggets_collected"
+  | "nuggets_spent";
+
+export interface Transaction {
+  id: string;
+  type: TransactionType;
+  label: string;
+  amount: number;
+  timestamp: number;
+}
+
+let txIdCounter = 0;
+function makeTx(
+  type: TransactionType,
+  label: string,
+  amount: number
+): Transaction {
+  return {
+    id: `tx_${++txIdCounter}_${Date.now()}`,
+    type,
+    label,
+    amount,
+    timestamp: Date.now(),
+  };
+}
+
 // ─── State shape ─────────────────────────────────────────────
 export interface GameState {
   nuggets: number;
@@ -59,6 +90,7 @@ export interface GameState {
   placedFurniture: string[];
   petName: string;
   trainerName: string;
+  transactions: Transaction[];
 }
 
 const INITIAL_STATE: GameState = {
@@ -78,6 +110,7 @@ const INITIAL_STATE: GameState = {
   placedFurniture: [],
   petName: "Sprout",
   trainerName: "Trainer",
+  transactions: [],
 };
 
 // ─── Store (external, mutable, subscription-based) ───────────
@@ -124,6 +157,10 @@ function createGameStore() {
     return () => listeners.delete(listener);
   }
 
+  function pushTx(tx: Transaction) {
+    state = { ...state, transactions: [tx, ...state.transactions] };
+  }
+
   // ─── Heart decay ──────────────────────────────────
   function decayHearts(now: number): Partial<GameState> {
     if (state.hearts === 0) return {};
@@ -144,6 +181,9 @@ function createGameStore() {
     const earned = perSecond * elapsed * mult;
     const newFloat = state.nuggetsFloat + earned;
     const whole = Math.floor(newFloat);
+    if (whole > 0) {
+      pushTx(makeTx("yield", "Yield harvested", whole));
+    }
     return {
       nuggets: state.nuggets + whole,
       nuggetsFloat: newFloat - whole,
@@ -172,6 +212,7 @@ function createGameStore() {
     const bonus = dailyBonus(newStreak);
     const longest = Math.max(state.longestStreak, newStreak);
 
+    pushTx(makeTx("nuggets_collected", "Daily bonus", bonus));
     set({
       currentStreak: newStreak,
       longestStreak: longest,
@@ -213,6 +254,7 @@ function createGameStore() {
       if (newInventory[foodId] <= 0) delete newInventory[foodId];
 
       const newHearts = Math.min(4, state.hearts + food.heartRestore) as HeartCount;
+      pushTx(makeTx("nuggets_collected", "Nuggets collected", FEED_BONUS));
       set({
         hearts: newHearts,
         lastFedAt: now,
@@ -226,6 +268,7 @@ function createGameStore() {
     // Pay with nuggets directly (basic kibble default)
     if (state.nuggets < food.price) return false;
     const newHearts = Math.min(4, state.hearts + food.heartRestore) as HeartCount;
+    pushTx(makeTx("nuggets_collected", "Nuggets collected", FEED_BONUS));
     set({
       hearts: newHearts,
       lastFedAt: now,
@@ -240,6 +283,7 @@ function createGameStore() {
     if (!food || state.nuggets < food.price) return false;
     const newInventory = { ...state.foodInventory };
     newInventory[foodId] = (newInventory[foodId] || 0) + 1;
+    pushTx(makeTx("nuggets_spent", `Bought ${food.name}`, -food.price));
     set({
       nuggets: state.nuggets - food.price,
       foodInventory: newInventory,
@@ -251,6 +295,7 @@ function createGameStore() {
     if (state.ownedFurniture.includes(furnitureId)) return false;
     const item = FURNITURE_ITEMS.find((f) => f.id === furnitureId);
     if (!item || state.nuggets < item.price) return false;
+    pushTx(makeTx("nuggets_spent", `Bought ${item.name}`, -item.price));
     set({
       nuggets: state.nuggets - item.price,
       ownedFurniture: [...state.ownedFurniture, furnitureId],
@@ -274,11 +319,14 @@ function createGameStore() {
 
   function deposit(amount: number) {
     if (amount <= 0) return;
+    pushTx(makeTx("deposit", "Deposit", amount));
     set({ depositBalance: state.depositBalance + amount });
   }
 
   function withdraw(amount: number) {
     if (amount <= 0) return;
+    const actual = Math.min(amount, state.depositBalance);
+    pushTx(makeTx("withdrawal", "Withdrawal", actual));
     set({ depositBalance: Math.max(0, state.depositBalance - amount) });
   }
 
