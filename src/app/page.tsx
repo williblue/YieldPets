@@ -44,6 +44,7 @@ export default function Home() {
   const [depositView, setDepositView] = useState<DepositView>(null);
   const [showStats, setShowStats] = useState(false);
   const [piggyPressed, setPiggyPressed] = useState(false);
+  const [petHeadPressed, setPetHeadPressed] = useState(false);
   const debounceRef = useRef(false);
 
   const hudState = {
@@ -175,6 +176,54 @@ export default function Home() {
         }} />
 
         <FurnitureModal item={selectedFurniture} onClose={handleModalClose} />
+
+        {/* Floating pet head button (stats) */}
+        {isLoggedIn && !depositView && !showStats && activeTab !== "settings" && (
+          <button
+            onClick={() => setShowStats(true)}
+            onMouseDown={() => setPetHeadPressed(true)}
+            onMouseUp={() => setPetHeadPressed(false)}
+            onMouseLeave={() => setPetHeadPressed(false)}
+            onTouchStart={() => setPetHeadPressed(true)}
+            onTouchEnd={() => setPetHeadPressed(false)}
+            style={{
+              position: "fixed",
+              bottom: 88,
+              left: "calc(50% - 214px + 24px)",
+              width: 52,
+              height: 52,
+              borderRadius: 999,
+              border: "2px solid #ECD8A0",
+              background: "#FFF8E8",
+              boxShadow: petHeadPressed
+                ? "0 1px 4px rgba(0,0,0,0.1)"
+                : "0 4px 12px rgba(0,0,0,0.12)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 0,
+              zIndex: 75,
+              overflow: "hidden",
+              transform: petHeadPressed ? "scale(0.93)" : "scale(1)",
+              transition: petHeadPressed
+                ? "transform 80ms ease-out, box-shadow 80ms ease-out"
+                : "transform 120ms ease-out, box-shadow 120ms ease-out",
+            }}
+          >
+            <img
+              src="/Subject.png"
+              alt="Pet"
+              style={{
+                width: 44,
+                height: 44,
+                objectFit: "cover",
+                objectPosition: "center top",
+                pointerEvents: "none",
+              }}
+            />
+          </button>
+        )}
 
         {/* Floating piggy bank button */}
         {isLoggedIn && !depositView && !showStats && activeTab !== "settings" && (

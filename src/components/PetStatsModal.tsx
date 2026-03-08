@@ -35,6 +35,7 @@ export default function PetStatsModal({
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [depositPressed, setDepositPressed] = useState(false);
   const [withdrawPressed, setWithdrawPressed] = useState(false);
+  const [tip, setTip] = useState<"pocketPile" | "harvested" | "growthRate" | null>(null);
 
   const growthRate = game.depositBalance > 0
     ? ((game.yieldPerDay / game.depositBalance) * 100).toFixed(1)
@@ -278,6 +279,7 @@ export default function PetStatsModal({
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {/* Pocket Pile */}
               <button
+                onClick={onDeposit}
                 style={{
                   ...cardStyle,
                   display: "flex",
@@ -331,20 +333,18 @@ export default function PetStatsModal({
                     >
                       Pocket Pile
                     </span>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <circle cx="7" cy="7" r="6" stroke="#C0B8A8" strokeWidth="1.2" />
-                      <text
-                        x="7"
-                        y="10.5"
-                        textAnchor="middle"
-                        fill="#C0B8A8"
-                        fontSize="9"
-                        fontWeight="bold"
-                        fontFamily="inherit"
-                      >
-                        i
-                      </text>
-                    </svg>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); setTip("pocketPile"); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setTip("pocketPile"); } }}
+                      style={{ cursor: "pointer", display: "flex" }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="6" stroke="#C0B8A8" strokeWidth="1.2" />
+                        <text x="7" y="10.5" textAnchor="middle" fill="#C0B8A8" fontSize="9" fontWeight="bold" fontFamily="inherit">i</text>
+                      </svg>
+                    </div>
                   </div>
                   <div
                     style={{
@@ -494,20 +494,18 @@ export default function PetStatsModal({
                     >
                       Harvested
                     </span>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <circle cx="7" cy="7" r="6" stroke="#C0B8A8" strokeWidth="1.2" />
-                      <text
-                        x="7"
-                        y="10.5"
-                        textAnchor="middle"
-                        fill="#C0B8A8"
-                        fontSize="9"
-                        fontWeight="bold"
-                        fontFamily="inherit"
-                      >
-                        i
-                      </text>
-                    </svg>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); setTip("harvested"); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setTip("harvested"); } }}
+                      style={{ cursor: "pointer", display: "flex" }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="6" stroke="#C0B8A8" strokeWidth="1.2" />
+                        <text x="7" y="10.5" textAnchor="middle" fill="#C0B8A8" fontSize="9" fontWeight="bold" fontFamily="inherit">i</text>
+                      </svg>
+                    </div>
                   </div>
                   <div
                     style={{
@@ -517,7 +515,7 @@ export default function PetStatsModal({
                       marginTop: 2,
                     }}
                   >
-                    +{game.yieldPerDay.toFixed(2)}
+                    +{(game.totalYieldEarned ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
@@ -586,20 +584,18 @@ export default function PetStatsModal({
                     >
                       {growthRate}%
                     </span>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <circle cx="7" cy="7" r="6" stroke="#C0B8A8" strokeWidth="1.2" />
-                      <text
-                        x="7"
-                        y="10.5"
-                        textAnchor="middle"
-                        fill="#C0B8A8"
-                        fontSize="9"
-                        fontWeight="bold"
-                        fontFamily="inherit"
-                      >
-                        i
-                      </text>
-                    </svg>
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => { e.stopPropagation(); setTip("growthRate"); }}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.stopPropagation(); setTip("growthRate"); } }}
+                      style={{ cursor: "pointer", display: "flex" }}
+                    >
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                        <circle cx="7" cy="7" r="6" stroke="#C0B8A8" strokeWidth="1.2" />
+                        <text x="7" y="10.5" textAnchor="middle" fill="#C0B8A8" fontSize="9" fontWeight="bold" fontFamily="inherit">i</text>
+                      </svg>
+                    </div>
                   </div>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
@@ -799,6 +795,69 @@ export default function PetStatsModal({
           </div>
         )}
       </div>
+
+      {/* Tip Modal */}
+      {tip && (
+        <div
+          onClick={() => setTip(null)}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 200,
+            background: "rgba(0,0,0,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: 320,
+              background: "#FFF8E8",
+              borderRadius: 20,
+              border: "2px solid #ECD8A0",
+              padding: 24,
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+              alignItems: "center",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: 15, fontWeight: 800, color: "var(--text-primary)" }}>
+              {tip === "pocketPile" && "Pocket Pile"}
+              {tip === "harvested" && "Harvested"}
+              {tip === "growthRate" && "Growth Rate"}
+            </div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)", lineHeight: 1.5 }}>
+              {tip === "pocketPile" && "Your total savings balance. Deposit more to grow your pocket pile and earn higher yield over time."}
+              {tip === "harvested" && "The total yield your deposits have earned. Keep your pet happy with full hearts to maximize earnings."}
+              {tip === "growthRate" && "Your current daily yield rate based on your deposit balance and pet happiness. More hearts = faster growth."}
+            </div>
+            <button
+              onClick={() => { setTip(null); onDeposit(); }}
+              style={{
+                width: "100%",
+                height: 44,
+                borderRadius: 999,
+                border: "none",
+                cursor: "pointer",
+                background: "linear-gradient(180deg, #8CD468 0%, #5BAF48 100%)",
+                boxShadow: "0 3px 0px #3D7A30",
+                color: "#FFFFFF",
+                fontFamily: "inherit",
+                fontWeight: 800,
+                fontSize: 15,
+              }}
+            >
+              Deposit
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
