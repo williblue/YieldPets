@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Stem -->
+  <path d="M16 28 C16 24, 16 20, 16 15" stroke="#6B9E56" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <!-- Left leaf -->
+  <ellipse cx="10.5" cy="9" rx="5.5" ry="8" transform="rotate(30 10.5 9)" fill="#7CC74E"/>
+  <!-- Right leaf -->
+  <ellipse cx="21.5" cy="9" rx="5.5" ry="8" transform="rotate(-30 21.5 9)" fill="#7CC74E"/>
+  <!-- Left leaf vein -->
+  <path d="M16 15 C14 12, 11 9, 9 6" stroke="#5A9E4B" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.4"/>
+  <!-- Right leaf vein -->
+  <path d="M16 15 C18 12, 21 9, 23 6" stroke="#5A9E4B" stroke-width="1" stroke-linecap="round" fill="none" opacity="0.4"/>
+</svg>
