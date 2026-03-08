@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { RoomState, FurnitureItem } from "@/types";
 import PetRadialMenu, { PetAction } from "@/components/PetRadialMenu";
+import RoomNuggets from "@/components/RoomNuggets";
+import { VisualNugget } from "@/hooks/useNuggetCollector";
 
 interface IsometricRoomProps {
   room: RoomState;
@@ -10,6 +12,8 @@ interface IsometricRoomProps {
   showEgg?: boolean;
   onEggTap?: () => void;
   onPetMenuAction?: (action: PetAction) => void;
+  visualNuggets?: VisualNugget[];
+  onCollectNugget?: (id: string) => void;
 }
 
 /* ── Walkable floor (isometric diamond) ────────────────────────── */
@@ -74,6 +78,8 @@ export default function IsometricRoom({
   showEgg = false,
   onEggTap,
   onPetMenuAction,
+  visualNuggets = [],
+  onCollectNugget,
 }: IsometricRoomProps) {
   const [failedFurniture, setFailedFurniture] = useState<Set<string>>(
     new Set(),
@@ -419,6 +425,11 @@ export default function IsometricRoom({
             />
           )}
         </div>
+      )}
+
+      {/* Collectible nuggets on the floor */}
+      {visualNuggets.length > 0 && onCollectNugget && (
+        <RoomNuggets nuggets={visualNuggets} onCollect={onCollectNugget} />
       )}
 
       {/* Radial menu backdrop — full room, catches outside taps */}

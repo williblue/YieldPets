@@ -16,6 +16,7 @@ import DailyBonusToast from "@/components/DailyBonusToast";
 import ShopScreen from "@/components/ShopScreen";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useGame } from "@/contexts/GameProvider";
+import { useNuggetCollector } from "@/hooks/useNuggetCollector";
 import { RoomState, FurnitureItem, NavTab } from "@/types";
 import { PetAction } from "@/components/PetRadialMenu";
 
@@ -31,6 +32,7 @@ const MOCK_ROOM: RoomState = {
 export default function Home() {
   const { isLoggedIn, isLoading } = useAuth();
   const game = useGame();
+  const { visualNuggets, displayedNuggets, collectNugget } = useNuggetCollector(game.nuggets);
   const [showStart, setShowStart] = useState(true);
   const [startVisible, setStartVisible] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
@@ -45,7 +47,7 @@ export default function Home() {
   const debounceRef = useRef(false);
 
   const hudState = {
-    goldNuggets: game.nuggets,
+    goldNuggets: displayedNuggets,
     hearts: game.hearts,
     shieldScore: 0,
     loading: false,
@@ -151,6 +153,8 @@ export default function Home() {
             showEgg={!isLoggedIn}
             onEggTap={handleEggTap}
             onPetMenuAction={handlePetMenuAction}
+            visualNuggets={visualNuggets}
+            onCollectNugget={collectNugget}
           />
         </div>
 
