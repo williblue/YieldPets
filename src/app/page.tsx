@@ -11,6 +11,7 @@ import LoginScreen from "@/components/LoginScreen";
 import WalletScreen from "@/components/WalletScreen";
 import DepositScreen from "@/components/DepositScreen";
 import CryptoDepositScreen from "@/components/CryptoDepositScreen";
+import PetStatsModal from "@/components/PetStatsModal";
 import { useAuth } from "@/contexts/AuthProvider";
 import { HUDState, RoomState, FurnitureItem, NavTab } from "@/types";
 import { PetAction } from "@/components/PetRadialMenu";
@@ -46,6 +47,7 @@ export default function Home() {
   const [selectedFurniture, setSelectedFurniture] = useState<FurnitureItem | null>(null);
   type DepositView = null | "deposit" | "crypto";
   const [depositView, setDepositView] = useState<DepositView>(null);
+  const [showStats, setShowStats] = useState(false);
   const [piggyPressed, setPiggyPressed] = useState(false);
   const debounceRef = useRef(false);
 
@@ -105,7 +107,7 @@ export default function Home() {
     } else if (action === "deposit") {
       setDepositView("deposit");
     } else if (action === "stats") {
-      console.log("Stats tapped");
+      setShowStats(true);
     }
   };
 
@@ -144,7 +146,7 @@ export default function Home() {
           }}
         />
 
-        {activeTab === "pet" && !depositView && <HUDBar state={hudState} />}
+        {activeTab === "pet" && !depositView && !showStats && <HUDBar state={hudState} />}
 
         <div style={{ paddingTop: 52 }}>
           <IsometricRoom
@@ -165,7 +167,7 @@ export default function Home() {
         <FurnitureModal item={selectedFurniture} onClose={handleModalClose} />
 
         {/* Floating piggy bank button */}
-        {isLoggedIn && !depositView && activeTab !== "settings" && (
+        {isLoggedIn && !depositView && !showStats && activeTab !== "settings" && (
           <button
             onClick={() => setDepositView("deposit")}
             onMouseDown={() => setPiggyPressed(true)}
@@ -224,6 +226,17 @@ export default function Home() {
           <div style={{ display: depositView === "crypto" ? "contents" : "none" }}>
             <CryptoDepositScreen onBack={() => setDepositView("deposit")} />
           </div>
+        )}
+
+        {/* Pet stats modal */}
+        {showStats && isLoggedIn && (
+          <PetStatsModal
+            onClose={() => setShowStats(false)}
+            onDeposit={() => { setShowStats(false); setDepositView("deposit"); }}
+            onWithdraw={() => { setShowStats(false); setDepositView("deposit"); }}
+            petName={roomState.pet.petName}
+            petImageUrl={roomState.pet.imageUrl}
+          />
         )}
 
         {/* Wallet screen overlay (when settings tab active) */}
