@@ -430,6 +430,7 @@ export default function PetStatsModal({
 
               {/* Harvested */}
               <button
+                onClick={onDeposit}
                 style={{
                   ...cardStyle,
                   display: "flex",
@@ -531,6 +532,7 @@ export default function PetStatsModal({
 
               {/* Growth Rate */}
               <button
+                onClick={onDeposit}
                 style={{
                   ...cardStyle,
                   display: "flex",
