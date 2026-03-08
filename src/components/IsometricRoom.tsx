@@ -2,12 +2,14 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { RoomState, FurnitureItem } from "@/types";
+import PetRadialMenu, { PetAction } from "@/components/PetRadialMenu";
 
 interface IsometricRoomProps {
   room: RoomState;
   onFurnitureTap: (item: FurnitureItem) => void;
   showEgg?: boolean;
   onEggTap?: () => void;
+  onPetMenuAction?: (action: PetAction) => void;
 }
 
 /* ── Walkable floor (isometric diamond) ────────────────────────── */
@@ -71,6 +73,7 @@ export default function IsometricRoom({
   onFurnitureTap,
   showEgg = false,
   onEggTap,
+  onPetMenuAction,
 }: IsometricRoomProps) {
   const [failedFurniture, setFailedFurniture] = useState<Set<string>>(
     new Set(),
@@ -81,6 +84,8 @@ export default function IsometricRoom({
   const [frame, setFrame] = useState(0);
   const [clicking, setClicking] = useState(false);
   const [eggTapped, setEggTapped] = useState(false);
+  const [showRadial, setShowRadial] = useState(false);
+  const [radialPos, setRadialPos] = useState({ x: FLOOR_CX, y: FLOOR_CY });
 
   const posRef = useRef({ x: FLOOR_CX, y: FLOOR_CY });
   const targetRef = useRef<{ x: number; y: number } | null>(null);
@@ -156,7 +161,7 @@ export default function IsometricRoom({
 
   /* ── Click handler: pause walk/idle, enter click state ──────── */
   const handlePetClick = useCallback(() => {
-    if (clicking) return;
+    if (clicking || showRadial) return;
 
     wasWalkingRef.current = walking;
 
@@ -173,15 +178,21 @@ export default function IsometricRoom({
 
     if (walkLayerRef.current) walkLayerRef.current.style.visibility = "hidden";
     setClicking(true);
-  }, [clicking, walking]);
+  }, [clicking, walking, showRadial]);
 
-  /* ── CSS animation end: resume previous state ───────────────── */
+  /* ── CSS animation end: show radial menu ──────────────────────── */
   const handleClickEnd = useCallback(() => {
     if (walkLayerRef.current) walkLayerRef.current.style.visibility = "visible";
     setClicking(false);
+    setRadialPos({ x: posRef.current.x, y: posRef.current.y });
+    setShowRadial(true);
+  }, []);
+
+  /* ── Resume walk/idle after radial menu closes ──────────────── */
+  const resumeAfterMenu = useCallback(() => {
+    setShowRadial(false);
 
     if (wasWalkingRef.current) {
-      // Resume walking: restart sprite cycling and movement
       spriteRef.current = setInterval(() => {
         setFrame((prev) => (prev + 1) % TOTAL_FRAMES);
       }, FRAME_MS);
@@ -229,17 +240,25 @@ export default function IsometricRoom({
 
       rafRef.current = requestAnimationFrame(step);
     }
-    // If was idle, the idle useEffect will schedule the next walk
   }, []);
 
+  const handleRadialAction = useCallback((action: PetAction) => {
+    resumeAfterMenu();
+    onPetMenuAction?.(action);
+  }, [resumeAfterMenu, onPetMenuAction]);
+
+  const handleRadialClose = useCallback(() => {
+    resumeAfterMenu();
+  }, [resumeAfterMenu]);
+
   useEffect(() => {
-    if (walking || clicking) return;
+    if (walking || clicking || showRadial) return;
     const delay = IDLE_MIN + Math.random() * (IDLE_MAX - IDLE_MIN);
     idleRef.current = setTimeout(startWalk, delay);
     return () => {
       if (idleRef.current) clearTimeout(idleRef.current);
     };
-  }, [walking, clicking, startWalk]);
+  }, [walking, clicking, showRadial, startWalk]);
 
   useEffect(() => {
     return () => {
@@ -397,6 +416,37 @@ export default function IsometricRoom({
               }}
             />
           )}
+        </div>
+      )}
+
+      {/* Radial menu backdrop — full room, catches outside taps */}
+      {showRadial && !showEgg && (
+        <div
+          onClick={handleRadialClose}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 19,
+          }}
+        />
+      )}
+
+      {/* Radial menu — anchored at pet center */}
+      {!showEgg && (
+        <div
+          style={{
+            position: "absolute",
+            left: radialPos.x,
+            bottom: radialPos.y + PET_H / 2,
+            zIndex: 20,
+            pointerEvents: showRadial ? "auto" : "none",
+          }}
+        >
+          <PetRadialMenu
+            visible={showRadial}
+            onAction={handleRadialAction}
+            onClose={handleRadialClose}
+          />
         </div>
       )}
     </div>

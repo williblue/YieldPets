@@ -9,8 +9,10 @@ import FurnitureModal from "@/components/FurnitureModal";
 import StartScreen from "@/components/StartScreen";
 import LoginScreen from "@/components/LoginScreen";
 import WalletScreen from "@/components/WalletScreen";
+import DepositScreen from "@/components/DepositScreen";
 import { useAuth } from "@/contexts/AuthProvider";
 import { HUDState, RoomState, FurnitureItem, NavTab } from "@/types";
+import { PetAction } from "@/components/PetRadialMenu";
 
 const MOCK_HUD: HUDState = {
   goldNuggets: 1380,
@@ -41,6 +43,8 @@ export default function Home() {
   const [roomState] = useState<RoomState>(MOCK_ROOM);
   const [activeTab, setActiveTab] = useState<NavTab>("pet");
   const [selectedFurniture, setSelectedFurniture] = useState<FurnitureItem | null>(null);
+  const [showDeposit, setShowDeposit] = useState(false);
+  const [piggyPressed, setPiggyPressed] = useState(false);
   const debounceRef = useRef(false);
 
   // Simulate loading
@@ -93,6 +97,16 @@ export default function Home() {
     setSelectedFurniture(null);
   };
 
+  const handlePetMenuAction = (action: PetAction) => {
+    if (action === "feed") {
+      console.log("Feed tapped");
+    } else if (action === "deposit") {
+      setShowDeposit(true);
+    } else if (action === "stats") {
+      console.log("Stats tapped");
+    }
+  };
+
   return (
     <div
       style={{
@@ -128,7 +142,7 @@ export default function Home() {
           }}
         />
 
-        <HUDBar state={hudState} />
+        {activeTab === "pet" && !showDeposit && <HUDBar state={hudState} />}
 
         <div style={{ paddingTop: 52 }}>
           <IsometricRoom
@@ -136,6 +150,7 @@ export default function Home() {
             onFurnitureTap={handleFurnitureTap}
             showEgg={!isLoggedIn}
             onEggTap={handleEggTap}
+            onPetMenuAction={handlePetMenuAction}
           />
         </div>
 
@@ -146,6 +161,58 @@ export default function Home() {
         <BottomNavBar activeTab={activeTab} onTabChange={setActiveTab} />
 
         <FurnitureModal item={selectedFurniture} onClose={handleModalClose} />
+
+        {/* Floating piggy bank button */}
+        {isLoggedIn && !showDeposit && activeTab !== "settings" && (
+          <button
+            onClick={() => setShowDeposit(true)}
+            onMouseDown={() => setPiggyPressed(true)}
+            onMouseUp={() => setPiggyPressed(false)}
+            onMouseLeave={() => setPiggyPressed(false)}
+            onTouchStart={() => setPiggyPressed(true)}
+            onTouchEnd={() => setPiggyPressed(false)}
+            style={{
+              position: "fixed",
+              bottom: 88,
+              right: "calc(50% - 214px + 24px)",
+              width: 52,
+              height: 52,
+              borderRadius: 999,
+              border: "2px solid #ECD8A0",
+              background: "#FFF8E8",
+              boxShadow: piggyPressed
+                ? "0 1px 4px rgba(0,0,0,0.1)"
+                : "0 4px 12px rgba(0,0,0,0.12)",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 0,
+              zIndex: 75,
+              transform: piggyPressed ? "scale(0.93)" : "scale(1)",
+              transition: piggyPressed
+                ? "transform 80ms ease-out, box-shadow 80ms ease-out"
+                : "transform 120ms ease-out, box-shadow 120ms ease-out",
+            }}
+          >
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+              <ellipse cx="15" cy="16" rx="9" ry="7" fill="#F8B0B8"/>
+              <ellipse cx="15" cy="16" rx="7" ry="5.5" fill="#F09098"/>
+              <circle cx="8" cy="14" r="3" fill="#F8B0B8"/>
+              <ellipse cx="15" cy="12" rx="3" ry="1.5" fill="#FFFFFF" opacity="0.35"/>
+              <rect x="11" y="21" width="2.5" height="3.5" rx="1" fill="#E08088"/>
+              <rect x="16" y="21" width="2.5" height="3.5" rx="1" fill="#E08088"/>
+              <circle cx="18" cy="14.5" r="1" fill="#3C3848"/>
+              <ellipse cx="15" cy="10" rx="2" ry="1" fill="#F8B0B8"/>
+              <rect x="13.5" y="8" width="3" height="3" rx="1.5" fill="#F5C030" stroke="#D4A020" strokeWidth="0.5"/>
+            </svg>
+          </button>
+        )}
+
+        {/* Deposit screen overlay */}
+        {showDeposit && isLoggedIn && (
+          <DepositScreen onClose={() => setShowDeposit(false)} />
+        )}
 
         {/* Wallet screen overlay (when settings tab active) */}
         {activeTab === "settings" && isLoggedIn && <WalletScreen />}
