@@ -9,7 +9,9 @@ import {
   ReactNode,
 } from "react";
 import * as fcl from "@onflow/fcl";
+import * as t from "@onflow/types";
 import "@/lib/flow";
+import { GET_COA_ADDRESS, CREATE_COA, CHECK_PYUSD_VAULT, SETUP_PYUSD_VAULT } from "@/lib/flow";
 import { useMagic } from "./MagicProvider";
 
 interface AuthContextValue {
@@ -46,6 +48,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [balance, setBalance] = useState<number | null>(null);
 
   const magicAuthz = magic?.flow?.authorization ?? null;
+
+  // Silently ensure COA and PYUSD vault exist
+  const ensureWalletSetup = useCallback(
+    async (flowAddress: string, authz: unknown) => {
+      if (!authz) return;
+      try {
+        // Check & create COA
+        const coaAddr = await fcl.query({
+          cadence: GET_COA_ADDRESS,
+          args: (arg: typeof fcl.arg) => [arg(flowAddress, t.Address)],
+        });
+        if (!coaAddr) {
+          const txId = await fcl.mutate({
+            cadence: CREATE_COA,
+            limit: 9999,
+            authorizations: [authz],
+            payer: authz,
+            proposer: authz,
+          });
+          await fcl.tx(txId).onceSealed();
+        }
+
+        // Check & create PYUSD vault
+        const hasVault = await fcl.query({
+          cadence: CHECK_PYUSD_VAULT,
+          args: (arg: typeof fcl.arg) => [arg(flowAddress, t.Address)],
+        });
+        if (!hasVault) {
+          const txId = await fcl.mutate({
+            cadence: SETUP_PYUSD_VAULT,
+            limit: 9999,
+            authorizations: [authz],
+            payer: authz,
+            proposer: authz,
+          });
+          await fcl.tx(txId).onceSealed();
+        }
+      } catch (err) {
+        console.error("Background wallet setup failed:", err);
+      }
+    },
+    []
+  );
 
   const refreshBalance = useCallback(
     async (addr?: string) => {
@@ -88,6 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsLoggedIn(true);
           if (flowAddress) {
             await refreshBalance(flowAddress);
+            ensureWalletSetup(flowAddress, magic.flow.authorization);
           }
         }
       } catch (err) {
@@ -101,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [magic, refreshBalance]);
+  }, [magic, refreshBalance, ensureWalletSetup]);
 
   const login = useCallback(
     async (emailInput: string) => {
@@ -124,6 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoggedIn(true);
         if (flowAddress) {
           await refreshBalance(flowAddress);
+          ensureWalletSetup(flowAddress, magic.flow.authorization);
         }
       } catch (err) {
         console.error("Login failed:", err);
@@ -131,7 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [magic, refreshBalance]
+    [magic, refreshBalance, ensureWalletSetup]
   );
 
   const logout = useCallback(async () => {
