@@ -241,14 +241,24 @@ function createGameStore() {
     const now = Date.now();
     if (now < state.feedCooldownEnd) return false;
 
-    const food = foodId
-      ? FOOD_ITEMS.find((f) => f.id === foodId)
-      : FOOD_ITEMS[0]; // default: kibble
+    // Default feed (no foodId) is free — restores 1 heart + bonus nuggets
+    if (!foodId) {
+      const newHearts = Math.min(4, state.hearts + 1) as HeartCount;
+      pushTx(makeTx("nuggets_collected", "Nuggets collected", FEED_BONUS));
+      set({
+        hearts: newHearts,
+        lastFedAt: now,
+        feedCooldownEnd: now + FEED_COOLDOWN_MS,
+        nuggets: state.nuggets + FEED_BONUS,
+      });
+      return true;
+    }
+
+    const food = FOOD_ITEMS.find((f) => f.id === foodId);
     if (!food) return false;
 
-    // Check if user has this food in inventory, or paying with nuggets
-    if (foodId && state.foodInventory[foodId] && state.foodInventory[foodId] > 0) {
-      // Use from inventory
+    // Check if user has this food in inventory
+    if (state.foodInventory[foodId] && state.foodInventory[foodId] > 0) {
       const newInventory = { ...state.foodInventory };
       newInventory[foodId] = (newInventory[foodId] || 0) - 1;
       if (newInventory[foodId] <= 0) delete newInventory[foodId];
@@ -265,7 +275,7 @@ function createGameStore() {
       return true;
     }
 
-    // Pay with nuggets directly (basic kibble default)
+    // Pay with nuggets directly
     if (state.nuggets < food.price) return false;
     const newHearts = Math.min(4, state.hearts + food.heartRestore) as HeartCount;
     pushTx(makeTx("nuggets_collected", "Nuggets collected", FEED_BONUS));
@@ -436,7 +446,7 @@ export function useGame() {
     HEART_MULTIPLIERS[state.hearts];
 
   const feedCooldownRemaining = Math.max(0, state.feedCooldownEnd - Date.now());
-  const canFeed = feedCooldownRemaining === 0 && state.nuggets >= 10;
+  const canFeed = feedCooldownRemaining === 0;
 
   return {
     ...state,
