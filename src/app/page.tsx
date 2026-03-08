@@ -211,7 +211,7 @@ export default function Home() {
 
         {/* Deposit screen overlay */}
         {showDeposit && isLoggedIn && (
-          <DepositScreen onClose={() => setShowDeposit(false)} />
+          <DepositScreen onClose={() => setShowDeposit(false)} petName={roomState.pet.petName} />
         )}
 
         {/* Wallet screen overlay (when settings tab active) */}

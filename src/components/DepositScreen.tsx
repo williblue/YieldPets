@@ -4,11 +4,64 @@ import { useState } from "react";
 
 interface DepositScreenProps {
   onClose: () => void;
+  petName: string;
 }
 
-export default function DepositScreen({ onClose }: DepositScreenProps) {
+type Tab = "deposit" | "withdraw";
+
+const MOCK_BALANCE = 50;
+const MOCK_DAILY_YIELD = 4.32;
+const MOCK_NUGGETS_PER_DAY = 40;
+const YIELD_RATE = MOCK_DAILY_YIELD / MOCK_BALANCE; // per dollar per day
+const NUGGETS_RATE = MOCK_NUGGETS_PER_DAY / MOCK_BALANCE;
+
+const QUICK_AMOUNTS = ["10", "50", "100", "500"];
+
+export default function DepositScreen({ onClose, petName }: DepositScreenProps) {
+  const [tab, setTab] = useState<Tab>("deposit");
   const [amount, setAmount] = useState("");
+  const [customAmount, setCustomAmount] = useState("");
   const [pressed, setPressed] = useState(false);
+
+  const numAmount = parseFloat(amount || customAmount || "0");
+  const hasAmount = numAmount > 0;
+
+  const newBalance =
+    tab === "deposit"
+      ? MOCK_BALANCE + numAmount
+      : Math.max(0, MOCK_BALANCE - numAmount);
+  const newNuggets = Math.round(newBalance * NUGGETS_RATE);
+
+  const ctaLabel = hasAmount
+    ? `${tab === "deposit" ? "Deposit" : "Withdraw"} $${numAmount.toFixed(2)} USDC`
+    : tab === "deposit"
+      ? "Deposit"
+      : "Withdraw";
+
+  const handleQuickAmount = (val: string) => {
+    setAmount(val);
+    setCustomAmount("");
+  };
+
+  const handleCustomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCustomAmount(e.target.value);
+    setAmount("");
+  };
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: 12,
+    fontWeight: 700,
+    color: "var(--text-secondary)",
+    textTransform: "uppercase",
+    letterSpacing: 1,
+  };
+
+  const cardStyle: React.CSSProperties = {
+    background: "#FFFFFF",
+    borderRadius: 16,
+    padding: 16,
+    boxShadow: "var(--shadow-card)",
+  };
 
   return (
     <div
@@ -62,10 +115,10 @@ export default function DepositScreen({ onClose }: DepositScreenProps) {
         style={{
           flex: 1,
           overflowY: "auto",
-          padding: "24px 24px 24px",
+          padding: "16px 20px 24px",
           display: "flex",
           flexDirection: "column",
-          gap: 20,
+          gap: 16,
           WebkitOverflowScrolling: "touch",
         }}
       >
@@ -73,111 +126,261 @@ export default function DepositScreen({ onClose }: DepositScreenProps) {
         <h2
           style={{
             margin: 0,
-            fontSize: 24,
+            fontSize: 20,
             fontWeight: 900,
             color: "var(--text-primary)",
             textAlign: "center",
           }}
         >
-          Deposit
+          Deposit / Withdraw
         </h2>
 
-        <p
-          style={{
-            margin: 0,
-            fontSize: 14,
-            fontWeight: 700,
-            color: "var(--text-secondary)",
-            textAlign: "center",
-          }}
-        >
-          Save money to earn yield for your pet
-        </p>
-
-        {/* Amount card */}
+        {/* Tab Switcher */}
         <div
           style={{
-            background: "#FFFFFF",
-            borderRadius: 16,
-            padding: 20,
-            boxShadow: "var(--shadow-card)",
             display: "flex",
-            flexDirection: "column",
-            gap: 12,
+            gap: 8,
+            justifyContent: "center",
           }}
         >
-          <span
+          {(["deposit", "withdraw"] as Tab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => {
+                setTab(t);
+                setAmount("");
+                setCustomAmount("");
+              }}
+              style={{
+                height: 40,
+                paddingLeft: 20,
+                paddingRight: 20,
+                borderRadius: 999,
+                border: tab === t ? "none" : "2px solid #ECD8A0",
+                background: tab === t ? "#F09098" : "transparent",
+                color: tab === t ? "#FFFFFF" : "var(--text-secondary)",
+                fontSize: 14,
+                fontFamily: "inherit",
+                fontWeight: 800,
+                cursor: "pointer",
+                transition:
+                  "background 120ms ease-out, color 120ms ease-out, border 120ms ease-out",
+              }}
+            >
+              {t === "deposit" ? "Deposit" : "Withdraw"}
+            </button>
+          ))}
+        </div>
+
+        {/* Balance Card */}
+        <div
+          style={{
+            ...cardStyle,
+            display: "flex",
+            flexDirection: "column",
+            gap: 8,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+            }}
+          >
+            <div>
+              <span style={labelStyle}>Current Balance</span>
+              <div
+                style={{
+                  fontSize: 24,
+                  fontWeight: 900,
+                  color: "var(--text-primary)",
+                  marginTop: 4,
+                }}
+              >
+                ${MOCK_BALANCE.toFixed(2)}{" "}
+                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)" }}>
+                  USDC
+                </span>
+              </div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <span style={labelStyle}>Daily Yield</span>
+              <div
+                style={{
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: "#F09098",
+                  marginTop: 4,
+                }}
+              >
+                +${MOCK_DAILY_YIELD.toFixed(2)}/day
+              </div>
+            </div>
+          </div>
+
+          <div
             style={{
               fontSize: 12,
               fontWeight: 700,
               color: "var(--text-secondary)",
-              textTransform: "uppercase",
-              letterSpacing: 1,
+              borderTop: "1px solid #F0E8D8",
+              paddingTop: 8,
             }}
           >
-            Amount
-          </span>
-
-          <input
-            type="number"
-            placeholder="0.00"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            step="0.01"
-            min="0"
-            style={{
-              width: "100%",
-              height: 56,
-              borderRadius: 16,
-              border: "2px solid #ECD8A0",
-              background: "#FFFFFF",
-              padding: "0 20px",
-              fontSize: 24,
-              fontFamily: "inherit",
-              fontWeight: 800,
-              color: "#3C3848",
-              outline: "none",
-              textAlign: "center",
-              boxSizing: "border-box",
-            }}
-          />
-
-          {/* Quick amounts */}
-          <div
-            style={{
-              display: "flex",
-              gap: 8,
-              justifyContent: "center",
-            }}
-          >
-            {["1", "5", "10", "25"].map((val) => (
-              <button
-                key={val}
-                onClick={() => setAmount(val)}
-                style={{
-                  height: 36,
-                  paddingLeft: 16,
-                  paddingRight: 16,
-                  borderRadius: 999,
-                  border: amount === val ? "2px solid #F09098" : "2px solid #ECD8A0",
-                  background: amount === val ? "rgba(240,144,152,0.1)" : "#FFFFFF",
-                  cursor: "pointer",
-                  fontSize: 14,
-                  fontFamily: "inherit",
-                  fontWeight: 800,
-                  color: amount === val ? "#F09098" : "var(--text-secondary)",
-                  transition: "border 120ms ease-out, background 120ms ease-out, color 120ms ease-out",
-                }}
-              >
-                ${val}
-              </button>
-            ))}
+            Auto feeder active — {petName} is fed from yield
           </div>
         </div>
 
-        {/* Deposit button */}
+        {/* Amount Section */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <span style={labelStyle}>
+            {tab === "deposit" ? "Amount to Add" : "Amount to Withdraw"}
+          </span>
+
+          {/* Quick amounts */}
+          <div style={{ display: "flex", gap: 8 }}>
+            {QUICK_AMOUNTS.map((val) => {
+              const selected = amount === val;
+              return (
+                <button
+                  key={val}
+                  onClick={() => handleQuickAmount(val)}
+                  style={{
+                    flex: 1,
+                    height: 40,
+                    borderRadius: 12,
+                    border: selected ? "2px solid #F09098" : "2px solid #ECD8A0",
+                    background: selected ? "#F09098" : "#FFFFFF",
+                    color: selected ? "#FFFFFF" : "var(--text-primary)",
+                    fontSize: 15,
+                    fontFamily: "inherit",
+                    fontWeight: 800,
+                    cursor: "pointer",
+                    transition:
+                      "background 120ms ease-out, color 120ms ease-out, border 120ms ease-out",
+                  }}
+                >
+                  ${val}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Custom amount input */}
+          <div style={{ position: "relative" }}>
+            <input
+              type="number"
+              placeholder="Custom amount..."
+              value={customAmount}
+              onChange={handleCustomChange}
+              step="0.01"
+              min="0"
+              style={{
+                width: "100%",
+                height: 48,
+                borderRadius: 12,
+                border: "2px solid #ECD8A0",
+                background: "#FFFFFF",
+                padding: "0 60px 0 16px",
+                fontSize: 15,
+                fontFamily: "inherit",
+                fontWeight: 700,
+                color: "#3C3848",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+            <span
+              style={{
+                position: "absolute",
+                right: 16,
+                top: "50%",
+                transform: "translateY(-50%)",
+                fontSize: 14,
+                fontWeight: 700,
+                color: "var(--text-secondary)",
+                pointerEvents: "none",
+              }}
+            >
+              USDC
+            </span>
+          </div>
+        </div>
+
+        {/* After Deposit/Withdraw Preview */}
+        {hasAmount && (
+          <div
+            style={{
+              ...cardStyle,
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}
+          >
+            <span style={labelStyle}>
+              {tab === "deposit" ? "After Deposit" : "After Withdrawal"}
+            </span>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "var(--text-secondary)",
+                }}
+              >
+                New balance
+              </span>
+              <span
+                style={{
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: "var(--text-primary)",
+                }}
+              >
+                ${newBalance.toFixed(2)} USDC
+              </span>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "var(--text-secondary)",
+                }}
+              >
+                Nuggets/day
+              </span>
+              <span
+                style={{
+                  fontSize: 16,
+                  fontWeight: 800,
+                  color: "var(--text-primary)",
+                }}
+              >
+                ~{newNuggets}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* CTA Button */}
         <button
-          disabled={!amount || parseFloat(amount) <= 0}
+          disabled={!hasAmount}
           onMouseDown={() => setPressed(true)}
           onMouseUp={() => setPressed(false)}
           onMouseLeave={() => setPressed(false)}
@@ -188,25 +391,23 @@ export default function DepositScreen({ onClose }: DepositScreenProps) {
             height: 56,
             borderRadius: 999,
             border: "none",
-            cursor: amount && parseFloat(amount) > 0 ? "pointer" : "default",
-            background:
-              amount && parseFloat(amount) > 0
-                ? pressed
-                  ? "linear-gradient(180deg, #F09098 0%, #F09098 100%)"
-                  : "linear-gradient(180deg, #F8B0B8 0%, #F09098 100%)"
-                : "#E0D8C8",
-            boxShadow:
-              amount && parseFloat(amount) > 0
-                ? pressed
-                  ? "0 1px 0px #C07078"
-                  : "0 4px 0px #C07078"
-                : "none",
+            cursor: hasAmount ? "pointer" : "default",
+            background: hasAmount
+              ? pressed
+                ? "linear-gradient(180deg, #F09098 0%, #F09098 100%)"
+                : "linear-gradient(180deg, #F8B0B8 0%, #F09098 100%)"
+              : "#E0D8C8",
+            boxShadow: hasAmount
+              ? pressed
+                ? "0 1px 0px #C07078"
+                : "0 4px 0px #C07078"
+              : "none",
             color: "#FFFFFF",
             fontFamily: "inherit",
             fontWeight: 800,
-            fontSize: 18,
+            fontSize: 17,
             transform:
-              pressed && amount && parseFloat(amount) > 0
+              pressed && hasAmount
                 ? "scale(0.97) translateY(3px)"
                 : "scale(1) translateY(0)",
             transition: pressed
@@ -214,11 +415,25 @@ export default function DepositScreen({ onClose }: DepositScreenProps) {
               : "transform 120ms ease-out, box-shadow 120ms ease-out, background 120ms ease-out",
             userSelect: "none",
             WebkitUserSelect: "none",
-            opacity: amount && parseFloat(amount) > 0 ? 1 : 0.5,
+            opacity: hasAmount ? 1 : 0.5,
           }}
         >
-          Deposit
+          {ctaLabel}
         </button>
+
+        {/* Footer note */}
+        <p
+          style={{
+            margin: 0,
+            fontSize: 12,
+            fontWeight: 700,
+            color: "var(--text-secondary)",
+            textAlign: "center",
+            opacity: 0.7,
+          }}
+        >
+          No fees · Funds settle on Flow blockchain
+        </p>
       </div>
     </div>
   );
