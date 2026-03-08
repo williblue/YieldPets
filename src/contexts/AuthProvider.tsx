@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const magicAuthz = magic?.flow?.authorization ?? null;
 
-  // Silently ensure COA and PYUSD vault exist
+  // Silently ensure COA and PYUSD0 vault exist
   const ensureWalletSetup = useCallback(
     async (flowAddress: string, authz: unknown) => {
       if (!authz) return;
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await fcl.tx(txId).onceSealed();
         }
 
-        // Check & create PYUSD vault
+        // Check & create PYUSD0 vault
         const hasVault = await fcl.query({
           cadence: CHECK_PYUSD_VAULT,
           args: (arg: typeof fcl.arg) => [arg(flowAddress, t.Address)],

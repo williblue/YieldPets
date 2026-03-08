@@ -59,7 +59,7 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
     return () => { cancelled = true; };
   }, [address]);
 
-  // Check PYUSD vault on Cadence address
+  // Check PYUSD0 vault on Cadence address
   useEffect(() => {
     if (!address) {
       setVaultLoading(false);
@@ -171,7 +171,7 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
       setVaultStatus(null);
       setVaultReady(true);
     } catch (err) {
-      console.error("PYUSD vault setup failed:", err);
+      console.error("PYUSD0 vault setup failed:", err);
       setVaultStatus("Setup failed. Please try again.");
     } finally {
       setVaultCreating(false);
@@ -408,7 +408,7 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
             </div>
           )}
 
-          {/* Cadence: PYUSD vault not set up */}
+          {/* Cadence: PYUSD0 vault not set up */}
           {showCadenceVaultSetup && (
             <div
               style={{
@@ -428,7 +428,7 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
                   textAlign: "center",
                 }}
               >
-                PYUSD vault not set up yet
+                PYUSD0 vault not set up yet
               </p>
               <p
                 style={{
@@ -440,7 +440,7 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
                   opacity: 0.7,
                 }}
               >
-                You need a PYUSD token vault on your Cadence account to receive deposits
+                You need a PYUSD0 token vault on your Cadence account to receive deposits
               </p>
               {vaultStatus && (
                 <p
@@ -462,7 +462,7 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
                 disabled={vaultCreating || !magicAuthz}
                 style={ctaButtonStyle(vaultCreating || !magicAuthz)}
               >
-                {vaultCreating ? "Setting up..." : "Set Up PYUSD Vault"}
+                {vaultCreating ? "Setting up..." : "Set Up PYUSD0 Vault"}
               </button>
             </div>
           )}
@@ -637,7 +637,7 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
                 color: "#3C3848",
               }}
             >
-              Only send PYUSD on the Flow network
+              Only send PYUSD0 on the Flow network
             </span>
             <span
               style={{

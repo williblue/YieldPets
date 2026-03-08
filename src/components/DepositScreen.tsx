@@ -366,7 +366,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                     marginTop: 2,
                   }}
                 >
-                  Send PYUSD from a wallet
+                  Send PYUSD0 from a wallet
                 </div>
               </div>
               <svg

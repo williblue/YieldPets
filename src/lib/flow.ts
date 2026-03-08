@@ -76,7 +76,7 @@ transaction {
             resourceType: nil,
             viewType: Type<FungibleTokenMetadataViews.FTVaultData>()
         ) as! FungibleTokenMetadataViews.FTVaultData?
-            ?? panic("Could not resolve FTVaultData for PYUSD")
+            ?? panic("Could not resolve FTVaultData for PYUSD0")
 
         if signer.storage.type(at: vaultData.storagePath) != nil {
             return
