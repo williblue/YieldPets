@@ -7,7 +7,7 @@ interface NavItem {
   label: string;
 }
 
-const disabledTabs: NavTab[] = ["build", "shop", "friends"];
+const disabledTabs: NavTab[] = ["build", "friends"];
 
 const navItems: NavItem[] = [
   { key: "pet", label: "Pet" },

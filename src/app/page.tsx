@@ -12,16 +12,12 @@ import WalletScreen from "@/components/WalletScreen";
 import DepositScreen from "@/components/DepositScreen";
 import CryptoDepositScreen from "@/components/CryptoDepositScreen";
 import PetStatsModal from "@/components/PetStatsModal";
+import DailyBonusToast from "@/components/DailyBonusToast";
+import ShopScreen from "@/components/ShopScreen";
 import { useAuth } from "@/contexts/AuthProvider";
-import { HUDState, RoomState, FurnitureItem, NavTab } from "@/types";
+import { useGame } from "@/contexts/GameProvider";
+import { RoomState, FurnitureItem, NavTab } from "@/types";
 import { PetAction } from "@/components/PetRadialMenu";
-
-const MOCK_HUD: HUDState = {
-  goldNuggets: 1380,
-  hearts: 4,
-  shieldScore: 0,
-  loading: false,
-};
 
 const MOCK_ROOM: RoomState = {
   pet: {
@@ -34,14 +30,11 @@ const MOCK_ROOM: RoomState = {
 
 export default function Home() {
   const { isLoggedIn, isLoading } = useAuth();
+  const game = useGame();
   const [showStart, setShowStart] = useState(true);
   const [startVisible, setStartVisible] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
   const [loginVisible, setLoginVisible] = useState(false);
-  const [hudState, setHudState] = useState<HUDState>({
-    ...MOCK_HUD,
-    loading: true,
-  });
   const [roomState] = useState<RoomState>(MOCK_ROOM);
   const [activeTab, setActiveTab] = useState<NavTab>("pet");
   const [selectedFurniture, setSelectedFurniture] = useState<FurnitureItem | null>(null);
@@ -51,13 +44,12 @@ export default function Home() {
   const [piggyPressed, setPiggyPressed] = useState(false);
   const debounceRef = useRef(false);
 
-  // Simulate loading
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setHudState(MOCK_HUD);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, []);
+  const hudState = {
+    goldNuggets: game.nuggets,
+    hearts: game.hearts,
+    shieldScore: 0,
+    loading: false,
+  } as const;
 
   // When login succeeds, hide the login screen
   useEffect(() => {
@@ -101,9 +93,13 @@ export default function Home() {
     setSelectedFurniture(null);
   };
 
+  const handleFeed = () => {
+    game.feed();
+  };
+
   const handlePetMenuAction = (action: PetAction) => {
     if (action === "feed") {
-      console.log("Feed tapped");
+      game.feed();
     } else if (action === "deposit") {
       setDepositView("deposit");
     } else if (action === "stats") {
@@ -160,7 +156,8 @@ export default function Home() {
 
         {isLoggedIn && (
           <ActionBar
-            onFeed={() => console.log("Feed tapped")}
+            onFeed={handleFeed}
+            feedDisabled={!game.canFeed}
           />
         )}
 
@@ -247,6 +244,11 @@ export default function Home() {
           />
         )}
 
+        {/* Shop screen overlay */}
+        {activeTab === "shop" && isLoggedIn && (
+          <ShopScreen onClose={() => setActiveTab("pet")} />
+        )}
+
         {/* Wallet screen overlay (when settings tab active) */}
         {activeTab === "settings" && isLoggedIn && <WalletScreen />}
 
@@ -269,6 +271,15 @@ export default function Home() {
               setTimeout(() => setShowLogin(false), 200);
             }} />
           </div>
+        )}
+
+        {/* Daily bonus toast */}
+        {game.dailyBonus && (
+          <DailyBonusToast
+            amount={game.dailyBonus.amount}
+            streak={game.currentStreak}
+            onDismiss={game.dismissDailyBonus}
+          />
         )}
 
         {/* Start screen overlay */}

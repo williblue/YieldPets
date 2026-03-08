@@ -1,0 +1,392 @@
+"use client";
+
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useCallback,
+  ReactNode,
+  useSyncExternalStore,
+} from "react";
+import { HeartCount } from "@/types";
+import { FOOD_ITEMS, FURNITURE_ITEMS } from "@/data/shopItems";
+
+// ─── Constants ───────────────────────────────────────────────
+const STORAGE_KEY = "yieldpets_game";
+const NUGGETS_PER_USD_PER_DAY = 0.8;
+const HEART_DECAY_MS = 8 * 60 * 60 * 1000; // 8 hours
+const FEED_COOLDOWN_MS = 1 * 60 * 60 * 1000; // 1 hour
+const FEED_BONUS = 5;
+const TICK_INTERVAL_MS = 10_000; // 10 seconds
+const HEART_MULTIPLIERS: Record<HeartCount, number> = {
+  4: 1.0,
+  3: 0.75,
+  2: 0.5,
+  1: 0.25,
+  0: 0,
+};
+
+function dailyBonus(streak: number): number {
+  return 50 + Math.min(streak, 15) * 10;
+}
+
+function todayStr(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function yesterdayStr(): string {
+  const d = new Date();
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().slice(0, 10);
+}
+
+// ─── State shape ─────────────────────────────────────────────
+export interface GameState {
+  nuggets: number;
+  nuggetsFloat: number;
+  lastTickAt: number;
+  depositBalance: number;
+  hearts: HeartCount;
+  lastFedAt: number;
+  feedCooldownEnd: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastLoginDate: string;
+  dailyBonusClaimed: boolean;
+  foodInventory: Record<string, number>;
+  ownedFurniture: string[];
+  placedFurniture: string[];
+}
+
+const INITIAL_STATE: GameState = {
+  nuggets: 0,
+  nuggetsFloat: 0,
+  lastTickAt: Date.now(),
+  depositBalance: 50,
+  hearts: 4,
+  lastFedAt: Date.now(),
+  feedCooldownEnd: 0,
+  currentStreak: 1,
+  longestStreak: 1,
+  lastLoginDate: todayStr(),
+  dailyBonusClaimed: false,
+  foodInventory: {},
+  ownedFurniture: [],
+  placedFurniture: [],
+};
+
+// ─── Store (external, mutable, subscription-based) ───────────
+type Listener = () => void;
+
+function createGameStore() {
+  let state: GameState = INITIAL_STATE;
+  const listeners = new Set<Listener>();
+
+  function load() {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Partial<GameState>;
+        state = { ...INITIAL_STATE, ...parsed };
+      }
+    } catch {
+      // corrupt data — use defaults
+    }
+  }
+
+  function save() {
+    if (typeof window === "undefined") return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      // storage full — ignore
+    }
+  }
+
+  function set(partial: Partial<GameState>) {
+    state = { ...state, ...partial };
+    save();
+    listeners.forEach((l) => l());
+  }
+
+  function get() {
+    return state;
+  }
+
+  function subscribe(listener: Listener) {
+    listeners.add(listener);
+    return () => listeners.delete(listener);
+  }
+
+  // ─── Heart decay ──────────────────────────────────
+  function decayHearts(now: number): Partial<GameState> {
+    if (state.hearts === 0) return {};
+    const elapsed = now - state.lastFedAt;
+    const decays = Math.floor(elapsed / HEART_DECAY_MS);
+    if (decays <= 0) return {};
+    const newHearts = Math.max(0, state.hearts - decays) as HeartCount;
+    return { hearts: newHearts };
+  }
+
+  // ─── Nugget accrual ───────────────────────────────
+  function accrueNuggets(now: number): Partial<GameState> {
+    const elapsed = (now - state.lastTickAt) / 1000; // seconds
+    if (elapsed <= 0) return { lastTickAt: now };
+    const rate = state.depositBalance * NUGGETS_PER_USD_PER_DAY; // per day
+    const perSecond = rate / 86400;
+    const mult = HEART_MULTIPLIERS[state.hearts];
+    const earned = perSecond * elapsed * mult;
+    const newFloat = state.nuggetsFloat + earned;
+    const whole = Math.floor(newFloat);
+    return {
+      nuggets: state.nuggets + whole,
+      nuggetsFloat: newFloat - whole,
+      lastTickAt: now,
+    };
+  }
+
+  // ─── Daily login / streak ─────────────────────────
+  function checkDailyLogin(): { bonusAmount: number } | null {
+    const today = todayStr();
+    if (state.lastLoginDate === today && state.dailyBonusClaimed) {
+      return null; // already claimed
+    }
+
+    const yesterday = yesterdayStr();
+    let newStreak = state.currentStreak;
+
+    if (state.lastLoginDate === today) {
+      // same day, not yet claimed (shouldn't happen but safe)
+    } else if (state.lastLoginDate === yesterday) {
+      newStreak = state.currentStreak + 1;
+    } else {
+      newStreak = 1;
+    }
+
+    const bonus = dailyBonus(newStreak);
+    const longest = Math.max(state.longestStreak, newStreak);
+
+    set({
+      currentStreak: newStreak,
+      longestStreak: longest,
+      lastLoginDate: today,
+      dailyBonusClaimed: true,
+      nuggets: state.nuggets + bonus,
+    });
+
+    return { bonusAmount: bonus };
+  }
+
+  // ─── Tick (call periodically) ─────────────────────
+  function tick() {
+    const now = Date.now();
+    const heartChanges = decayHearts(now);
+    // Apply heart changes first so accrual uses new heart count
+    if (Object.keys(heartChanges).length > 0) {
+      state = { ...state, ...heartChanges };
+    }
+    const nuggetChanges = accrueNuggets(now);
+    set({ ...heartChanges, ...nuggetChanges });
+  }
+
+  // ─── Actions ──────────────────────────────────────
+  function feed(foodId?: string) {
+    const now = Date.now();
+    if (now < state.feedCooldownEnd) return false;
+
+    const food = foodId
+      ? FOOD_ITEMS.find((f) => f.id === foodId)
+      : FOOD_ITEMS[0]; // default: kibble
+    if (!food) return false;
+
+    // Check if user has this food in inventory, or paying with nuggets
+    if (foodId && state.foodInventory[foodId] && state.foodInventory[foodId] > 0) {
+      // Use from inventory
+      const newInventory = { ...state.foodInventory };
+      newInventory[foodId] = (newInventory[foodId] || 0) - 1;
+      if (newInventory[foodId] <= 0) delete newInventory[foodId];
+
+      const newHearts = Math.min(4, state.hearts + food.heartRestore) as HeartCount;
+      set({
+        hearts: newHearts,
+        lastFedAt: now,
+        feedCooldownEnd: now + FEED_COOLDOWN_MS,
+        nuggets: state.nuggets + FEED_BONUS,
+        foodInventory: newInventory,
+      });
+      return true;
+    }
+
+    // Pay with nuggets directly (basic kibble default)
+    if (state.nuggets < food.price) return false;
+    const newHearts = Math.min(4, state.hearts + food.heartRestore) as HeartCount;
+    set({
+      hearts: newHearts,
+      lastFedAt: now,
+      feedCooldownEnd: now + FEED_COOLDOWN_MS,
+      nuggets: state.nuggets - food.price + FEED_BONUS,
+    });
+    return true;
+  }
+
+  function buyFood(foodId: string) {
+    const food = FOOD_ITEMS.find((f) => f.id === foodId);
+    if (!food || state.nuggets < food.price) return false;
+    const newInventory = { ...state.foodInventory };
+    newInventory[foodId] = (newInventory[foodId] || 0) + 1;
+    set({
+      nuggets: state.nuggets - food.price,
+      foodInventory: newInventory,
+    });
+    return true;
+  }
+
+  function buyFurniture(furnitureId: string) {
+    if (state.ownedFurniture.includes(furnitureId)) return false;
+    const item = FURNITURE_ITEMS.find((f) => f.id === furnitureId);
+    if (!item || state.nuggets < item.price) return false;
+    set({
+      nuggets: state.nuggets - item.price,
+      ownedFurniture: [...state.ownedFurniture, furnitureId],
+      placedFurniture: [...state.placedFurniture, furnitureId],
+    });
+    return true;
+  }
+
+  function placeFurniture(furnitureId: string) {
+    if (!state.ownedFurniture.includes(furnitureId)) return false;
+    if (state.placedFurniture.includes(furnitureId)) return false;
+    set({ placedFurniture: [...state.placedFurniture, furnitureId] });
+    return true;
+  }
+
+  function removeFurniture(furnitureId: string) {
+    set({
+      placedFurniture: state.placedFurniture.filter((id) => id !== furnitureId),
+    });
+  }
+
+  function deposit(amount: number) {
+    if (amount <= 0) return;
+    set({ depositBalance: state.depositBalance + amount });
+  }
+
+  function withdraw(amount: number) {
+    if (amount <= 0) return;
+    set({ depositBalance: Math.max(0, state.depositBalance - amount) });
+  }
+
+  return {
+    get,
+    set,
+    subscribe,
+    load,
+    tick,
+    checkDailyLogin,
+    feed,
+    buyFood,
+    buyFurniture,
+    placeFurniture,
+    removeFurniture,
+    deposit,
+    withdraw,
+  };
+}
+
+type GameStore = ReturnType<typeof createGameStore>;
+
+// ─── Context ─────────────────────────────────────────────────
+interface GameContextValue {
+  store: GameStore;
+  dailyBonus: { amount: number } | null;
+  dismissDailyBonus: () => void;
+}
+
+const GameContext = createContext<GameContextValue | null>(null);
+
+// ─── Provider ────────────────────────────────────────────────
+export function GameProvider({ children }: { children: ReactNode }) {
+  const storeRef = useRef<GameStore | null>(null);
+  if (!storeRef.current) {
+    storeRef.current = createGameStore();
+  }
+  const store = storeRef.current;
+
+  const dailyBonusRef = useRef<{ amount: number } | null>(null);
+  // Subscribe to store changes to trigger re-renders
+  const snapshot = useSyncExternalStore(
+    store.subscribe,
+    () => store.get(),
+    () => INITIAL_STATE
+  );
+  void snapshot; // keep subscription active
+
+  useEffect(() => {
+    store.load();
+    store.tick(); // catch up on elapsed time
+
+    const result = store.checkDailyLogin();
+    if (result) {
+      dailyBonusRef.current = { amount: result.bonusAmount };
+    }
+
+    const interval = setInterval(() => store.tick(), TICK_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [store]);
+
+  const dismissDailyBonus = useCallback(() => {
+    dailyBonusRef.current = null;
+    // Trigger re-render
+    store.set({});
+  }, [store]);
+
+  return (
+    <GameContext.Provider
+      value={{
+        store,
+        dailyBonus: dailyBonusRef.current,
+        dismissDailyBonus,
+      }}
+    >
+      {children}
+    </GameContext.Provider>
+  );
+}
+
+// ─── Hook ────────────────────────────────────────────────────
+export function useGame() {
+  const ctx = useContext(GameContext);
+  if (!ctx) throw new Error("useGame must be used within GameProvider");
+
+  const state = useSyncExternalStore(
+    ctx.store.subscribe,
+    ctx.store.get,
+    () => INITIAL_STATE
+  );
+
+  const nuggetsPerDay =
+    state.depositBalance *
+    NUGGETS_PER_USD_PER_DAY *
+    HEART_MULTIPLIERS[state.hearts];
+
+  const feedCooldownRemaining = Math.max(0, state.feedCooldownEnd - Date.now());
+  const canFeed = feedCooldownRemaining === 0 && state.nuggets >= 10;
+
+  return {
+    ...state,
+    nuggetsPerDay,
+    feedCooldownRemaining,
+    canFeed,
+    feed: ctx.store.feed,
+    buyFood: ctx.store.buyFood,
+    buyFurniture: ctx.store.buyFurniture,
+    placeFurniture: ctx.store.placeFurniture,
+    removeFurniture: ctx.store.removeFurniture,
+    deposit: ctx.store.deposit,
+    withdraw: ctx.store.withdraw,
+    dailyBonus: ctx.dailyBonus,
+    dismissDailyBonus: ctx.dismissDailyBonus,
+  };
+}

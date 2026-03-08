@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useGame } from "@/contexts/GameProvider";
 
 interface PetStatsModalProps {
   onClose: () => void;
@@ -12,13 +13,15 @@ interface PetStatsModalProps {
 
 type Tab = "about" | "personality";
 
-const MOCK_BALANCE = "10,000.00";
-const MOCK_HARVESTED = "+78.50";
-const MOCK_GROWTH_RATE = "5.8%";
 const MOCK_AGE = "4 months old";
-const MOCK_STASH_STATUS = "Stash Sprout";
-const MOCK_STREAK = 16;
-const MOCK_LONGEST_STREAK = 20;
+
+function stashStatus(balance: number): string {
+  if (balance >= 10000) return "Stash Legend";
+  if (balance >= 1000) return "Stash Grower";
+  if (balance >= 100) return "Stash Sprout";
+  if (balance > 0) return "Stash Seedling";
+  return "No Stash";
+}
 
 export default function PetStatsModal({
   onClose,
@@ -27,10 +30,15 @@ export default function PetStatsModal({
   petName,
   petImageUrl,
 }: PetStatsModalProps) {
+  const game = useGame();
   const [tab, setTab] = useState<Tab>("about");
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [depositPressed, setDepositPressed] = useState(false);
   const [withdrawPressed, setWithdrawPressed] = useState(false);
+
+  const growthRate = game.depositBalance > 0
+    ? ((game.nuggetsPerDay / game.depositBalance) * 100).toFixed(1)
+    : "0.0";
 
   const labelStyle: React.CSSProperties = {
     fontSize: 11,
@@ -222,7 +230,7 @@ export default function PetStatsModal({
                       marginTop: 1,
                     }}
                   >
-                    {MOCK_STASH_STATUS}
+                    {stashStatus(game.depositBalance)}
                   </div>
                 </div>
               </div>
@@ -346,7 +354,7 @@ export default function PetStatsModal({
                       marginTop: 2,
                     }}
                   >
-                    {balanceVisible ? MOCK_BALANCE : "****"}{" "}
+                    {balanceVisible ? game.depositBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "****"}{" "}
                     <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)" }}>
                       (PYUSD0)
                     </span>
@@ -501,7 +509,7 @@ export default function PetStatsModal({
                       marginTop: 2,
                     }}
                   >
-                    {MOCK_HARVESTED}
+                    +{game.nuggetsPerDay.toFixed(2)}
                   </div>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
@@ -568,7 +576,7 @@ export default function PetStatsModal({
                         color: "var(--text-primary)",
                       }}
                     >
-                      {MOCK_GROWTH_RATE}
+                      {growthRate}%
                     </span>
                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                       <circle cx="7" cy="7" r="6" stroke="#C0B8A8" strokeWidth="1.2" />
@@ -708,7 +716,7 @@ export default function PetStatsModal({
                     color: "var(--text-primary)",
                   }}
                 >
-                  {MOCK_STREAK} day streak
+                  {game.currentStreak} day streak
                 </div>
                 <div
                   style={{
@@ -718,7 +726,7 @@ export default function PetStatsModal({
                     marginTop: 2,
                   }}
                 >
-                  Longest: {MOCK_LONGEST_STREAK} days
+                  Longest: {game.longestStreak} days
                 </div>
               </div>
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>

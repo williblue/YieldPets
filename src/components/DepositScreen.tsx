@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useGame } from "@/contexts/GameProvider";
 
 interface DepositScreenProps {
   onClose: () => void;
@@ -10,10 +11,7 @@ interface DepositScreenProps {
 
 type Tab = "deposit" | "withdraw";
 
-const MOCK_BALANCE = 50;
-const MOCK_DAILY_YIELD = 4.32;
-const MOCK_NUGGETS_PER_DAY = 40;
-const NUGGETS_RATE = MOCK_NUGGETS_PER_DAY / MOCK_BALANCE;
+const NUGGETS_PER_USD_PER_DAY = 0.8;
 
 const QUICK_AMOUNTS = ["10", "50", "100", "500"];
 
@@ -34,6 +32,7 @@ const methodCardStyle: React.CSSProperties = {
 };
 
 export default function DepositScreen({ onClose, onCrypto, petName }: DepositScreenProps) {
+  const game = useGame();
   const [tab, setTab] = useState<Tab>("deposit");
   const [depositMethod, setDepositMethod] = useState<"card" | null>(null);
   const [amount, setAmount] = useState("");
@@ -43,11 +42,13 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
   const numAmount = parseFloat(amount || customAmount || "0");
   const hasAmount = numAmount > 0;
 
+  const currentBalance = game.depositBalance;
+  const dailyYield = currentBalance * 0.0864; // ~8.64% APY mock
   const newBalance =
     tab === "deposit"
-      ? MOCK_BALANCE + numAmount
-      : Math.max(0, MOCK_BALANCE - numAmount);
-  const newNuggets = Math.round(newBalance * NUGGETS_RATE);
+      ? currentBalance + numAmount
+      : Math.max(0, currentBalance - numAmount);
+  const newNuggets = Math.round(newBalance * NUGGETS_PER_USD_PER_DAY);
 
   const ctaLabel = hasAmount
     ? `${tab === "deposit" ? "Deposit" : "Withdraw"} $${numAmount.toFixed(2)} USD`
@@ -231,7 +232,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                   marginTop: 4,
                 }}
               >
-                ${MOCK_BALANCE.toFixed(2)}{" "}
+                ${currentBalance.toFixed(2)}{" "}
                 <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)" }}>
                   USD
                 </span>
@@ -247,7 +248,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                   marginTop: 4,
                 }}
               >
-                +${MOCK_DAILY_YIELD.toFixed(2)}/day
+                +${dailyYield.toFixed(2)}/day
               </div>
             </div>
           </div>
@@ -539,6 +540,13 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
             {/* CTA Button */}
             <button
               disabled={!hasAmount}
+              onClick={() => {
+                if (!hasAmount) return;
+                if (tab === "deposit") game.deposit(numAmount);
+                else game.withdraw(numAmount);
+                setAmount("");
+                setCustomAmount("");
+              }}
               onMouseDown={() => setPressed(true)}
               onMouseUp={() => setPressed(false)}
               onMouseLeave={() => setPressed(false)}
