@@ -50,7 +50,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
   const newNuggets = Math.round(newBalance * NUGGETS_RATE);
 
   const ctaLabel = hasAmount
-    ? `${tab === "deposit" ? "Deposit" : "Withdraw"} $${numAmount.toFixed(2)} USDC`
+    ? `${tab === "deposit" ? "Deposit" : "Withdraw"} $${numAmount.toFixed(2)} USD`
     : tab === "deposit"
       ? "Deposit"
       : "Withdraw";
@@ -233,7 +233,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
               >
                 ${MOCK_BALANCE.toFixed(2)}{" "}
                 <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)" }}>
-                  USDC
+                  USD
                 </span>
               </div>
             </div>
@@ -461,7 +461,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                     pointerEvents: "none",
                   }}
                 >
-                  USDC
+                  USD
                 </span>
               </div>
             </div>
@@ -503,7 +503,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                       color: "var(--text-primary)",
                     }}
                   >
-                    ${newBalance.toFixed(2)} USDC
+                    ${newBalance.toFixed(2)} USD
                   </span>
                 </div>
 
