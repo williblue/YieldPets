@@ -291,6 +291,8 @@ export default function IsometricRoom({
         height: canvasHeight,
         overflow: "hidden",
         zIndex: 1,
+        userSelect: "none",
+        WebkitUserSelect: "none",
       }}
     >
       {/* Isometric room PNG */}
