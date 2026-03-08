@@ -297,7 +297,7 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
             textAlign: "center",
           }}
         >
-          Receive Crypto
+          Receive Stablecoin
         </h2>
 
         {/* Network Switcher */}

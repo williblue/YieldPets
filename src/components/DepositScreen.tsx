@@ -308,7 +308,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                     marginTop: 2,
                   }}
                 >
-                  Buy PYUSD with card
+                  Add money with card
                 </div>
               </div>
               <svg
@@ -356,7 +356,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                     color: "var(--text-primary)",
                   }}
                 >
-                  Crypto
+                  Stablecoin
                 </div>
                 <div
                   style={{
