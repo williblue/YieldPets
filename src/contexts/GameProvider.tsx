@@ -360,7 +360,7 @@ function createGameStore() {
   }
 
   function toggleSfx() {
-    set({ sfxEnabled: !state.sfxEnabled });
+    set({ sfxEnabled: !(state.sfxEnabled ?? true) });
   }
 
   return {
