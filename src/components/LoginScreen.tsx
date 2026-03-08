@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthProvider";
 
-export default function LoginScreen() {
+interface LoginScreenProps {
+  onBack?: () => void;
+}
+
+export default function LoginScreen({ onBack }: LoginScreenProps) {
   const { login, isLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [sending, setSending] = useState(false);
@@ -57,6 +61,40 @@ export default function LoginScreen() {
           zIndex: 0,
         }}
       />
+
+      {/* Back button */}
+      {onBack && (
+        <button
+          onClick={onBack}
+          style={{
+            position: "absolute",
+            top: 16,
+            left: 16,
+            zIndex: 2,
+            width: 44,
+            height: 44,
+            borderRadius: 999,
+            border: "2px solid #ECD8A0",
+            background: "#FFF8E8",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 0,
+          }}
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M12.5 15L7.5 10L12.5 5"
+              stroke="#7878A0"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      )}
 
       {/* Content */}
       <div

@@ -59,26 +59,25 @@ export default function Home() {
     }
   }, [isLoggedIn, showLogin]);
 
-  // When user logs out (and start screen is gone), show login screen again
+  // When user logs out, reset tab to pet (egg will show automatically)
   useEffect(() => {
-    if (!isLoggedIn && !isLoading && !showStart && !showLogin) {
-      setShowLogin(true);
+    if (!isLoggedIn && !isLoading && !showStart) {
       setActiveTab("pet");
-      requestAnimationFrame(() => setLoginVisible(true));
     }
-  }, [isLoggedIn, isLoading, showStart, showLogin]);
+  }, [isLoggedIn, isLoading, showStart]);
 
   const handlePlay = () => {
     // Fade out start screen
     setStartVisible(false);
     setTimeout(() => {
       setShowStart(false);
-      // If not logged in, show login screen
-      if (!isLoggedIn && !isLoading) {
-        setShowLogin(true);
-        requestAnimationFrame(() => setLoginVisible(true));
-      }
     }, 200);
+  };
+
+  const handleEggTap = () => {
+    if (showLogin) return;
+    setShowLogin(true);
+    requestAnimationFrame(() => setLoginVisible(true));
   };
 
   const handleFurnitureTap = (item: FurnitureItem) => {
@@ -132,7 +131,12 @@ export default function Home() {
         <HUDBar state={hudState} />
 
         <div style={{ paddingTop: 52 }}>
-          <IsometricRoom room={roomState} onFurnitureTap={handleFurnitureTap} />
+          <IsometricRoom
+            room={roomState}
+            onFurnitureTap={handleFurnitureTap}
+            showEgg={!isLoggedIn}
+            onEggTap={handleEggTap}
+          />
         </div>
 
         <ActionBar
@@ -160,7 +164,10 @@ export default function Home() {
                 : "opacity 180ms ease-in",
             }}
           >
-            <LoginScreen />
+            <LoginScreen onBack={() => {
+              setLoginVisible(false);
+              setTimeout(() => setShowLogin(false), 200);
+            }} />
           </div>
         )}
 

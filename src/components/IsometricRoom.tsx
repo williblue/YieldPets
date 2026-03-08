@@ -6,6 +6,8 @@ import { RoomState, FurnitureItem } from "@/types";
 interface IsometricRoomProps {
   room: RoomState;
   onFurnitureTap: (item: FurnitureItem) => void;
+  showEgg?: boolean;
+  onEggTap?: () => void;
 }
 
 /* ── Walkable floor (isometric diamond) ────────────────────────── */
@@ -67,6 +69,8 @@ function randFloor(from: { x: number; y: number }): { x: number; y: number } {
 export default function IsometricRoom({
   room,
   onFurnitureTap,
+  showEgg = false,
+  onEggTap,
 }: IsometricRoomProps) {
   const [failedFurniture, setFailedFurniture] = useState<Set<string>>(
     new Set(),
@@ -76,6 +80,7 @@ export default function IsometricRoom({
   const [facingLeft, setFacingLeft] = useState(false);
   const [frame, setFrame] = useState(0);
   const [clicking, setClicking] = useState(false);
+  const [eggTapped, setEggTapped] = useState(false);
 
   const posRef = useRef({ x: FLOOR_CX, y: FLOOR_CY });
   const targetRef = useRef<{ x: number; y: number } | null>(null);
@@ -246,6 +251,19 @@ export default function IsometricRoom({
 
   const bgX = -frame * PET_W;
 
+  const handleEggTap = useCallback(() => {
+    if (eggTapped) return;
+    setEggTapped(true);
+    if (popSfx.current) {
+      popSfx.current.currentTime = 0;
+      popSfx.current.play();
+    }
+    setTimeout(() => {
+      onEggTap?.();
+      setEggTapped(false);
+    }, 400);
+  }, [eggTapped, onEggTap]);
+
   return (
     <div
       style={{
@@ -309,51 +327,78 @@ export default function IsometricRoom({
         );
       })}
 
-      {/* Pet sprite */}
-      <div
-        ref={petElRef}
-        onClick={handlePetClick}
-        style={{
-          position: "absolute",
-          left: FLOOR_CX,
-          bottom: FLOOR_CY,
-          width: PET_W,
-          height: PET_H,
-          transform: `translateX(-50%) ${facingLeft ? "scaleX(-1)" : ""}`,
-          zIndex: 5,
-          cursor: "pointer",
-        }}
-      >
-        {/* Walk layer — always rendered */}
+      {showEgg ? (
+        /* Egg — shown when not signed in */
         <div
-          ref={walkLayerRef}
+          className={eggTapped ? "egg-tap" : "egg-idle"}
+          onClick={handleEggTap}
           style={{
+            position: "absolute",
+            left: FLOOR_CX,
+            bottom: FLOOR_CY,
+            width: 72,
+            height: 96,
+            zIndex: 5,
+            cursor: "pointer",
+          }}
+        >
+          <img
+            src="/egg.svg"
+            alt="Egg"
+            style={{
+              width: "100%",
+              height: "100%",
+              pointerEvents: "none",
+            }}
+          />
+        </div>
+      ) : (
+        /* Pet sprite */
+        <div
+          ref={petElRef}
+          onClick={handlePetClick}
+          style={{
+            position: "absolute",
+            left: FLOOR_CX,
+            bottom: FLOOR_CY,
             width: PET_W,
             height: PET_H,
-            backgroundImage: "url(/pet_walk_sheet.png)",
-            backgroundSize: `${BG_W}px ${PET_H}px`,
-            backgroundPosition: `${bgX}px 0px`,
-            backgroundRepeat: "no-repeat",
+            transform: `translateX(-50%) ${facingLeft ? "scaleX(-1)" : ""}`,
+            zIndex: 5,
+            cursor: "pointer",
           }}
-        />
-        {/* Click layer — overlays on top, removed when done */}
-        {clicking && (
+        >
+          {/* Walk layer — always rendered */}
           <div
-            className="pet-click-anim"
-            onAnimationEnd={handleClickEnd}
+            ref={walkLayerRef}
             style={{
-              position: "absolute",
-              left: 0,
-              bottom: 2,
               width: PET_W,
-              height: CLICK_PET_H,
-              backgroundImage: "url(/pet_click_sheet.png)",
-              backgroundSize: `${CLICK_BG_W}px ${CLICK_PET_H}px`,
+              height: PET_H,
+              backgroundImage: "url(/pet_walk_sheet.png)",
+              backgroundSize: `${BG_W}px ${PET_H}px`,
+              backgroundPosition: `${bgX}px 0px`,
               backgroundRepeat: "no-repeat",
             }}
           />
-        )}
-      </div>
+          {/* Click layer — overlays on top, removed when done */}
+          {clicking && (
+            <div
+              className="pet-click-anim"
+              onAnimationEnd={handleClickEnd}
+              style={{
+                position: "absolute",
+                left: 0,
+                bottom: 2,
+                width: PET_W,
+                height: CLICK_PET_H,
+                backgroundImage: "url(/pet_click_sheet.png)",
+                backgroundSize: `${CLICK_BG_W}px ${CLICK_PET_H}px`,
+                backgroundRepeat: "no-repeat",
+              }}
+            />
+          )}
+        </div>
+      )}
     </div>
   );
 }
