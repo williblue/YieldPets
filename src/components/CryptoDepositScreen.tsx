@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import * as fcl from "@onflow/fcl";
 import * as t from "@onflow/types";
 import { useAuth } from "@/contexts/AuthProvider";
-import { GET_COA_ADDRESS, CREATE_COA } from "@/lib/flow";
+import { GET_COA_ADDRESS, CREATE_COA, CHECK_PYUSD_VAULT, SETUP_PYUSD_VAULT } from "@/lib/flow";
 import QRCode from "qrcode";
 
 type Network = "cadence" | "evm";
@@ -16,11 +16,17 @@ interface CryptoDepositScreenProps {
 export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps) {
   const { address, magicAuthz } = useAuth();
 
-  const [network, setNetwork] = useState<Network>("cadence");
+  const [network, setNetwork] = useState<Network>("evm");
   const [coaAddress, setCoaAddress] = useState<string | null>(null);
   const [coaLoading, setCoaLoading] = useState(true);
   const [coaCreating, setCoaCreating] = useState(false);
   const [coaStatus, setCoaStatus] = useState<string | null>(null);
+
+  const [vaultReady, setVaultReady] = useState(false);
+  const [vaultLoading, setVaultLoading] = useState(true);
+  const [vaultCreating, setVaultCreating] = useState(false);
+  const [vaultStatus, setVaultStatus] = useState<string | null>(null);
+
   const [copied, setCopied] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
@@ -53,9 +59,41 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
     return () => { cancelled = true; };
   }, [address]);
 
+  // Check PYUSD vault on Cadence address
+  useEffect(() => {
+    if (!address) {
+      setVaultLoading(false);
+      return;
+    }
+    let cancelled = false;
+
+    const checkVault = async () => {
+      setVaultLoading(true);
+      try {
+        const result = await fcl.query({
+          cadence: CHECK_PYUSD_VAULT,
+          args: (arg: typeof fcl.arg) => [arg(address, t.Address)],
+        });
+        if (!cancelled) setVaultReady(result === true);
+      } catch {
+        if (!cancelled) setVaultReady(false);
+      } finally {
+        if (!cancelled) setVaultLoading(false);
+      }
+    };
+
+    checkVault();
+    return () => { cancelled = true; };
+  }, [address]);
+
   // Generate QR code when address changes
   useEffect(() => {
     if (!displayAddress) {
+      setQrDataUrl(null);
+      return;
+    }
+    // For Cadence, only generate QR if vault is ready
+    if (network === "cadence" && !vaultReady) {
       setQrDataUrl(null);
       return;
     }
@@ -72,7 +110,7 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
     });
 
     return () => { cancelled = true; };
-  }, [displayAddress]);
+  }, [displayAddress, network, vaultReady]);
 
   const handleCopy = useCallback(async () => {
     if (!displayAddress) return;
@@ -116,6 +154,30 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
     }
   }, [magicAuthz, coaCreating, address]);
 
+  const handleSetupVault = useCallback(async () => {
+    if (!magicAuthz || vaultCreating) return;
+    setVaultCreating(true);
+    setVaultStatus("Signing transaction...");
+    try {
+      const txId = await fcl.mutate({
+        cadence: SETUP_PYUSD_VAULT,
+        limit: 9999,
+        authorizations: [magicAuthz],
+        payer: magicAuthz,
+        proposer: magicAuthz,
+      });
+      setVaultStatus("Waiting for confirmation...");
+      await fcl.tx(txId).onceSealed();
+      setVaultStatus(null);
+      setVaultReady(true);
+    } catch (err) {
+      console.error("PYUSD vault setup failed:", err);
+      setVaultStatus("Setup failed. Please try again.");
+    } finally {
+      setVaultCreating(false);
+    }
+  }, [magicAuthz, vaultCreating]);
+
   // Reset copied state when switching network
   useEffect(() => {
     setCopied(false);
@@ -137,6 +199,34 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
   };
 
   const showEvmSetup = network === "evm" && !coaLoading && !coaAddress;
+  const showCadenceVaultSetup = network === "cadence" && !vaultLoading && !vaultReady;
+  const isLoading =
+    (network === "evm" && coaLoading) ||
+    (network === "cadence" && vaultLoading);
+  const showAddress =
+    !isLoading && !showEvmSetup && !showCadenceVaultSetup;
+
+  const ctaButtonStyle = (disabled: boolean): React.CSSProperties => ({
+    height: 44,
+    paddingLeft: 24,
+    paddingRight: 24,
+    borderRadius: 999,
+    border: "none",
+    cursor: disabled ? "default" : "pointer",
+    background: disabled
+      ? "#E0D8C8"
+      : "linear-gradient(180deg, #F8B0B8 0%, #F09098 100%)",
+    boxShadow: disabled ? "none" : "0 3px 0px #C07078",
+    color: "#FFFFFF",
+    fontFamily: "inherit",
+    fontWeight: 800,
+    fontSize: 15,
+    opacity: disabled ? 0.6 : 1,
+    transition:
+      "transform 80ms ease-out, box-shadow 80ms ease-out, background 80ms ease-out",
+    userSelect: "none",
+    WebkitUserSelect: "none",
+  });
 
   return (
     <div
@@ -218,7 +308,7 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
             justifyContent: "center",
           }}
         >
-          {(["cadence", "evm"] as Network[]).map((n) => (
+          {(["evm", "cadence"] as Network[]).map((n) => (
             <button
               key={n}
               onClick={() => setNetwork(n)}
@@ -257,7 +347,8 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
             {network === "cadence" ? "Flow Cadence Address" : "Flow EVM Address"}
           </span>
 
-          {network === "evm" && coaLoading ? (
+          {/* Loading state */}
+          {isLoading && (
             <span
               style={{
                 fontSize: 14,
@@ -268,7 +359,10 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
             >
               Loading...
             </span>
-          ) : showEvmSetup ? (
+          )}
+
+          {/* EVM: COA not set up */}
+          {showEvmSetup && (
             <div
               style={{
                 display: "flex",
@@ -307,36 +401,74 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
               <button
                 onClick={handleCreateCoa}
                 disabled={coaCreating || !magicAuthz}
-                style={{
-                  height: 44,
-                  paddingLeft: 24,
-                  paddingRight: 24,
-                  borderRadius: 999,
-                  border: "none",
-                  cursor: coaCreating || !magicAuthz ? "default" : "pointer",
-                  background:
-                    coaCreating || !magicAuthz
-                      ? "#E0D8C8"
-                      : "linear-gradient(180deg, #F8B0B8 0%, #F09098 100%)",
-                  boxShadow:
-                    coaCreating || !magicAuthz
-                      ? "none"
-                      : "0 3px 0px #C07078",
-                  color: "#FFFFFF",
-                  fontFamily: "inherit",
-                  fontWeight: 800,
-                  fontSize: 15,
-                  opacity: coaCreating || !magicAuthz ? 0.6 : 1,
-                  transition:
-                    "transform 80ms ease-out, box-shadow 80ms ease-out, background 80ms ease-out",
-                  userSelect: "none",
-                  WebkitUserSelect: "none",
-                }}
+                style={ctaButtonStyle(coaCreating || !magicAuthz)}
               >
                 {coaCreating ? "Setting up..." : "Set Up EVM Account"}
               </button>
             </div>
-          ) : (
+          )}
+
+          {/* Cadence: PYUSD vault not set up */}
+          {showCadenceVaultSetup && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 12,
+                padding: "24px 0",
+              }}
+            >
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 14,
+                  fontWeight: 700,
+                  color: "var(--text-secondary)",
+                  textAlign: "center",
+                }}
+              >
+                PYUSD vault not set up yet
+              </p>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: "var(--text-secondary)",
+                  textAlign: "center",
+                  opacity: 0.7,
+                }}
+              >
+                You need a PYUSD token vault on your Cadence account to receive deposits
+              </p>
+              {vaultStatus && (
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: vaultStatus.includes("failed")
+                      ? "#E85878"
+                      : "var(--text-secondary)",
+                    textAlign: "center",
+                  }}
+                >
+                  {vaultStatus}
+                </p>
+              )}
+              <button
+                onClick={handleSetupVault}
+                disabled={vaultCreating || !magicAuthz}
+                style={ctaButtonStyle(vaultCreating || !magicAuthz)}
+              >
+                {vaultCreating ? "Setting up..." : "Set Up PYUSD Vault"}
+              </button>
+            </div>
+          )}
+
+          {/* Address + QR */}
+          {showAddress && (
             <>
               {/* QR code */}
               <div

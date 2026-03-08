@@ -43,7 +43,57 @@ transaction {
     }
 
     execute {
-        log("COA setup complete")
+
+    }
+}
+`;
+
+export const CHECK_PYUSD_VAULT = `
+import FungibleToken from 0xf233dcee88fe0abe
+import FungibleTokenMetadataViews from 0xf233dcee88fe0abe
+import EVMVMBridgedToken_99af3eea856556646c98c8b9b2548fe815240750 from 0x1e4aa0b87d10b141
+
+access(all) fun main(address: Address): Bool {
+    let vaultData = EVMVMBridgedToken_99af3eea856556646c98c8b9b2548fe815240750.resolveContractView(
+        resourceType: nil,
+        viewType: Type<FungibleTokenMetadataViews.FTVaultData>()
+    ) as! FungibleTokenMetadataViews.FTVaultData?
+    if vaultData == nil { return false }
+
+    let acct = getAccount(address)
+    return acct.capabilities.get<&{FungibleToken.Receiver}>(vaultData!.receiverPath).check()
+}
+`;
+
+export const SETUP_PYUSD_VAULT = `
+import FungibleToken from 0xf233dcee88fe0abe
+import FungibleTokenMetadataViews from 0xf233dcee88fe0abe
+import EVMVMBridgedToken_99af3eea856556646c98c8b9b2548fe815240750 from 0x1e4aa0b87d10b141
+
+transaction {
+    prepare(signer: auth(SaveValue, IssueStorageCapabilityController, PublishCapability) &Account) {
+        let vaultData = EVMVMBridgedToken_99af3eea856556646c98c8b9b2548fe815240750.resolveContractView(
+            resourceType: nil,
+            viewType: Type<FungibleTokenMetadataViews.FTVaultData>()
+        ) as! FungibleTokenMetadataViews.FTVaultData?
+            ?? panic("Could not resolve FTVaultData for PYUSD")
+
+        if signer.storage.type(at: vaultData.storagePath) != nil {
+            return
+        }
+
+        let vault <- EVMVMBridgedToken_99af3eea856556646c98c8b9b2548fe815240750.createEmptyVault(vaultType: Type<@EVMVMBridgedToken_99af3eea856556646c98c8b9b2548fe815240750.Vault>())
+        signer.storage.save(<-vault, to: vaultData.storagePath)
+
+        let receiverCap = signer.capabilities.storage.issue<&{FungibleToken.Receiver}>(vaultData.storagePath)
+        signer.capabilities.publish(receiverCap, at: vaultData.receiverPath)
+
+        let vaultCap = signer.capabilities.storage.issue<&{FungibleToken.Balance}>(vaultData.storagePath)
+        signer.capabilities.publish(vaultCap, at: vaultData.metadataPath)
+    }
+
+    execute {
+
     }
 }
 `;
