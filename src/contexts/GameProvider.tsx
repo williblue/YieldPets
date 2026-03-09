@@ -93,6 +93,7 @@ export interface GameState {
   transactions: Transaction[];
   totalYieldEarned: number;
   sfxEnabled: boolean;
+  balanceVisible: boolean;
 }
 
 const INITIAL_STATE: GameState = {
@@ -115,6 +116,7 @@ const INITIAL_STATE: GameState = {
   transactions: [],
   totalYieldEarned: 0,
   sfxEnabled: true,
+  balanceVisible: true,
 };
 
 // ─── Store (external, mutable, subscription-based) ───────────
@@ -363,6 +365,10 @@ function createGameStore() {
     set({ sfxEnabled: !(state.sfxEnabled ?? true) });
   }
 
+  function toggleBalanceVisible() {
+    set({ balanceVisible: !(state.balanceVisible ?? true) });
+  }
+
   return {
     get,
     set,
@@ -381,6 +387,7 @@ function createGameStore() {
     setTrainerName,
     resetState,
     toggleSfx,
+    toggleBalanceVisible,
   };
 }
 
@@ -479,6 +486,7 @@ export function useGame() {
     setTrainerName: ctx.store.setTrainerName,
     resetState: ctx.store.resetState,
     toggleSfx: ctx.store.toggleSfx,
+    toggleBalanceVisible: ctx.store.toggleBalanceVisible,
     dailyBonus: ctx.dailyBonus,
     dismissDailyBonus: ctx.dismissDailyBonus,
   };

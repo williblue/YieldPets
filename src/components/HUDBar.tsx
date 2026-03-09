@@ -1,6 +1,7 @@
 "use client";
 
 import { HUDState, HeartCount } from "@/types";
+import { useGame } from "@/contexts/GameProvider";
 
 function formatGold(value: number): string {
   return value.toLocaleString("en-US");
@@ -62,6 +63,7 @@ interface HUDBarProps {
 
 export default function HUDBar({ state }: HUDBarProps) {
   const { goldNuggets, hearts, depositBalance, yieldPerDay, loading } = state;
+  const game = useGame();
 
   const pillStyle: React.CSSProperties = {
     background: "var(--hud-bar-bg)",
@@ -113,10 +115,15 @@ export default function HUDBar({ state }: HUDBarProps) {
       </div>
 
       {/* Deposit Balance + Yield */}
-      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+      <div
+        style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, cursor: "pointer" }}
+        onClick={() => game.toggleBalanceVisible()}
+      >
         <div style={{ ...pillStyle, minWidth: 80 }}>
           <BalanceIcon />
-          <span style={valueStyle}>{loading ? "\u2014" : formatBalance(depositBalance)}</span>
+          <span style={valueStyle}>
+            {loading ? "\u2014" : (game.balanceVisible ?? true) ? formatBalance(depositBalance) : "••••"}
+          </span>
         </div>
         {!loading && yieldPerDay > 0 && (
           <span
@@ -128,7 +135,7 @@ export default function HUDBar({ state }: HUDBarProps) {
               lineHeight: 1,
             }}
           >
-            {formatYield(yieldPerDay)}/day
+            {(game.balanceVisible ?? true) ? `${formatYield(yieldPerDay)}/day` : "••••"}
           </span>
         )}
       </div>

@@ -105,6 +105,7 @@ const TIMELINE_COLORS = [
 
 export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScreenProps) {
   const game = useGame();
+  const hidden = !(game.balanceVisible ?? true);
 
   const deposits = useMemo(
     () => getDepositHistory(game.transactions, game.depositBalance),
@@ -290,8 +291,10 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
                 lineHeight: 1.1,
               }}
             >
-              {fmtUSD(game.depositBalance)}{" "}
-              <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)" }}>PYUSD</span>
+              <span onClick={() => game.toggleBalanceVisible()} style={{ cursor: "pointer" }}>
+                {hidden ? "••••••" : fmtUSD(game.depositBalance)}{" "}
+                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)" }}>PYUSD</span>
+              </span>
             </div>
             <div
               style={{
@@ -482,7 +485,7 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
                 color: "var(--text-primary)",
               }}
             >
-              {fmtCompact(Math.round(avgDeposit))}
+              {hidden ? "••••" : fmtCompact(Math.round(avgDeposit))}
             </span>
             <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)" }}>
               PYUSD
@@ -509,7 +512,7 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
                 color: "#5BAF48",
               }}
             >
-              +{fmtCompact(Math.round(game.totalYieldEarned ?? 0))}
+              {hidden ? "••••" : `+${fmtCompact(Math.round(game.totalYieldEarned ?? 0))}`}
             </span>
             <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)" }}>
               so far
@@ -585,7 +588,7 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
                           color: entry.color.label,
                         }}
                       >
-                        +{fmtCompact(entry.deposit.amount)}
+                        {hidden ? "••••" : `+${fmtCompact(entry.deposit.amount)}`}
                       </span>
                     </div>
 
@@ -615,7 +618,7 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
                               marginTop: 2,
                             }}
                           >
-                            {fmtUSD(entry.deposit.balanceAfter)}
+                            {hidden ? "••••" : fmtUSD(entry.deposit.balanceAfter)}
                           </div>
                         </div>
                       </div>
@@ -638,7 +641,7 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
                               marginTop: 2,
                             }}
                           >
-                            +{fmtCompact(Math.round(yieldFromDeposit * 100) / 100)} earned
+                            {hidden ? "••••" : `+${fmtCompact(Math.round(yieldFromDeposit * 100) / 100)} earned`}
                           </div>
                         </div>
                         <span

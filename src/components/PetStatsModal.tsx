@@ -93,7 +93,7 @@ export default function PetStatsModal({
 }: PetStatsModalProps) {
   const game = useGame();
   const [tab, setTab] = useState<Tab>("about");
-  const [balanceVisible, setBalanceVisible] = useState(true);
+  const balanceVisible = game.balanceVisible ?? true;
   const [depositPressed, setDepositPressed] = useState(false);
   const [withdrawPressed, setWithdrawPressed] = useState(false);
   const [tip, setTip] = useState<"pocketPile" | "harvested" | "growthRate" | null>(null);
@@ -443,13 +443,13 @@ export default function PetStatsModal({
                   tabIndex={0}
                   onClick={(e) => {
                     e.stopPropagation();
-                    setBalanceVisible(!balanceVisible);
+                    game.toggleBalanceVisible();
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
                       e.stopPropagation();
-                      setBalanceVisible(!balanceVisible);
+                      game.toggleBalanceVisible();
                     }
                   }}
                   style={{
@@ -593,7 +593,7 @@ export default function PetStatsModal({
                       marginTop: 2,
                     }}
                   >
-                    +{(game.totalYieldEarned ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    {balanceVisible ? `+${(game.totalYieldEarned ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "••••"}
                   </div>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
@@ -661,7 +661,7 @@ export default function PetStatsModal({
                         color: "var(--text-primary)",
                       }}
                     >
-                      {growthRate}%
+                      {balanceVisible ? `${growthRate}%` : "••••"}
                     </span>
                     <div
                       role="button"

@@ -49,6 +49,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
   const numAmount = parseFloat(amount || customAmount || "0");
   const hasAmount = numAmount > 0;
 
+  const hidden = !(game.balanceVisible ?? true);
   const currentBalance = game.depositBalance;
   const dailyYield = currentBalance * 0.0864; // ~8.64% APY mock
   const newBalance =
@@ -239,9 +240,11 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                   marginTop: 4,
                 }}
               >
-                ${fmtUSD(currentBalance)}{" "}
-                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)" }}>
-                  USD
+                <span onClick={() => game.toggleBalanceVisible()} style={{ cursor: "pointer" }}>
+                  {hidden ? "••••••" : `$${fmtUSD(currentBalance)}`}{" "}
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)" }}>
+                    USD
+                  </span>
                 </span>
               </div>
             </div>
@@ -255,7 +258,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                   marginTop: 4,
                 }}
               >
-                +${fmtUSD(dailyYield)}/day
+                {hidden ? "••••" : `+$${fmtUSD(dailyYield)}/day`}
               </div>
             </div>
           </div>
@@ -511,7 +514,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                       color: "var(--text-primary)",
                     }}
                   >
-                    ${fmtUSD(newBalance)} USD
+                    {hidden ? "••••••" : `$${fmtUSD(newBalance)} USD`}
                   </span>
                 </div>
 
