@@ -12,6 +12,7 @@ import SettingsScreen from "@/components/SettingsScreen";
 import DepositScreen from "@/components/DepositScreen";
 import CryptoDepositScreen from "@/components/CryptoDepositScreen";
 import PetStatsModal from "@/components/PetStatsModal";
+import PocketPileScreen from "@/components/PocketPileScreen";
 import DailyBonusToast from "@/components/DailyBonusToast";
 import ShopScreen from "@/components/ShopScreen";
 import { useAuth } from "@/contexts/AuthProvider";
@@ -43,6 +44,7 @@ export default function Home() {
   type DepositView = null | "deposit" | "crypto";
   const [depositView, setDepositView] = useState<DepositView>(null);
   const [showStats, setShowStats] = useState(false);
+  const [showPocketPile, setShowPocketPile] = useState(false);
   const [piggyPressed, setPiggyPressed] = useState(false);
   const [petHeadPressed, setPetHeadPressed] = useState(false);
   const debounceRef = useRef(false);
@@ -146,7 +148,7 @@ export default function Home() {
           }}
         />
 
-        {activeTab === "pet" && !depositView && !showStats && <HUDBar state={hudState} />}
+        {activeTab === "pet" && !depositView && !showStats && !showPocketPile && <HUDBar state={hudState} />}
 
         <div style={{ paddingTop: 52 }}>
           <IsometricRoom
@@ -176,6 +178,7 @@ export default function Home() {
           // Close any open modals/overlays when switching tabs
           setDepositView(null);
           setShowStats(false);
+          setShowPocketPile(false);
           setSelectedFurniture(null);
           setActiveTab(tab);
         }} />
@@ -183,7 +186,7 @@ export default function Home() {
         <FurnitureModal item={selectedFurniture} onClose={handleModalClose} />
 
         {/* Floating pet head button (stats) */}
-        {isLoggedIn && !depositView && !showStats && activeTab !== "settings" && (
+        {isLoggedIn && !depositView && !showStats && !showPocketPile && activeTab !== "settings" && (
           <button
             onClick={() => setShowStats(true)}
             onMouseDown={() => setPetHeadPressed(true)}
@@ -226,7 +229,7 @@ export default function Home() {
         )}
 
         {/* Floating piggy bank button */}
-        {isLoggedIn && !depositView && !showStats && activeTab !== "settings" && (
+        {isLoggedIn && !depositView && !showStats && !showPocketPile && activeTab !== "settings" && (
           <button
             onClick={() => setDepositView("deposit")}
             onMouseDown={() => setPiggyPressed(true)}
@@ -289,7 +292,16 @@ export default function Home() {
             onClose={() => setShowStats(false)}
             onDeposit={() => { setShowStats(false); setDepositView("deposit"); }}
             onWithdraw={() => { setShowStats(false); setDepositView("deposit"); }}
+            onPocketPile={() => { setShowStats(false); setShowPocketPile(true); }}
             petName={game.petName}
+          />
+        )}
+
+        {/* Pocket Pile screen */}
+        {showPocketPile && isLoggedIn && (
+          <PocketPileScreen
+            onClose={() => { setShowPocketPile(false); setShowStats(true); }}
+            onDeposit={() => { setShowPocketPile(false); setDepositView("deposit"); }}
           />
         )}
 

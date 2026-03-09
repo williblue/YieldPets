@@ -7,6 +7,7 @@ interface PetStatsModalProps {
   onClose: () => void;
   onDeposit: () => void;
   onWithdraw: () => void;
+  onPocketPile: () => void;
   petName: string;
 }
 
@@ -87,6 +88,7 @@ export default function PetStatsModal({
   onClose,
   onDeposit,
   onWithdraw,
+  onPocketPile,
   petName,
 }: PetStatsModalProps) {
   const game = useGame();
@@ -354,7 +356,7 @@ export default function PetStatsModal({
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {/* Pocket Pile */}
               <button
-                onClick={onDeposit}
+                onClick={onPocketPile}
                 style={{
                   ...cardStyle,
                   display: "flex",
