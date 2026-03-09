@@ -40,18 +40,19 @@ function HeartIcon({ filled }: { filled: boolean }) {
   );
 }
 
-function PiggyIcon() {
+function BalanceIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <ellipse cx="11" cy="11.5" rx="6.5" ry="5" fill="#F8B0B8"/>
-      <ellipse cx="11" cy="11.5" rx="5" ry="4" fill="#F09098"/>
-      <circle cx="6" cy="10" r="2" fill="#F8B0B8"/>
-      <ellipse cx="11" cy="8.5" rx="2" ry="1" fill="#FFFFFF" opacity="0.35"/>
-      <rect x="8.5" y="15" width="1.8" height="2.5" rx="0.8" fill="#E08088"/>
-      <rect x="12" y="15" width="1.8" height="2.5" rx="0.8" fill="#E08088"/>
-      <circle cx="13.5" cy="10.5" r="0.7" fill="#3C3848"/>
-      <rect x="10" y="6" width="2.2" height="2.2" rx="1.1" fill="#F5C030" stroke="#D4A020" strokeWidth="0.4"/>
-    </svg>
+    <span
+      style={{
+        fontSize: 14,
+        fontWeight: 900,
+        color: "#5BAF48",
+        lineHeight: 1,
+        letterSpacing: -0.5,
+      }}
+    >
+      USD
+    </span>
   );
 }
 
@@ -114,7 +115,7 @@ export default function HUDBar({ state }: HUDBarProps) {
       {/* Deposit Balance + Yield */}
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
         <div style={{ ...pillStyle, minWidth: 80 }}>
-          <PiggyIcon />
+          <BalanceIcon />
           <span style={valueStyle}>{loading ? "\u2014" : formatBalance(depositBalance)}</span>
         </div>
         {!loading && yieldPerDay > 0 && (
