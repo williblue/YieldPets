@@ -189,7 +189,7 @@ export default function Home() {
             onTouchEnd={() => setPetHeadPressed(false)}
             style={{
               position: "fixed",
-              bottom: 88,
+              bottom: 95,
               left: "calc(50% - 214px + 24px)",
               width: 52,
               height: 52,
@@ -232,7 +232,7 @@ export default function Home() {
             onTouchEnd={() => setPiggyPressed(false)}
             style={{
               position: "fixed",
-              bottom: 88,
+              bottom: 95,
               right: "calc(50% - 214px + 24px)",
               width: 52,
               height: 52,
