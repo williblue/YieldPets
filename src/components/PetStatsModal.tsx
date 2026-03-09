@@ -248,7 +248,7 @@ export default function PetStatsModal({
                 style={{
                   width: 128,
                   height: 136,
-                  borderRadius: 3,
+                  borderRadius: 4,
                   border: "1px solid #D4B896",
                   background: "#F8F4EC",
                   flexShrink: 0,
@@ -839,35 +839,20 @@ export default function PetStatsModal({
                   }}
                 >
                   {/* Pet face indicator */}
-                  <div
+                  <img
+                    src="/happy_face.png"
+                    alt=""
                     style={{
                       position: "absolute",
-                      top: -12,
+                      top: -16,
                       left: `${((personality.score + 20) / 40) * 100}%`,
                       transform: "translateX(-50%)",
-                      width: 38,
-                      height: 38,
-                      borderRadius: 999,
-                      border: "3px solid #FFFFFF",
-                      background: "#F8F4EC",
-                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                      overflow: "hidden",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
+                      width: 44,
+                      height: 44,
+                      objectFit: "contain",
+                      filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.15))",
                     }}
-                  >
-                    <div
-                      style={{
-                        width: 38,
-                        height: 38,
-                        backgroundImage: "url(/pet_walk_sheet.png)",
-                        backgroundSize: "608px 42px",
-                        backgroundPosition: "0 center",
-                        backgroundRepeat: "no-repeat",
-                      }}
-                    />
-                  </div>
+                  />
                 </div>
 
                 {/* Chill / Thrill labels */}
