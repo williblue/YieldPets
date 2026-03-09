@@ -895,8 +895,6 @@ export default function WalletScreen() {
                 fontWeight: 800,
                 fontSize: 16,
                 transition: "background 120ms ease-out",
-                userSelect: "none",
-                WebkitUserSelect: "none",
                 marginBottom: 8,
               }}
             >

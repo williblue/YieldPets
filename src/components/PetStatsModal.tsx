@@ -704,8 +704,6 @@ export default function PetStatsModal({
                   transition: depositPressed
                     ? "transform 80ms ease-out, box-shadow 80ms ease-out"
                     : "transform 120ms ease-out, box-shadow 120ms ease-out",
-                  userSelect: "none",
-                  WebkitUserSelect: "none",
                 }}
               >
                 Deposit
@@ -737,8 +735,6 @@ export default function PetStatsModal({
                   transition: withdrawPressed
                     ? "transform 80ms ease-out, box-shadow 80ms ease-out"
                     : "transform 120ms ease-out, box-shadow 120ms ease-out",
-                  userSelect: "none",
-                  WebkitUserSelect: "none",
                 }}
               >
                 Withdraw

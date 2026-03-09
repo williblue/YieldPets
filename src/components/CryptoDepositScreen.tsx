@@ -224,8 +224,6 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
     opacity: disabled ? 0.6 : 1,
     transition:
       "transform 80ms ease-out, box-shadow 80ms ease-out, background 80ms ease-out",
-    userSelect: "none",
-    WebkitUserSelect: "none",
   });
 
   return (

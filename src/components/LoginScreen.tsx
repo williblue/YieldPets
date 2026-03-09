@@ -211,8 +211,6 @@ export default function LoginScreen({ onBack }: LoginScreenProps) {
               transition: pressed
                 ? "transform 80ms ease-out, box-shadow 80ms ease-out, background 80ms ease-out"
                 : "transform 120ms ease-out, box-shadow 120ms ease-out, background 120ms ease-out",
-              userSelect: "none",
-              WebkitUserSelect: "none",
               opacity: canSubmit ? 1 : 0.5,
             }}
           >
