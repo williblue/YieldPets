@@ -371,8 +371,8 @@ export default function IsometricRoom({
             position: "absolute",
             left: FLOOR_CX,
             bottom: FLOOR_CY,
-            width: 120,
-            height: 95,
+            width: 70,
+            height: 55,
             zIndex: 5,
             cursor: "pointer",
           }}
