@@ -717,11 +717,11 @@ function DeveloperSettings({ onBack }: { onBack: () => void }) {
 
 // ─── Main Settings Screen ───────────────────────────────────
 
-interface WalletScreenProps {
+interface SettingsScreenProps {
   onClose: () => void;
 }
 
-export default function WalletScreen({ onClose }: WalletScreenProps) {
+export default function SettingsScreen({ onClose }: SettingsScreenProps) {
   const { email, logout } = useAuth();
   const game = useGame();
 

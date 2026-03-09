@@ -8,7 +8,7 @@ import BottomNavBar from "@/components/BottomNavBar";
 import FurnitureModal from "@/components/FurnitureModal";
 import StartScreen from "@/components/StartScreen";
 import LoginScreen from "@/components/LoginScreen";
-import WalletScreen from "@/components/WalletScreen";
+import SettingsScreen from "@/components/SettingsScreen";
 import DepositScreen from "@/components/DepositScreen";
 import CryptoDepositScreen from "@/components/CryptoDepositScreen";
 import PetStatsModal from "@/components/PetStatsModal";
@@ -305,7 +305,7 @@ export default function Home() {
         )}
 
         {/* Wallet screen overlay (when settings tab active) */}
-        {activeTab === "settings" && isLoggedIn && <WalletScreen onClose={() => setActiveTab("pet")} />}
+        {activeTab === "settings" && isLoggedIn && <SettingsScreen onClose={() => setActiveTab("pet")} />}
 
         {/* Login screen overlay */}
         {showLogin && (
