@@ -22,6 +22,9 @@ access(all) contract YieldPets: NonFungibleToken {
     access(all) event MoodUpdated(id: UInt64, oldMood: UFix64, newMood: UFix64)
     access(all) event ArmorEquipped(guardianId: UInt64, armorId: UInt64, slot: String)
     access(all) event ArmorUnequipped(guardianId: UInt64, armorId: UInt64, slot: String)
+    access(all) event HeartsUpdated(id: UInt64, oldHearts: UInt8, newHearts: UInt8)
+    access(all) event NuggetsUpdated(id: UInt64, nuggets: UInt64)
+    access(all) event GameStateSaved(id: UInt64, hearts: UInt8, nuggets: UInt64, streak: UInt64)
 
     // ========================================
     // Paths
@@ -93,6 +96,62 @@ access(all) contract YieldPets: NonFungibleToken {
     }
 
     // ========================================
+    // Game State Struct (for bulk read)
+    // ========================================
+
+    access(all) struct GameStateSnapshot {
+        access(all) let hearts: UInt8
+        access(all) let nuggets: UInt64
+        access(all) let totalYieldEarned: UFix64
+        access(all) let lastFedAt: UFix64
+        access(all) let currentStreak: UInt64
+        access(all) let longestStreak: UInt64
+        access(all) let lastLoginDate: String
+        access(all) let dailyBonusClaimed: Bool
+        access(all) let foodInventory: {String: UInt64}
+        access(all) let ownedFurniture: [String]
+        access(all) let placedFurniture: [String]
+        access(all) let petName: String
+        access(all) let trainerName: String
+        access(all) let stage: UInt8
+        access(all) let growthScore: UFix64
+
+        init(
+            hearts: UInt8,
+            nuggets: UInt64,
+            totalYieldEarned: UFix64,
+            lastFedAt: UFix64,
+            currentStreak: UInt64,
+            longestStreak: UInt64,
+            lastLoginDate: String,
+            dailyBonusClaimed: Bool,
+            foodInventory: {String: UInt64},
+            ownedFurniture: [String],
+            placedFurniture: [String],
+            petName: String,
+            trainerName: String,
+            stage: UInt8,
+            growthScore: UFix64
+        ) {
+            self.hearts = hearts
+            self.nuggets = nuggets
+            self.totalYieldEarned = totalYieldEarned
+            self.lastFedAt = lastFedAt
+            self.currentStreak = currentStreak
+            self.longestStreak = longestStreak
+            self.lastLoginDate = lastLoginDate
+            self.dailyBonusClaimed = dailyBonusClaimed
+            self.foodInventory = foodInventory
+            self.ownedFurniture = ownedFurniture
+            self.placedFurniture = placedFurniture
+            self.petName = petName
+            self.trainerName = trainerName
+            self.stage = stage
+            self.growthScore = growthScore
+        }
+    }
+
+    // ========================================
     // NFT Resource
     // ========================================
 
@@ -108,6 +167,19 @@ access(all) contract YieldPets: NonFungibleToken {
         // Equipped armor (slot -> armorId)
         access(all) var equippedArmor: {String: UInt64}
 
+        // ── Game state fields (synced from client) ──
+        access(all) var hearts: UInt8           // 0-4
+        access(all) var nuggets: UInt64         // gold nugget balance
+        access(all) var totalYieldEarned: UFix64
+        access(all) var currentStreak: UInt64
+        access(all) var longestStreak: UInt64
+        access(all) var lastLoginDate: String
+        access(all) var dailyBonusClaimed: Bool
+        access(all) var foodInventory: {String: UInt64}
+        access(all) var ownedFurniture: [String]
+        access(all) var placedFurniture: [String]
+        access(all) var trainerName: String
+
         init(
             id: UInt64,
             name: String
@@ -120,6 +192,19 @@ access(all) contract YieldPets: NonFungibleToken {
             self.lastFedAt = getCurrentBlock().timestamp
             self.growthScore = 0.0
             self.equippedArmor = {}
+
+            // Game state defaults (match GameProvider INITIAL_STATE)
+            self.hearts = 0
+            self.nuggets = 0
+            self.totalYieldEarned = 0.0
+            self.currentStreak = 1
+            self.longestStreak = 1
+            self.lastLoginDate = ""
+            self.dailyBonusClaimed = false
+            self.foodInventory = {}
+            self.ownedFurniture = []
+            self.placedFurniture = []
+            self.trainerName = "Trainer"
         }
 
         access(all) fun updateMood(newMood: UFix64) {
@@ -173,6 +258,127 @@ access(all) contract YieldPets: NonFungibleToken {
 
         access(all) fun feed() {
             self.lastFedAt = getCurrentBlock().timestamp
+        }
+
+        // ── Bulk save: persist full game state from client ──
+        access(all) fun saveGameState(
+            hearts: UInt8,
+            nuggets: UInt64,
+            totalYieldEarned: UFix64,
+            lastFedAt: UFix64,
+            currentStreak: UInt64,
+            longestStreak: UInt64,
+            lastLoginDate: String,
+            dailyBonusClaimed: Bool,
+            foodInventory: {String: UInt64},
+            ownedFurniture: [String],
+            placedFurniture: [String],
+            petName: String,
+            trainerName: String
+        ) {
+            pre {
+                hearts <= 4: "Hearts must be 0-4"
+            }
+
+            let oldHearts = self.hearts
+
+            self.hearts = hearts
+            self.nuggets = nuggets
+            self.totalYieldEarned = totalYieldEarned
+            self.lastFedAt = lastFedAt
+            self.currentStreak = currentStreak
+            self.longestStreak = longestStreak
+            self.lastLoginDate = lastLoginDate
+            self.dailyBonusClaimed = dailyBonusClaimed
+            self.foodInventory = foodInventory
+            self.ownedFurniture = ownedFurniture
+            self.placedFurniture = placedFurniture
+            self.name = petName
+            self.trainerName = trainerName
+
+            // Map hearts to mood (0→0, 1→25, 2→50, 3→75, 4→100)
+            self.mood = UFix64(hearts) * 25.0
+
+            if oldHearts != hearts {
+                emit HeartsUpdated(id: self.id, oldHearts: oldHearts, newHearts: hearts)
+            }
+
+            emit GameStateSaved(
+                id: self.id,
+                hearts: hearts,
+                nuggets: nuggets,
+                streak: currentStreak
+            )
+        }
+
+        // ── Read full game state as a struct ──
+        access(all) fun loadGameState(): YieldPets.GameStateSnapshot {
+            return GameStateSnapshot(
+                hearts: self.hearts,
+                nuggets: self.nuggets,
+                totalYieldEarned: self.totalYieldEarned,
+                lastFedAt: self.lastFedAt,
+                currentStreak: self.currentStreak,
+                longestStreak: self.longestStreak,
+                lastLoginDate: self.lastLoginDate,
+                dailyBonusClaimed: self.dailyBonusClaimed,
+                foodInventory: self.foodInventory,
+                ownedFurniture: self.ownedFurniture,
+                placedFurniture: self.placedFurniture,
+                petName: self.name,
+                trainerName: self.trainerName,
+                stage: self.stage.rawValue,
+                growthScore: self.growthScore
+            )
+        }
+
+        // ── Individual updaters for targeted saves ──
+        access(all) fun updateHearts(newHearts: UInt8) {
+            pre {
+                newHearts <= 4: "Hearts must be 0-4"
+            }
+            let old = self.hearts
+            self.hearts = newHearts
+            self.mood = UFix64(newHearts) * 25.0
+            emit HeartsUpdated(id: self.id, oldHearts: old, newHearts: newHearts)
+        }
+
+        access(all) fun addNuggets(amount: UInt64) {
+            self.nuggets = self.nuggets + amount
+            emit NuggetsUpdated(id: self.id, nuggets: self.nuggets)
+        }
+
+        access(all) fun spendNuggets(amount: UInt64) {
+            pre {
+                amount <= self.nuggets: "Insufficient nuggets"
+            }
+            self.nuggets = self.nuggets - amount
+            emit NuggetsUpdated(id: self.id, nuggets: self.nuggets)
+        }
+
+        access(all) fun updateStreak(
+            current: UInt64,
+            longest: UInt64,
+            lastLogin: String,
+            bonusClaimed: Bool
+        ) {
+            self.currentStreak = current
+            self.longestStreak = longest
+            self.lastLoginDate = lastLogin
+            self.dailyBonusClaimed = bonusClaimed
+        }
+
+        access(all) fun updateFoodInventory(inventory: {String: UInt64}) {
+            self.foodInventory = inventory
+        }
+
+        access(all) fun updateFurniture(owned: [String], placed: [String]) {
+            self.ownedFurniture = owned
+            self.placedFurniture = placed
+        }
+
+        access(all) fun setTrainerName(newName: String) {
+            self.trainerName = newName
         }
 
         // MetadataViews implementation
