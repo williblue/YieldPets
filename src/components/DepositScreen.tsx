@@ -13,6 +13,13 @@ type Tab = "deposit" | "withdraw";
 
 const NUGGETS_PER_USD_PER_DAY = 0.8;
 
+function fmtUSD(value: number): string {
+  return value.toLocaleString("en-US", {
+    minimumFractionDigits: value % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 const QUICK_AMOUNTS = ["10", "50", "100", "500"];
 
 const methodCardStyle: React.CSSProperties = {
@@ -51,7 +58,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
   const newNuggets = Math.round(newBalance * NUGGETS_PER_USD_PER_DAY);
 
   const ctaLabel = hasAmount
-    ? `${tab === "deposit" ? "Deposit" : "Withdraw"} $${numAmount.toFixed(2)} USD`
+    ? `${tab === "deposit" ? "Deposit" : "Withdraw"} $${fmtUSD(numAmount)} USD`
     : tab === "deposit"
       ? "Deposit"
       : "Withdraw";
@@ -232,7 +239,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                   marginTop: 4,
                 }}
               >
-                ${currentBalance.toFixed(2)}{" "}
+                ${fmtUSD(currentBalance)}{" "}
                 <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)" }}>
                   USD
                 </span>
@@ -248,7 +255,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                   marginTop: 4,
                 }}
               >
-                +${dailyYield.toFixed(2)}/day
+                +${fmtUSD(dailyYield)}/day
               </div>
             </div>
           </div>
@@ -504,7 +511,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                       color: "var(--text-primary)",
                     }}
                   >
-                    ${newBalance.toFixed(2)} USD
+                    ${fmtUSD(newBalance)} USD
                   </span>
                 </div>
 
