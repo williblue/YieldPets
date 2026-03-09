@@ -767,24 +767,16 @@ export default function PetStatsModal({
                 width: "100%",
               }}
             >
-              <div
+              <img
+                src="/streak_icon.png"
+                alt=""
                 style={{
                   width: 40,
                   height: 40,
-                  borderRadius: 10,
-                  background: "rgba(245,192,48,0.15)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
+                  objectFit: "contain",
                   flexShrink: 0,
                 }}
-              >
-                <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                  <circle cx="11" cy="11" r="8" fill="#F5C030" />
-                  <circle cx="11" cy="11" r="5.5" fill="#F8D868" />
-                  <circle cx="11" cy="11" r="3" fill="#F5C030" />
-                </svg>
-              </div>
+              />
               <div style={{ flex: 1 }}>
                 <div
                   style={{
