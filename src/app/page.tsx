@@ -193,34 +193,29 @@ export default function Home() {
               left: "calc(50% - 214px + 24px)",
               width: 52,
               height: 52,
-              borderRadius: 999,
-              border: "2px solid #ECD8A0",
-              background: "#FFF8E8",
-              boxShadow: petHeadPressed
-                ? "0 1px 4px rgba(0,0,0,0.1)"
-                : "0 4px 12px rgba(0,0,0,0.12)",
+              border: "none",
+              background: "transparent",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               padding: 0,
               zIndex: 75,
-              overflow: "hidden",
               transform: petHeadPressed ? "scale(0.93)" : "scale(1)",
               transition: petHeadPressed
-                ? "transform 80ms ease-out, box-shadow 80ms ease-out"
-                : "transform 120ms ease-out, box-shadow 120ms ease-out",
+                ? "transform 80ms ease-out"
+                : "transform 120ms ease-out",
             }}
           >
             <img
-              src="/Subject.png"
-              alt="Pet"
+              src="/happy_face.png"
+              alt="Stats"
               style={{
-                width: 44,
-                height: 44,
-                objectFit: "cover",
-                objectPosition: "center top",
+                width: 52,
+                height: 52,
+                objectFit: "contain",
                 pointerEvents: "none",
+                filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.15))",
               }}
             />
           </button>
@@ -241,12 +236,8 @@ export default function Home() {
               right: "calc(50% - 214px + 24px)",
               width: 52,
               height: 52,
-              borderRadius: 999,
-              border: "2px solid #ECD8A0",
-              background: "#FFF8E8",
-              boxShadow: piggyPressed
-                ? "0 1px 4px rgba(0,0,0,0.1)"
-                : "0 4px 12px rgba(0,0,0,0.12)",
+              border: "none",
+              background: "transparent",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
@@ -255,21 +246,21 @@ export default function Home() {
               zIndex: 75,
               transform: piggyPressed ? "scale(0.93)" : "scale(1)",
               transition: piggyPressed
-                ? "transform 80ms ease-out, box-shadow 80ms ease-out"
-                : "transform 120ms ease-out, box-shadow 120ms ease-out",
+                ? "transform 80ms ease-out"
+                : "transform 120ms ease-out",
             }}
           >
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <ellipse cx="15" cy="16" rx="9" ry="7" fill="#F8B0B8"/>
-              <ellipse cx="15" cy="16" rx="7" ry="5.5" fill="#F09098"/>
-              <circle cx="8" cy="14" r="3" fill="#F8B0B8"/>
-              <ellipse cx="15" cy="12" rx="3" ry="1.5" fill="#FFFFFF" opacity="0.35"/>
-              <rect x="11" y="21" width="2.5" height="3.5" rx="1" fill="#E08088"/>
-              <rect x="16" y="21" width="2.5" height="3.5" rx="1" fill="#E08088"/>
-              <circle cx="18" cy="14.5" r="1" fill="#3C3848"/>
-              <ellipse cx="15" cy="10" rx="2" ry="1" fill="#F8B0B8"/>
-              <rect x="13.5" y="8" width="3" height="3" rx="1.5" fill="#F5C030" stroke="#D4A020" strokeWidth="0.5"/>
-            </svg>
+            <img
+              src="/piggy_bank.png"
+              alt="Deposit"
+              style={{
+                width: 52,
+                height: 52,
+                objectFit: "contain",
+                pointerEvents: "none",
+                filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.15))",
+              }}
+            />
           </button>
         )}
 
