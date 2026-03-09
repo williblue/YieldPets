@@ -305,7 +305,7 @@ export default function Home() {
         )}
 
         {/* Wallet screen overlay (when settings tab active) */}
-        {activeTab === "settings" && isLoggedIn && <WalletScreen />}
+        {activeTab === "settings" && isLoggedIn && <WalletScreen onClose={() => setActiveTab("pet")} />}
 
         {/* Login screen overlay */}
         {showLogin && (

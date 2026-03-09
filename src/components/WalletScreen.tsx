@@ -717,7 +717,11 @@ function DeveloperSettings({ onBack }: { onBack: () => void }) {
 
 // ─── Main Settings Screen ───────────────────────────────────
 
-export default function WalletScreen() {
+interface WalletScreenProps {
+  onClose: () => void;
+}
+
+export default function WalletScreen({ onClose }: WalletScreenProps) {
   const { email, logout } = useAuth();
   const game = useGame();
 
@@ -740,6 +744,30 @@ export default function WalletScreen() {
         overflow: "hidden",
       }}
     >
+      {/* Back button */}
+      <button
+        onClick={onClose}
+        style={{
+          position: "absolute",
+          top: 16,
+          left: 16,
+          zIndex: 2,
+          width: 44,
+          height: 44,
+          borderRadius: 999,
+          border: "2px solid #ECD8A0",
+          background: "#FFF8E8",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 0,
+        }}
+      >
+        <BackArrow />
+      </button>
+
       <div
         style={{
           flex: 1,
@@ -762,7 +790,7 @@ export default function WalletScreen() {
               style={{
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "center",
               }}
             >
               <span
@@ -886,6 +914,8 @@ export default function WalletScreen() {
               style={{
                 width: "100%",
                 height: 48,
+                minHeight: 48,
+                flexShrink: 0,
                 borderRadius: 999,
                 border: "2px solid #ECD8A0",
                 cursor: "pointer",
