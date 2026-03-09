@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGame } from "@/contexts/GameProvider";
 
 interface PetStatsModalProps {
@@ -8,7 +8,6 @@ interface PetStatsModalProps {
   onDeposit: () => void;
   onWithdraw: () => void;
   petName: string;
-  petImageUrl: string;
 }
 
 type Tab = "about" | "personality";
@@ -89,7 +88,6 @@ export default function PetStatsModal({
   onDeposit,
   onWithdraw,
   petName,
-  petImageUrl,
 }: PetStatsModalProps) {
   const game = useGame();
   const [tab, setTab] = useState<Tab>("about");
@@ -97,6 +95,24 @@ export default function PetStatsModal({
   const [depositPressed, setDepositPressed] = useState(false);
   const [withdrawPressed, setWithdrawPressed] = useState(false);
   const [tip, setTip] = useState<"pocketPile" | "harvested" | "growthRate" | null>(null);
+  const [clickFrame, setClickFrame] = useState(-1); // -1 = idle, 0–5 = animating
+
+  // Periodic click animation every 7–10s, stepping through 6 frames
+  useEffect(() => {
+    if (clickFrame >= 0) {
+      // Advance through 6 frames then stop
+      if (clickFrame >= 6) {
+        setClickFrame(-1);
+        return;
+      }
+      const timer = setTimeout(() => setClickFrame((f) => f + 1), 150);
+      return () => clearTimeout(timer);
+    }
+    // Idle — schedule next animation
+    const delay = 7000 + Math.random() * 3000;
+    const timer = setTimeout(() => setClickFrame(0), delay);
+    return () => clearTimeout(timer);
+  }, [clickFrame]);
 
   const personality = computePersonality(game.depositBalance, game.currentStreak, game.hearts);
 
@@ -227,7 +243,7 @@ export default function PetStatsModal({
                 overflow: "hidden",
               }}
             >
-              {/* Pet Image */}
+              {/* Pet Sprite */}
               <div
                 style={{
                   width: 88,
@@ -237,20 +253,35 @@ export default function PetStatsModal({
                   background: "#F8F4EC",
                   flexShrink: 0,
                   overflow: "hidden",
+                  position: "relative",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
                 }}
               >
-                <img
-                  src={petImageUrl}
-                  alt={petName}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "contain",
-                  }}
-                />
+                {clickFrame >= 0 && clickFrame < 6 ? (
+                  <div
+                    style={{
+                      width: 88,
+                      height: 97,
+                      backgroundImage: "url(/pet_click_sheet.png)",
+                      backgroundSize: "528px 97px",
+                      backgroundPosition: `${-clickFrame * 88}px 0`,
+                      backgroundRepeat: "no-repeat",
+                    }}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: 88,
+                      height: 88,
+                      backgroundImage: "url(/pet_walk_sheet.png)",
+                      backgroundSize: "1406px 97px",
+                      backgroundPosition: "0 center",
+                      backgroundRepeat: "no-repeat",
+                    }}
+                  />
+                )}
               </div>
 
               {/* Pet Details */}
@@ -824,10 +855,15 @@ export default function PetStatsModal({
                       justifyContent: "center",
                     }}
                   >
-                    <img
-                      src={petImageUrl}
-                      alt=""
-                      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                    <div
+                      style={{
+                        width: 38,
+                        height: 38,
+                        backgroundImage: "url(/pet_walk_sheet.png)",
+                        backgroundSize: "608px 42px",
+                        backgroundPosition: "0 center",
+                        backgroundRepeat: "no-repeat",
+                      }}
                     />
                   </div>
                 </div>

@@ -295,7 +295,6 @@ export default function Home() {
             onDeposit={() => { setShowStats(false); setDepositView("deposit"); }}
             onWithdraw={() => { setShowStats(false); setDepositView("deposit"); }}
             petName={game.petName}
-            petImageUrl={roomState.pet.imageUrl}
           />
         )}
 
