@@ -23,6 +23,67 @@ function stashStatus(balance: number): string {
   return "No Stash";
 }
 
+function computePersonality(balance: number, streak: number, hearts: number) {
+  let score = 0;
+  if (balance >= 5000) score += 10;
+  else if (balance >= 1000) score += 7;
+  else if (balance >= 500) score += 5;
+  else if (balance >= 100) score += 3;
+  else if (balance >= 50) score += 1;
+  else score -= 3;
+  score += Math.min(6, Math.floor(streak / 2));
+  score += hearts - 2;
+  score = Math.max(-20, Math.min(20, score));
+
+  let name: string;
+  let lean: string;
+  let traits: string[];
+
+  if (score <= -10) {
+    name = "Cozy Cloud";
+    lean = "Chill";
+    traits = [
+      "Prefers steady, predictable growth.",
+      "Likes small, frequent deposits.",
+      "Gets uneasy with large market swings.",
+    ];
+  } else if (score <= -3) {
+    name = "Calm Pebble";
+    lean = "Chill";
+    traits = [
+      "Values stability over big returns.",
+      "Prefers conservative vault strategies.",
+      "Takes comfort in gradual progress.",
+    ];
+  } else if (score <= 2) {
+    name = "Balanced Bean";
+    lean = "Neutral";
+    traits = [
+      "Adapts to different market conditions.",
+      "Open to various vault strategies.",
+      "Stays even-keeled through ups and downs.",
+    ];
+  } else if (score <= 14) {
+    name = "Bold Bud";
+    lean = "Thrill";
+    traits = [
+      "Gets excited by bigger swings.",
+      "Prefers adventurous vault paths.",
+      "May feel stressed during sudden dips.",
+    ];
+  } else {
+    name = "Daring Flame";
+    lean = "Thrill";
+    traits = [
+      "Thrives on market volatility.",
+      "Seeks the highest-yield vault paths.",
+      "Embraces risk for potential rewards.",
+    ];
+  }
+
+  return { score, name, lean, traits };
+}
+
 export default function PetStatsModal({
   onClose,
   onDeposit,
@@ -36,6 +97,8 @@ export default function PetStatsModal({
   const [depositPressed, setDepositPressed] = useState(false);
   const [withdrawPressed, setWithdrawPressed] = useState(false);
   const [tip, setTip] = useState<"pocketPile" | "harvested" | "growthRate" | null>(null);
+
+  const personality = computePersonality(game.depositBalance, game.currentStreak, game.hearts);
 
   const growthRate = game.depositBalance > 0
     ? ((game.yieldPerDay / game.depositBalance) * 100).toFixed(1)
@@ -154,10 +217,7 @@ export default function PetStatsModal({
           ))}
         </div>
 
-        {/* ABOUT Tab Content */}
-        {tab === "about" && (
-          <>
-            {/* Pet Info Card */}
+        {/* Pet Info Card (shared between tabs) */}
             <div
               style={{
                 ...cardStyle,
@@ -275,6 +335,9 @@ export default function PetStatsModal({
               </div>
             </div>
 
+        {/* ABOUT Tab Content */}
+        {tab === "about" && (
+          <>
             {/* Stats Rows */}
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {/* Pocket Pile */}
@@ -740,52 +803,166 @@ export default function PetStatsModal({
           </>
         )}
 
-        {/* PERSONALITY Tab Placeholder */}
+        {/* PERSONALITY Tab */}
         {tab === "personality" && (
-          <div
-            style={{
-              ...cardStyle,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-              padding: "48px 24px",
-            }}
-          >
-            <span style={{ fontSize: 32 }}>
-              <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <circle cx="20" cy="20" r="16" fill="#F0E8D8" />
-                <circle cx="14" cy="17" r="2" fill="#7878A0" />
-                <circle cx="26" cy="17" r="2" fill="#7878A0" />
-                <path
-                  d="M14 26C14 26 17 29 20 29C23 29 26 26 26 26"
-                  stroke="#7878A0"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </span>
-            <span
-              style={{
-                fontSize: 16,
-                fontWeight: 800,
-                color: "var(--text-primary)",
-              }}
-            >
-              Coming Soon
-            </span>
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 700,
-                color: "var(--text-secondary)",
-                textAlign: "center",
-              }}
-            >
-              Your pet&apos;s personality traits will appear here
-            </span>
-          </div>
+          <>
+            {/* Dare Meter */}
+            <div style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: 12 }}>
+              <div
+                style={{
+                  fontSize: 13,
+                  fontWeight: 800,
+                  color: "var(--text-secondary)",
+                  textTransform: "uppercase",
+                  letterSpacing: 0.5,
+                }}
+              >
+                Dare meter
+              </div>
+
+              {/* Bar */}
+              <div style={{ position: "relative", paddingTop: 20 }}>
+                <div
+                  style={{
+                    height: 16,
+                    borderRadius: 999,
+                    background: "linear-gradient(90deg, #A8D8E8 0%, #8CC8A0 50%, #C8E888 100%)",
+                    position: "relative",
+                  }}
+                >
+                  {/* Pet face indicator */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: -12,
+                      left: `${((personality.score + 20) / 40) * 100}%`,
+                      transform: "translateX(-50%)",
+                      width: 38,
+                      height: 38,
+                      borderRadius: 999,
+                      border: "3px solid #FFFFFF",
+                      background: "#F8F4EC",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                      overflow: "hidden",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <img
+                      src={petImageUrl}
+                      alt=""
+                      style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                    />
+                  </div>
+                </div>
+
+                {/* Chill / Thrill labels */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: 8,
+                  }}
+                >
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)" }}>
+                    Chill
+                  </span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)" }}>
+                    Thrill
+                  </span>
+                </div>
+              </div>
+
+              {/* Personality type pill + lean label */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 4,
+                }}
+              >
+                <div
+                  style={{
+                    background: "#F0E8D8",
+                    borderRadius: 999,
+                    padding: "6px 20px",
+                    fontSize: 15,
+                    fontWeight: 900,
+                    color: "var(--text-primary)",
+                  }}
+                >
+                  {personality.name}
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)" }}>
+                  {personality.lean === "Neutral"
+                    ? "Neutral"
+                    : `Leans ${personality.lean} ${personality.score >= 0 ? "+" : ""}${personality.score}`}
+                </div>
+              </div>
+            </div>
+
+            {/* What this means */}
+            <div style={{ ...cardStyle, display: "flex", flexDirection: "column", gap: 14 }}>
+              <div style={{ fontSize: 15, fontWeight: 900, color: "var(--text-primary)" }}>
+                What this means
+              </div>
+              {personality.traits.map((trait, i) => (
+                <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                  <div
+                    style={{
+                      width: 28,
+                      height: 28,
+                      borderRadius: 8,
+                      background:
+                        i === 0
+                          ? "rgba(160,120,80,0.12)"
+                          : i === 1
+                            ? "rgba(120,120,160,0.12)"
+                            : "rgba(200,140,160,0.12)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {i === 0 && (
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <rect x="3" y="2" width="10" height="12" rx="1.5" stroke="#A07850" strokeWidth="1.3" />
+                        <path d="M5.5 5.5H10.5M5.5 8H10.5M5.5 10.5H8" stroke="#A07850" strokeWidth="1.2" strokeLinecap="round" />
+                      </svg>
+                    )}
+                    {i === 1 && (
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M4 13V7L8 4L12 7V13H4Z" stroke="#7878A0" strokeWidth="1.3" strokeLinejoin="round" />
+                        <rect x="6.5" y="9.5" width="3" height="3.5" rx="0.5" stroke="#7878A0" strokeWidth="1" />
+                      </svg>
+                    )}
+                    {i === 2 && (
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <circle cx="8" cy="7" r="3.5" stroke="#C88CA0" strokeWidth="1.3" />
+                        <path d="M8 10.5V14" stroke="#C88CA0" strokeWidth="1.3" strokeLinecap="round" />
+                        <path d="M6 12.5L8 11L10 12.5" stroke="#C88CA0" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    )}
+                  </div>
+                  <span
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: "var(--text-primary)",
+                      lineHeight: 1.5,
+                      paddingTop: 3,
+                    }}
+                  >
+                    {trait}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+          </>
         )}
       </div>
 
