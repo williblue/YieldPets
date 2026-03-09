@@ -1,46 +1,50 @@
-# 🐣 YieldPets
+# YieldPets
 
-A Tamagotchi-style NFT "Yield Guardian" that grows when you deposit PYUSD0 into a yield vault.
+A Tamagotchi-style DeFi pet game on **Flow**, where depositing **PYUSD** into a yield vault grows and evolves your pet.
 
 ![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)
-![Tailwind](https://img.shields.io/badge/Tailwind-3-38bdf8?style=flat-square&logo=tailwindcss)
+![Flow](https://img.shields.io/badge/Flow-Mainnet-00ef8b?style=flat-square)
 
-## 🎮 Concept
+## How It Works
 
-Your **YieldPet** is an NFT that evolves based on your DeFi activity:
+Deposit PYUSD (PayPal USD) into a yield vault powered by MoreMarkets (Aave V3 fork on Flow EVM). Your yield drives pet growth, unlocks items, and earns gold nuggets.
 
-- **Deposit PYUSD0** → Pet grows and levels up
-- **Keep funds locked** → Pet mood improves
-- **Earn yield** → Unlock armor/accessories for your Pet
-- **Withdraw** → Pet may de-level or die ☠️
+- **Deposit PYUSD** → Pet grows and levels up
+- **Earn yield** → Collect gold nuggets, unlock furniture and food
+- **Keep funds locked** → Pet mood improves, streak bonuses increase
+- **Withdraw** → Pet may de-level or die
 
-## 🌟 Features
+## Features
 
-- **6 Evolution Stages**: Egg → Baby → Teen → Adult → Legendary (+ Dead state)
-- **Mood System**: Pet expressions change based on mood (0-100)
-- **Real-time Yield Ticker**: Watch your yield accrue in real-time
-- **Armor System**: 4 slots (head, body, weapon, pet) with 4 rarity tiers
-- **Scary Withdrawals**: Warnings show projected stage after withdrawal
-- **Activity Timeline**: Track all your vault interactions
-- **Responsive Design**: Works on desktop and mobile
+- **Pet Evolution** — Egg → Baby → Teen → Adult → Legendary (+ Dead state)
+- **Isometric Room** — Animated pet sprite with walkable floor and placeable furniture
+- **Yield-Driven Economy** — Real-time yield accrual from PYUSD deposits feeds the in-game economy
+- **Shop** — Buy food and furniture with gold nuggets
+- **Pet Stats & Personality** — Dynamic personality traits based on deposit balance, streak, and care
+- **Daily Bonuses** — Login streaks with escalating rewards
+- **Passwordless Auth** — Email login via Magic SDK with automatic Flow wallet creation
 
-## 🚀 Quick Start
+## Tech Stack
+
+- **Frontend:** Next.js (App Router), TypeScript, custom CSS
+- **Blockchain:** Flow mainnet, Cadence smart contracts
+- **DeFi:** MoreMarkets (Aave V3 on Flow EVM) for PYUSD yield
+- **Auth:** Magic SDK with Flow plugin
+- **Contracts:** Cadence — vault management, pet NFTs, armor NFTs
+
+## Quick Start
 
 ```bash
-# Install dependencies
-npm install
-
-# Run development server
+cd src && npm install
 npm run dev
-
 # Open http://localhost:3000
 ```
 
-## 📄 License
+## License
 
 MIT
 
 ---
 
-Built with 💜 for hackathons
+Built for hackathons
