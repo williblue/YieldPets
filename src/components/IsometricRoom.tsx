@@ -44,7 +44,7 @@ const CLICK_PET_H = Math.ceil(CLICK_SHEET_H * CLICK_SCALE); // display height
 const CLICK_BG_W = Math.ceil(CLICK_SHEET_W * CLICK_SCALE); // scaled sheet width
 
 /* ── Movement ──────────────────────────────────────────────────── */
-const SPEED = 0.5;
+const SPEED = PET_W / 144; // 0.5 at PET_W=72, scales proportionally
 const IDLE_MIN = 1400;
 const IDLE_MAX = 3200;
 // Minimum walk distance so one full animation cycle (16 frames) plays
