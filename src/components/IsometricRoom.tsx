@@ -28,7 +28,7 @@ const TOTAL_FRAMES = 16;
 const SHEET_W = 4784;
 const SHEET_H = 329;
 const FRAME_W = SHEET_W / TOTAL_FRAMES; // 299
-const PET_W = 72; // display width per frame
+const PET_W = 54; // display width per frame
 const SCALE = PET_W / FRAME_W; // ≈ 0.2676
 const BG_W = SHEET_W * SCALE; // 1280
 const PET_H = Math.ceil(SHEET_H * SCALE); // 89
@@ -90,7 +90,8 @@ export default function IsometricRoom({
   const [walking, setWalking] = useState(false);
   const [facingLeft, setFacingLeft] = useState(false);
   const [frame, setFrame] = useState(0);
-  const [clicking, setClicking] = useState(false);
+  const [clickFrame, setClickFrame] = useState(-1); // -1 = not clicking, 0–5 = animating
+  const clicking = clickFrame >= 0;
   const [eggTapped, setEggTapped] = useState(false);
   const [showRadial, setShowRadial] = useState(false);
   const [radialPos, setRadialPos] = useState({ x: FLOOR_CX, y: FLOOR_CY });
@@ -185,16 +186,23 @@ export default function IsometricRoom({
     }
 
     if (walkLayerRef.current) walkLayerRef.current.style.visibility = "hidden";
-    setClicking(true);
+    setClickFrame(0);
   }, [clicking, walking, showRadial, sfxEnabled]);
 
-  /* ── CSS animation end: show radial menu ──────────────────────── */
-  const handleClickEnd = useCallback(() => {
-    if (walkLayerRef.current) walkLayerRef.current.style.visibility = "visible";
-    setClicking(false);
-    setRadialPos({ x: posRef.current.x, y: posRef.current.y });
-    setShowRadial(true);
-  }, []);
+  /* ── JS-driven click animation: step through 6 frames ─────────── */
+  useEffect(() => {
+    if (clickFrame < 0) return;
+    if (clickFrame >= CLICK_FRAMES) {
+      // Animation done — show radial menu
+      if (walkLayerRef.current) walkLayerRef.current.style.visibility = "visible";
+      setClickFrame(-1);
+      setRadialPos({ x: posRef.current.x, y: posRef.current.y });
+      setShowRadial(true);
+      return;
+    }
+    const timer = setTimeout(() => setClickFrame((f) => f + 1), 150);
+    return () => clearTimeout(timer);
+  }, [clickFrame]);
 
   /* ── Resume walk/idle after radial menu closes ──────────────── */
   const resumeAfterMenu = useCallback(() => {
@@ -408,10 +416,8 @@ export default function IsometricRoom({
             }}
           />
           {/* Click layer — overlays on top, removed when done */}
-          {clicking && (
+          {clickFrame >= 0 && clickFrame < CLICK_FRAMES && (
             <div
-              className="pet-click-anim"
-              onAnimationEnd={handleClickEnd}
               style={{
                 position: "absolute",
                 left: 0,
@@ -420,6 +426,7 @@ export default function IsometricRoom({
                 height: CLICK_PET_H,
                 backgroundImage: "url(/pet_click_sheet.png)",
                 backgroundSize: `${CLICK_BG_W}px ${CLICK_PET_H}px`,
+                backgroundPosition: `${-clickFrame * PET_W}px 0`,
                 backgroundRepeat: "no-repeat",
               }}
             />

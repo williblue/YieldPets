@@ -100,16 +100,6 @@ html, body {
   to { background-position-x: -320px; }
 }
 
-/* Pet click reaction — 768×140 strip, 6 frames @ 150ms each */
-@keyframes pet-click-sprite {
-  from { background-position-x: 0; }
-  to   { background-position-x: -432px; }
-}
-
-.pet-click-anim {
-  animation: pet-click-sprite 900ms steps(6) forwards;
-}
-
 
 /* Egg idle wobble */
 @keyframes egg-wobble {
