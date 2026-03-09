@@ -152,7 +152,7 @@ export default function Home() {
           <IsometricRoom
             room={roomState}
             onFurnitureTap={handleFurnitureTap}
-            showEgg={!isLoggedIn}
+            showEgg={!isLoggedIn && !isLoading}
             onEggTap={handleEggTap}
             onPetMenuAction={handlePetMenuAction}
             visualNuggets={visualNuggets}
