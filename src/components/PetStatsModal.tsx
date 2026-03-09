@@ -243,13 +243,13 @@ export default function PetStatsModal({
                 overflow: "hidden",
               }}
             >
-              {/* Pet Sprite */}
+              {/* Pet Sprite — polaroid style */}
               <div
                 style={{
-                  width: 88,
-                  height: 88,
-                  borderRadius: 12,
-                  border: "3px solid #D4B896",
+                  width: 128,
+                  height: 136,
+                  borderRadius: 3,
+                  border: "1px solid #D4B896",
                   background: "#F8F4EC",
                   flexShrink: 0,
                   overflow: "hidden",
@@ -257,6 +257,7 @@ export default function PetStatsModal({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  boxShadow: "inset 0 0 0 6px #FFFFFF",
                 }}
               >
                 {clickFrame >= 0 && clickFrame < 6 ? (
