@@ -257,6 +257,7 @@ export default function PetStatsModal({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
+                  paddingLeft: 8,
                   boxShadow: "inset 0 0 0 6px #FFFFFF",
                 }}
               >
