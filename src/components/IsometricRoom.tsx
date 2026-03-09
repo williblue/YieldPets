@@ -375,6 +375,7 @@ export default function IsometricRoom({
             height: 55,
             zIndex: 5,
             cursor: "pointer",
+            filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.25))",
           }}
         >
           <img
@@ -401,6 +402,7 @@ export default function IsometricRoom({
             transform: `translateX(-50%) ${facingLeft ? "scaleX(-1)" : ""}`,
             zIndex: 5,
             cursor: "pointer",
+            filter: "drop-shadow(0 3px 4px rgba(0,0,0,0.25))",
           }}
         >
           {/* Walk layer — always rendered */}
