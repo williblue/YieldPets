@@ -297,42 +297,21 @@ export default function PetStatsModal({
               </div>
 
               {/* YieldPets Official Badge */}
-              <div
+              <img
+                src="/yieldpets_stamp.png"
+                alt=""
                 style={{
                   position: "absolute",
-                  top: 12,
-                  right: -8,
-                  width: 72,
-                  height: 72,
+                  top: -23,
+                  right: -20,
+                  width: 160,
+                  height: 160,
                   opacity: 0.15,
                   transform: "rotate(15deg)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
                   pointerEvents: "none",
+                  objectFit: "contain",
                 }}
-              >
-                <div
-                  style={{
-                    width: 64,
-                    height: 64,
-                    borderRadius: 999,
-                    border: "3px solid #3C3848",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    textAlign: "center",
-                    fontSize: 8,
-                    fontWeight: 900,
-                    color: "#3C3848",
-                    lineHeight: 1.2,
-                    textTransform: "uppercase",
-                    padding: 6,
-                  }}
-                >
-                  YieldPets Official
-                </div>
-              </div>
+              />
             </div>
 
         {/* ABOUT Tab Content */}
