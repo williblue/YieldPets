@@ -13,6 +13,13 @@ function formatBalance(value: number): string {
   return `$${value.toFixed(2)}`;
 }
 
+function formatYield(value: number): string {
+  if (value >= 1_000) return `+${(value / 1_000).toFixed(1)}K`;
+  if (value >= 100) return `+${Math.floor(value)}`;
+  if (value >= 1) return `+${value.toFixed(1)}`;
+  return `+${value.toFixed(2)}`;
+}
+
 function CoinIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -53,7 +60,7 @@ interface HUDBarProps {
 }
 
 export default function HUDBar({ state }: HUDBarProps) {
-  const { goldNuggets, hearts, depositBalance, loading } = state;
+  const { goldNuggets, hearts, depositBalance, yieldPerDay, loading } = state;
 
   const pillStyle: React.CSSProperties = {
     background: "var(--hud-bar-bg)",
@@ -84,12 +91,11 @@ export default function HUDBar({ state }: HUDBarProps) {
         left: "50%",
         transform: "translateX(-50%)",
         width: 428,
-        height: 52,
         zIndex: 100,
         display: "flex",
-        alignItems: "center",
+        alignItems: "flex-start",
         justifyContent: "space-between",
-        padding: "0 12px",
+        padding: "9px 12px 0",
       }}
     >
       {/* Gold Nuggets */}
@@ -105,10 +111,25 @@ export default function HUDBar({ state }: HUDBarProps) {
         ))}
       </div>
 
-      {/* Deposit Balance */}
-      <div style={{ ...pillStyle, minWidth: 80 }}>
-        <PiggyIcon />
-        <span style={valueStyle}>{loading ? "\u2014" : formatBalance(depositBalance)}</span>
+      {/* Deposit Balance + Yield */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2 }}>
+        <div style={{ ...pillStyle, minWidth: 80 }}>
+          <PiggyIcon />
+          <span style={valueStyle}>{loading ? "\u2014" : formatBalance(depositBalance)}</span>
+        </div>
+        {!loading && yieldPerDay > 0 && (
+          <span
+            style={{
+              fontSize: 10,
+              fontWeight: 800,
+              color: "#5BAF48",
+              paddingRight: 4,
+              lineHeight: 1,
+            }}
+          >
+            {formatYield(yieldPerDay)}/day
+          </span>
+        )}
       </div>
     </div>
   );

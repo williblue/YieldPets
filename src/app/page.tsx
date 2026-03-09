@@ -51,6 +51,7 @@ export default function Home() {
     goldNuggets: displayedNuggets,
     hearts: game.hearts,
     depositBalance: game.depositBalance,
+    yieldPerDay: game.yieldPerDay,
     loading: false,
   } as const;
 

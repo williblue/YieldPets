@@ -7,6 +7,7 @@ export interface HUDState {
   goldNuggets: GoldNuggets;
   hearts: HeartCount;
   depositBalance: number;
+  yieldPerDay: number;
   loading: boolean;
 }
 
