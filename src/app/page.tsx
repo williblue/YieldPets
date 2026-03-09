@@ -173,6 +173,10 @@ export default function Home() {
             handleEggTap();
             return;
           }
+          // Close any open modals/overlays when switching tabs
+          setDepositView(null);
+          setShowStats(false);
+          setSelectedFurniture(null);
           setActiveTab(tab);
         }} />
 
