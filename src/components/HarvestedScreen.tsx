@@ -145,24 +145,21 @@ export default function HarvestedScreen({ onClose, onDeposit }: HarvestedScreenP
       <div
         style={{
           flex: 1,
-          overflowY: "auto",
+          overflowY: "scroll",
           padding: "20px 20px 32px",
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
           WebkitOverflowScrolling: "touch",
         }}
       >
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Hero Card */}
         <div
           style={{
             ...cardStyle,
-            padding: "36px 20px 32px",
+            padding: "24px 20px 20px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            gap: 12,
-            minHeight: 340,
+            gap: 8,
           }}
         >
           <div
@@ -182,14 +179,14 @@ export default function HarvestedScreen({ onClose, onDeposit }: HarvestedScreenP
             src="/yield_icon.png"
             alt=""
             style={{
-              width: 60,
-              height: 60,
+              width: 48,
+              height: 48,
               objectFit: "contain",
-              marginTop: 12,
+              marginTop: 4,
             }}
           />
 
-          <div style={{ ...labelStyle, marginTop: 10 }}>Total Harvested</div>
+          <div style={{ ...labelStyle, marginTop: 4 }}>Total Harvested</div>
 
           <div
             onClick={() => game.toggleBalanceVisible()}
@@ -474,6 +471,7 @@ export default function HarvestedScreen({ onClose, onDeposit }: HarvestedScreenP
             Deposit More to Grow Yield
           </button>
         )}
+        </div>
       </div>
     </div>
   );
