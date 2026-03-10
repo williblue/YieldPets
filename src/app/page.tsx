@@ -17,6 +17,7 @@ import HarvestedScreen from "@/components/HarvestedScreen";
 import GrowthRateScreen from "@/components/GrowthRateScreen";
 import DailyBonusToast from "@/components/DailyBonusToast";
 import ShopScreen from "@/components/ShopScreen";
+import ImagePreloader from "@/components/ImagePreloader";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useGame } from "@/contexts/GameProvider";
 import { useNuggetCollector } from "@/hooks/useNuggetCollector";
@@ -137,10 +138,14 @@ export default function Home() {
           overflow: "hidden",
         }}
       >
+        <ImagePreloader />
+
         {/* Full-screen cloud background */}
         <img
           src="/cloud_bg_mobile.png"
           alt=""
+          loading="eager"
+          decoding="async"
           style={{
             position: "absolute",
             inset: 0,

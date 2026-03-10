@@ -28,6 +28,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="preload" as="image" href="/cloud_bg_mobile.png" />
+        <link rel="preload" as="image" href="/Subject.png" />
+        <link rel="preload" as="image" href="/iso_room.png" />
+        <link rel="preload" as="image" href="/happy_face.png" />
+        <link rel="preload" as="image" href="/piggy_bank.png" />
+        <link rel="preload" as="image" href="/yieldpets_logo.png" />
+        <link rel="preload" as="image" href="/egg_without_bush.png" />
+      </head>
       <body className={nunito.className}>
         <Providers>{children}</Providers>
       </body>
