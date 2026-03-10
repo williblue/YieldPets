@@ -8,6 +8,7 @@ interface PetStatsModalProps {
   onDeposit: () => void;
   onWithdraw: () => void;
   onPocketPile: () => void;
+  onHarvested: () => void;
   petName: string;
 }
 
@@ -89,6 +90,7 @@ export default function PetStatsModal({
   onDeposit,
   onWithdraw,
   onPocketPile,
+  onHarvested,
   petName,
 }: PetStatsModalProps) {
   const game = useGame();
@@ -507,7 +509,7 @@ export default function PetStatsModal({
 
               {/* Harvested */}
               <button
-                onClick={onDeposit}
+                onClick={onHarvested}
                 style={{
                   ...cardStyle,
                   display: "flex",

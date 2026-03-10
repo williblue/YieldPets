@@ -96,6 +96,22 @@ export interface GameState {
   balanceVisible: boolean;
 }
 
+// ─── Seed demo transactions ──────────────────────────────────
+function buildSeedTransactions(): Transaction[] {
+  const now = Date.now();
+  const DAY = 86_400_000;
+  return [
+    { id: "seed_y1", type: "yield", label: "Yield harvested", amount: 3, timestamp: now - 0.5 * DAY },
+    { id: "seed_y2", type: "yield", label: "Yield harvested", amount: 5, timestamp: now - 1.2 * DAY },
+    { id: "seed_y3", type: "yield", label: "Yield harvested", amount: 4, timestamp: now - 2.1 * DAY },
+    { id: "seed_y4", type: "yield", label: "Yield harvested", amount: 6, timestamp: now - 3.5 * DAY },
+    { id: "seed_y5", type: "yield", label: "Yield harvested", amount: 2, timestamp: now - 5 * DAY },
+    { id: "seed_y6", type: "yield", label: "Yield harvested", amount: 7, timestamp: now - 8 * DAY },
+    { id: "seed_y7", type: "yield", label: "Yield harvested", amount: 4, timestamp: now - 12 * DAY },
+    { id: "seed_d1", type: "deposit", label: "Deposit", amount: 50, timestamp: now - 14 * DAY },
+  ];
+}
+
 const INITIAL_STATE: GameState = {
   nuggets: 0,
   nuggetsFloat: 0,
@@ -113,8 +129,8 @@ const INITIAL_STATE: GameState = {
   placedFurniture: [],
   petName: "Sprout",
   trainerName: "Trainer",
-  transactions: [],
-  totalYieldEarned: 0,
+  transactions: buildSeedTransactions(),
+  totalYieldEarned: 31,
   sfxEnabled: true,
   balanceVisible: true,
 };
@@ -133,6 +149,11 @@ function createGameStore() {
       if (raw) {
         const parsed = JSON.parse(raw) as Partial<GameState>;
         state = { ...INITIAL_STATE, ...parsed };
+        // Migrate: inject seed transactions if user has none
+        if (!state.transactions || state.transactions.length === 0) {
+          state.transactions = buildSeedTransactions();
+          state.totalYieldEarned = 31;
+        }
       }
     } catch {
       // corrupt data — use defaults
