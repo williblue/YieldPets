@@ -59,9 +59,10 @@ function BalanceIcon() {
 
 interface HUDBarProps {
   state: HUDState;
+  onBalanceTap?: () => void;
 }
 
-export default function HUDBar({ state }: HUDBarProps) {
+export default function HUDBar({ state, onBalanceTap }: HUDBarProps) {
   const { goldNuggets, hearts, depositBalance, yieldPerDay, loading } = state;
   const game = useGame();
 
@@ -117,7 +118,7 @@ export default function HUDBar({ state }: HUDBarProps) {
       {/* Deposit Balance + Yield */}
       <div
         style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 2, cursor: "pointer" }}
-        onClick={() => game.toggleBalanceVisible()}
+        onClick={() => onBalanceTap ? onBalanceTap() : game.toggleBalanceVisible()}
       >
         <div style={{ ...pillStyle, minWidth: 80 }}>
           <BalanceIcon />

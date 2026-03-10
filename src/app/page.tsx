@@ -48,6 +48,7 @@ export default function Home() {
   const [depositView, setDepositView] = useState<DepositView>(null);
   const [showStats, setShowStats] = useState(false);
   const [showPocketPile, setShowPocketPile] = useState(false);
+  const pocketPileFromHud = useRef(false);
   const [showHarvested, setShowHarvested] = useState(false);
   const [showGrowthRate, setShowGrowthRate] = useState(false);
   const [piggyPressed, setPiggyPressed] = useState(false);
@@ -156,7 +157,7 @@ export default function Home() {
           }}
         />
 
-        {activeTab === "pet" && !depositView && !showStats && !showPocketPile && !showHarvested && !showGrowthRate && <HUDBar state={hudState} />}
+        {activeTab === "pet" && !depositView && !showStats && !showPocketPile && !showHarvested && !showGrowthRate && <HUDBar state={hudState} onBalanceTap={() => { pocketPileFromHud.current = true; setShowPocketPile(true); }} />}
 
         <div style={{ paddingTop: 52 }}>
           <IsometricRoom
@@ -320,7 +321,7 @@ export default function Home() {
         {/* Pocket Pile screen */}
         {showPocketPile && isLoggedIn && (
           <PocketPileScreen
-            onClose={() => { setShowPocketPile(false); setShowStats(true); }}
+            onClose={() => { setShowPocketPile(false); if (pocketPileFromHud.current) { pocketPileFromHud.current = false; } else { setShowStats(true); } }}
             onDeposit={() => { setShowPocketPile(false); setDepositView("deposit"); }}
           />
         )}
