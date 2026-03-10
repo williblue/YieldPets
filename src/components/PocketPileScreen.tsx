@@ -293,7 +293,7 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
             >
               <span onClick={() => game.toggleBalanceVisible()} style={{ cursor: "pointer" }}>
                 {hidden ? "••••••" : fmtUSD(game.depositBalance)}{" "}
-                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)" }}>PYUSD</span>
+                <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)" }}>USD</span>
               </span>
             </div>
             <div
@@ -488,7 +488,7 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
               {hidden ? "••••" : fmtCompact(Math.round(avgDeposit))}
             </span>
             <span style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)" }}>
-              PYUSD
+              USD
             </span>
           </div>
 

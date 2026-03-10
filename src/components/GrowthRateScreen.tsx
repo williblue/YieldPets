@@ -554,7 +554,7 @@ export default function GrowthRateScreen({ onClose, onDeposit }: GrowthRateScree
                 {hidden ? "••••••" : fmtCurrency(projectedValue)}
               </div>
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-secondary)", marginTop: 2 }}>
-                {hidden ? "••••" : `+${fmtCurrency(projectedEarnings)} PYUSD earned in ${projectionYears} years`}
+                {hidden ? "••••" : `+${fmtCurrency(projectedEarnings)} USD earned in ${projectionYears} years`}
               </div>
             </div>
 

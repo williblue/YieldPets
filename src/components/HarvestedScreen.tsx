@@ -208,7 +208,7 @@ export default function HarvestedScreen({ onClose, onDeposit }: HarvestedScreenP
               color: "var(--text-secondary)",
             }}
           >
-            PYUSD since first deposit
+            USD since first deposit
           </div>
 
           {/* Status badges */}
