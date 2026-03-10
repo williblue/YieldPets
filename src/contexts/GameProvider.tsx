@@ -14,7 +14,7 @@ import { FOOD_ITEMS, FURNITURE_ITEMS } from "@/data/shopItems";
 
 // ─── Constants ───────────────────────────────────────────────
 const STORAGE_KEY = "yieldpets_game";
-const YIELD_PER_USD_PER_DAY = 0.8;
+const YIELD_PER_USD_PER_DAY = 0.10 / 365; // ~10% APY
 const HEART_DECAY_MS = 8 * 60 * 60 * 1000; // 8 hours
 const FEED_COOLDOWN_MS = 0; // no cooldown
 const FEED_BONUS = 5;

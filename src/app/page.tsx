@@ -14,6 +14,7 @@ import CryptoDepositScreen from "@/components/CryptoDepositScreen";
 import PetStatsModal from "@/components/PetStatsModal";
 import PocketPileScreen from "@/components/PocketPileScreen";
 import HarvestedScreen from "@/components/HarvestedScreen";
+import GrowthRateScreen from "@/components/GrowthRateScreen";
 import DailyBonusToast from "@/components/DailyBonusToast";
 import ShopScreen from "@/components/ShopScreen";
 import { useAuth } from "@/contexts/AuthProvider";
@@ -47,6 +48,7 @@ export default function Home() {
   const [showStats, setShowStats] = useState(false);
   const [showPocketPile, setShowPocketPile] = useState(false);
   const [showHarvested, setShowHarvested] = useState(false);
+  const [showGrowthRate, setShowGrowthRate] = useState(false);
   const [piggyPressed, setPiggyPressed] = useState(false);
   const [petHeadPressed, setPetHeadPressed] = useState(false);
   const debounceRef = useRef(false);
@@ -150,7 +152,7 @@ export default function Home() {
           }}
         />
 
-        {activeTab === "pet" && !depositView && !showStats && !showPocketPile && !showHarvested && <HUDBar state={hudState} />}
+        {activeTab === "pet" && !depositView && !showStats && !showPocketPile && !showHarvested && !showGrowthRate && <HUDBar state={hudState} />}
 
         <div style={{ paddingTop: 52 }}>
           <IsometricRoom
@@ -182,6 +184,7 @@ export default function Home() {
           setShowStats(false);
           setShowPocketPile(false);
           setShowHarvested(false);
+          setShowGrowthRate(false);
           setSelectedFurniture(null);
           setActiveTab(tab);
         }} />
@@ -189,7 +192,7 @@ export default function Home() {
         <FurnitureModal item={selectedFurniture} onClose={handleModalClose} />
 
         {/* Floating pet head button (stats) */}
-        {isLoggedIn && !depositView && !showStats && !showPocketPile && !showHarvested && activeTab !== "settings" && (
+        {isLoggedIn && !depositView && !showStats && !showPocketPile && !showHarvested && !showGrowthRate && activeTab !== "settings" && (
           <button
             onClick={() => setShowStats(true)}
             onMouseDown={() => setPetHeadPressed(true)}
@@ -232,7 +235,7 @@ export default function Home() {
         )}
 
         {/* Floating piggy bank button */}
-        {isLoggedIn && !depositView && !showStats && !showPocketPile && !showHarvested && activeTab !== "settings" && (
+        {isLoggedIn && !depositView && !showStats && !showPocketPile && !showHarvested && !showGrowthRate && activeTab !== "settings" && (
           <button
             onClick={() => setDepositView("deposit")}
             onMouseDown={() => setPiggyPressed(true)}
@@ -297,7 +300,16 @@ export default function Home() {
             onWithdraw={() => { setShowStats(false); setDepositView("deposit"); }}
             onPocketPile={() => { setShowStats(false); setShowPocketPile(true); }}
             onHarvested={() => { setShowStats(false); setShowHarvested(true); }}
+            onGrowthRate={() => { setShowStats(false); setShowGrowthRate(true); }}
             petName={game.petName}
+          />
+        )}
+
+        {/* Growth Rate screen */}
+        {showGrowthRate && isLoggedIn && (
+          <GrowthRateScreen
+            onClose={() => { setShowGrowthRate(false); setShowStats(true); }}
+            onDeposit={() => { setShowGrowthRate(false); setDepositView("deposit"); }}
           />
         )}
 
