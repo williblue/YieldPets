@@ -728,6 +728,7 @@ export default function SettingsScreen({ onClose }: SettingsScreenProps) {
   const [view, setView] = useState<"main" | "developer" | "transactions">("main");
   const [bgMusic, setBgMusic] = useState(true);
   const [showNameEdit, setShowNameEdit] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
 
   return (
     <div
@@ -861,6 +862,7 @@ export default function SettingsScreen({ onClose }: SettingsScreenProps) {
                 <SettingsRow
                   label="Email"
                   sublabel={email || undefined}
+                  right={<span />}
                 />
               </div>
             </div>
@@ -869,7 +871,7 @@ export default function SettingsScreen({ onClose }: SettingsScreenProps) {
             <div>
               <span style={sectionLabel}>Info</span>
               <div style={cardStyle}>
-                <SettingsRow label="Credits info" />
+                <SettingsRow label="Credits info" onClick={() => setShowCredits(true)} />
                 <div
                   style={{
                     height: 1,
@@ -916,6 +918,79 @@ export default function SettingsScreen({ onClose }: SettingsScreenProps) {
           onSave={game.setPetName}
           onClose={() => setShowNameEdit(false)}
         />
+      )}
+
+      {showCredits && (
+        <div
+          onClick={() => setShowCredits(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 300,
+            background: "rgba(0,0,0,0.45)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 24,
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: "100%",
+              maxWidth: 340,
+              background: "#FFF8E8",
+              borderRadius: 20,
+              border: "2px solid #ECD8A0",
+              padding: 24,
+              display: "flex",
+              flexDirection: "column",
+              gap: 16,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 16,
+                fontWeight: 800,
+                color: "var(--text-primary)",
+                textAlign: "center",
+              }}
+            >
+              Credits
+            </div>
+            <div
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: "var(--text-secondary)",
+                lineHeight: 1.6,
+                textAlign: "center",
+              }}
+            >
+              Sound effects by Kenney.nl
+              <br />
+              Licensed under CC0 1.0 Universal
+            </div>
+            <button
+              onClick={() => setShowCredits(false)}
+              style={{
+                width: "100%",
+                height: 44,
+                borderRadius: 999,
+                border: "none",
+                cursor: "pointer",
+                background: "linear-gradient(180deg, #6DC95A 0%, #5BAF48 100%)",
+                boxShadow: "0 3px 0px #3D8A30",
+                color: "#FFFFFF",
+                fontFamily: "inherit",
+                fontWeight: 800,
+                fontSize: 15,
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
