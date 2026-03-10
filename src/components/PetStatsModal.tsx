@@ -123,7 +123,7 @@ export default function PetStatsModal({
   const personality = computePersonality(game.depositBalance, game.currentStreak, game.hearts);
 
   const growthRate = game.depositBalance > 0
-    ? ((game.yieldPerDay / game.depositBalance) * 100).toFixed(1)
+    ? ((game.yieldPerDay / game.depositBalance) * 365 * 100).toFixed(1)
     : "0.0";
 
   const labelStyle: React.CSSProperties = {
