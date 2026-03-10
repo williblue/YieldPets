@@ -200,7 +200,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
               textAlign: "center",
             }}
           >
-            {tab === "withdraw" ? "Withdraw Funds" : "Deposit / Withdraw"}
+            {tab === "withdraw" ? "Withdraw Funds" : "Deposit Funds"}
           </h2>
 
           {/* Tab Switcher */}
@@ -548,7 +548,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                         {hidden ? "••••" : `-${fmtUSD(Math.round(missedYield1Y))}`}
                       </span>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <img src="/nugget.png" alt="" style={{ width: 14, height: 14, objectFit: "contain" }} />
+                        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#F5C030" stroke="#D4A020" strokeWidth="1.5" /><circle cx="10" cy="10" r="5" fill="#F8D868" /></svg>
                         <span
                           style={{
                             fontSize: 11,
@@ -594,7 +594,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                         {hidden ? "••••" : `-${fmtUSD(Math.round(missedYield3Y))}`}
                       </span>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <img src="/nugget.png" alt="" style={{ width: 14, height: 14, objectFit: "contain" }} />
+                        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#F5C030" stroke="#D4A020" strokeWidth="1.5" /><circle cx="10" cy="10" r="5" fill="#F8D868" /></svg>
                         <span
                           style={{
                             fontSize: 11,
