@@ -433,7 +433,7 @@ export default function GrowthRateScreen({ onClose, onDeposit }: GrowthRateScree
                 letterSpacing: 1,
               }}
             >
-              Your Current APY
+              Your Growth Rate
             </div>
             <div
               onClick={() => game.toggleBalanceVisible()}
@@ -477,7 +477,7 @@ export default function GrowthRateScreen({ onClose, onDeposit }: GrowthRateScree
                   letterSpacing: 0.5,
                 }}
               >
-                Growth Rate/APY History
+                Growth Rate History
               </span>
               <div style={{ display: "flex", gap: 4 }}>
                 {(["1W", "1M", "3M", "ALL"] as HistoryRange[]).map((r) => (
@@ -539,7 +539,7 @@ export default function GrowthRateScreen({ onClose, onDeposit }: GrowthRateScree
             {/* Projection hero */}
             <div style={{ padding: "8px 16px 4px", textAlign: "center" }}>
               <div style={{ fontSize: 11, fontWeight: 800, color: "#5BAF48" }}>
-                {hidden ? "••••" : `${fmtApy(currentApy)}% APY`}
+                {hidden ? "••••" : `${fmtApy(currentApy)}% yearly`}
               </div>
               <div
                 onClick={() => game.toggleBalanceVisible()}
@@ -581,7 +581,7 @@ export default function GrowthRateScreen({ onClose, onDeposit }: GrowthRateScree
               }}
             >
               <span style={{ fontSize: 9, fontWeight: 700, color: "#B0A890" }}>
-                ~ estimates at {fmtApy(currentApy)}% APY · compounding monthly
+                ~ estimates at {fmtApy(currentApy)}% yearly · compounding monthly
               </span>
             </div>
           </div>

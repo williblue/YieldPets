@@ -238,7 +238,7 @@ export default function HarvestedScreen({ onClose, onDeposit }: HarvestedScreenP
                   color: "#5BAF48",
                 }}
               >
-                {apyRate}% APY
+                {apyRate}% yearly
               </div>
             )}
           </div>

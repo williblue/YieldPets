@@ -336,7 +336,7 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
                     color: "#5BAF48",
                   }}
                 >
-                  Earning {apyRate}% APY
+                  Earning {apyRate}% yearly
                 </div>
               )}
             </div>
