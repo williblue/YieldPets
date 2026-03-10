@@ -47,7 +47,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
   const [amount, setAmount] = useState("");
   const [customAmount, setCustomAmount] = useState("");
   const [pressed, setPressed] = useState(false);
-  const [addressType, setAddressType] = useState<AddressType>("flow");
+  const [addressType, setAddressType] = useState<AddressType>("evm");
   const [withdrawAddress, setWithdrawAddress] = useState("");
 
   const numAmount = parseFloat(amount || customAmount || "0");
@@ -288,7 +288,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                     overflow: "hidden",
                   }}
                 >
-                  {(["flow", "evm"] as AddressType[]).map((t) => (
+                  {(["evm", "flow"] as AddressType[]).map((t) => (
                     <button
                       key={t}
                       onClick={() => setAddressType(t)}
