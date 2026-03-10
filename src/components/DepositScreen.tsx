@@ -239,22 +239,41 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
           {/* ─── WITHDRAW TAB ─── */}
           {tab === "withdraw" && (
             <>
-              {/* Sad pet + feeling */}
-              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+              {/* Sad pet peeking over top of card */}
+              <div style={{ position: "relative", marginTop: 40 }}>
                 <img
                   src="/pet_sad.png"
                   alt=""
-                  style={{ width: 72, height: 72, objectFit: "contain" }}
+                  style={{
+                    position: "absolute",
+                    top: -69,
+                    right: 20,
+                    width: 72,
+                    height: 72,
+                    objectFit: "contain",
+                    zIndex: 2,
+                    filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.1))",
+                  }}
                 />
                 <div
                   style={{
-                    fontSize: 13,
-                    fontWeight: 700,
-                    color: "var(--text-secondary)",
-                    fontStyle: "italic",
+                    background: "#FFFFFF",
+                    borderRadius: 16,
+                    padding: "16px 16px 14px",
+                    boxShadow: "var(--shadow-card)",
+                    overflow: "hidden",
                   }}
                 >
-                  {petName} feels a little nervous...
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: "var(--text-secondary)",
+                      fontStyle: "italic",
+                    }}
+                  >
+                    {petName} feels a little nervous...
+                  </div>
                 </div>
               </div>
 
@@ -286,7 +305,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                         transition: "background 120ms ease-out, color 120ms ease-out",
                       }}
                     >
-                      {t === "flow" ? "Flow Address" : "EVM Address"}
+                      {t === "flow" ? "Cadence" : "EVM"}
                     </button>
                   ))}
                 </div>
@@ -305,7 +324,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                 >
                   <span style={{ fontSize: 18 }}>&#9888;</span>
                   <span style={{ fontSize: 12, fontWeight: 700, color: "#8A7A5A", lineHeight: 1.4 }}>
-                    Only provide {addressType === "flow" ? "a Flow Network" : "an EVM"} address.
+                    Only provide {addressType === "flow" ? "a Cadence" : "an EVM"} address.
                     Sending to an address on another network could cause your funds to be lost.
                   </span>
                 </div>
@@ -344,7 +363,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                 <span style={labelStyle}>Address</span>
                 <input
                   type="text"
-                  placeholder={addressType === "flow" ? "Flow address" : "EVM address (0x...)"}
+                  placeholder={addressType === "flow" ? "Cadence address" : "EVM address (0x...)"}
                   value={withdrawAddress}
                   onChange={(e) => setWithdrawAddress(e.target.value)}
                   style={{
