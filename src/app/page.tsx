@@ -129,6 +129,7 @@ export default function Home() {
         background: "#BDD8EE",
       }}
     >
+      <ImagePreloader>
       <div
         style={{
           width: 428,
@@ -138,8 +139,6 @@ export default function Home() {
           overflow: "hidden",
         }}
       >
-        <ImagePreloader />
-
         {/* Full-screen cloud background */}
         <img
           src="/cloud_bg_mobile.png"
@@ -390,6 +389,7 @@ export default function Home() {
           </div>
         )}
       </div>
+      </ImagePreloader>
     </div>
   );
 }

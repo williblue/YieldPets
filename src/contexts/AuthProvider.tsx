@@ -39,12 +39,35 @@ const AuthContext = createContext<AuthContextValue>({
   magicAuthz: null,
 });
 
+// Persist auth state so the UI can render immediately without waiting for Magic SDK
+function getCachedAuth(): { loggedIn: boolean; email: string | null; address: string | null } {
+  if (typeof window === "undefined") return { loggedIn: false, email: null, address: null };
+  try {
+    const raw = localStorage.getItem("yp_auth_cache");
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return { loggedIn: false, email: null, address: null };
+}
+
+function setCachedAuth(loggedIn: boolean, email: string | null, address: string | null) {
+  try {
+    if (loggedIn) {
+      localStorage.setItem("yp_auth_cache", JSON.stringify({ loggedIn, email, address }));
+    } else {
+      localStorage.removeItem("yp_auth_cache");
+    }
+  } catch {}
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { magic } = useMagic();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [email, setEmail] = useState<string | null>(null);
-  const [address, setAddress] = useState<string | null>(null);
+  const cached = getCachedAuth();
+  const [isLoggedIn, setIsLoggedIn] = useState(cached.loggedIn);
+  // If cached as logged in: skip loading (show UI immediately, validate in background)
+  // If not cached: also skip loading (show egg immediately for new users)
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState<string | null>(cached.email);
+  const [address, setAddress] = useState<string | null>(cached.address);
   const [balance, setBalance] = useState<number | null>(null);
 
   const magicAuthz = magic?.flow?.authorization ?? null;
@@ -131,10 +154,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setEmail(metadata.email ?? null);
           setAddress(flowAddress);
           setIsLoggedIn(true);
+          setCachedAuth(true, metadata.email ?? null, flowAddress);
           if (flowAddress) {
             await refreshBalance(flowAddress);
             ensureWalletSetup(flowAddress, magic.flow.authorization);
           }
+        } else {
+          // Not logged in — clear any stale cache
+          setIsLoggedIn(false);
+          setCachedAuth(false, null, null);
         }
       } catch (err) {
         console.error("Session check failed:", err);
@@ -168,6 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setEmail(metadata.email ?? null);
         setAddress(flowAddress);
         setIsLoggedIn(true);
+        setCachedAuth(true, metadata.email ?? null, flowAddress);
         if (flowAddress) {
           await refreshBalance(flowAddress);
           ensureWalletSetup(flowAddress, magic.flow.authorization);
@@ -192,6 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setAddress(null);
       setBalance(null);
       setIsLoading(false);
+      setCachedAuth(false, null, null);
     }
   }, [magic]);
 

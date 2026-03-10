@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useImagesReady } from "@/components/ImagePreloader";
 
 interface StartScreenProps {
   onPlay: () => void;
@@ -8,12 +9,28 @@ interface StartScreenProps {
 
 export default function StartScreen({ onPlay }: StartScreenProps) {
   const [pressed, setPressed] = useState(false);
+  const [waiting, setWaiting] = useState(false);
+  const imagesReady = useImagesReady();
+  const wantsPlay = useRef(false);
 
   const handlePress = () => setPressed(true);
   const handleRelease = () => {
     setPressed(false);
-    onPlay();
+    if (imagesReady) {
+      onPlay();
+    } else {
+      wantsPlay.current = true;
+      setWaiting(true);
+    }
   };
+
+  // Fire onPlay as soon as images are ready (if user already tapped Play)
+  useEffect(() => {
+    if (imagesReady && wantsPlay.current) {
+      wantsPlay.current = false;
+      onPlay();
+    }
+  }, [imagesReady, onPlay]);
 
   return (
     <div
@@ -112,7 +129,7 @@ export default function StartScreen({ onPlay }: StartScreenProps) {
               : "transform 120ms ease-out, box-shadow 120ms ease-out, background 120ms ease-out",
           }}
         >
-          Play
+          {waiting ? "Loading..." : "Play"}
         </button>
       </div>
     </div>
