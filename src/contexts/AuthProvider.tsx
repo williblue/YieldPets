@@ -12,7 +12,7 @@ import * as fcl from "@onflow/fcl";
 import * as t from "@onflow/types";
 import { useFlowAccount } from "@onflow/kit";
 import "@/lib/flow";
-import { GET_COA_ADDRESS, CREATE_COA, CHECK_PYUSD_VAULT, SETUP_PYUSD_VAULT } from "@/lib/flow";
+import { GET_COA_ADDRESS, CREATE_COA, CHECK_PYUSD_VAULT, SETUP_PYUSD_VAULT, SETUP_USDC_LENDING_VAULT } from "@/lib/flow";
 import { useMagic } from "./MagicProvider";
 
 interface AuthContextValue {
@@ -117,6 +117,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             proposer: authz,
           });
           await fcl.tx(txId).onceSealed();
+        }
+
+        // Setup USDC lending vault (creates VaultPosition for stgUSDC → MoreMarkets)
+        try {
+          const usdcTxId = await fcl.mutate({
+            cadence: SETUP_USDC_LENDING_VAULT,
+            limit: 9999,
+            authorizations: [authz],
+            payer: authz,
+            proposer: authz,
+          });
+          await fcl.tx(usdcTxId).onceSealed();
+        } catch (usdcErr) {
+          // Non-critical — USDC vault setup can be retried later
+          console.warn("USDC vault setup skipped:", usdcErr);
         }
       } catch (err) {
         console.error("Background wallet setup failed:", err);

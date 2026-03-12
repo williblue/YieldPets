@@ -9,6 +9,7 @@ import { GET_COA_ADDRESS, CREATE_COA, CHECK_PYUSD_VAULT, SETUP_PYUSD_VAULT } fro
 import QRCode from "qrcode";
 
 type Network = "cadence" | "evm";
+type TokenType = "pyusd0" | "stgusdc";
 
 interface CryptoDepositScreenProps {
   onBack: () => void;
@@ -17,6 +18,7 @@ interface CryptoDepositScreenProps {
 export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps) {
   const { address, magicAuthz } = useAuth();
 
+  const [token, setToken] = useState<TokenType>("stgusdc");
   const [network, setNetwork] = useState<Network>("evm");
   const [coaCreating, setCoaCreating] = useState(false);
   const [coaStatus, setCoaStatus] = useState<string | null>(null);
@@ -264,6 +266,46 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
         >
           Receive Stablecoin
         </h2>
+
+        {/* Token Selector */}
+        <div
+          style={{
+            display: "flex",
+            gap: 8,
+            justifyContent: "center",
+          }}
+        >
+          {([
+            { key: "stgusdc" as TokenType, label: "USDC", desc: "~2% APY" },
+            { key: "pyusd0" as TokenType, label: "PYUSD0", desc: "~10% APY (capped)" },
+          ]).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setToken(t.key)}
+              style={{
+                height: 44,
+                paddingLeft: 16,
+                paddingRight: 16,
+                borderRadius: 12,
+                border: token === t.key ? "2px solid #F09098" : "2px solid #ECD8A0",
+                background: token === t.key ? "rgba(240,144,152,0.1)" : "#FFFFFF",
+                color: token === t.key ? "#F09098" : "var(--text-secondary)",
+                fontSize: 13,
+                fontFamily: "inherit",
+                fontWeight: 800,
+                cursor: "pointer",
+                transition: "all 120ms ease-out",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: 2,
+              }}
+            >
+              <span>{t.label}</span>
+              <span style={{ fontSize: 10, fontWeight: 700, opacity: 0.7 }}>{t.desc}</span>
+            </button>
+          ))}
+        </div>
 
         {/* Network Switcher */}
         <div
@@ -602,7 +644,7 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
                 color: "#3C3848",
               }}
             >
-              Only send PYUSD0 on the Flow network
+              Only send {token === "stgusdc" ? "stgUSDC" : "PYUSD0"} on the Flow network
             </span>
             <span
               style={{

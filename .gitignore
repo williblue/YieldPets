@@ -74,3 +74,4 @@ cadence/scripts/*.private.cdc
 tmp/
 temp/
 flow.json
+mainnet-deployer.pkey

@@ -14,7 +14,8 @@ import { FOOD_ITEMS, ALL_FURNITURE, EXCLUSIVE_ITEMS } from "@/data/shopItems";
 
 // ─── Constants ───────────────────────────────────────────────
 const STORAGE_KEY = "yieldpets_game";
-const YIELD_PER_USD_PER_DAY = 0.10 / 365; // ~10% APY
+const YIELD_PER_USD_PER_DAY = 0.10 / 365; // ~10% APY (PYUSD0)
+const USDC_YIELD_PER_USD_PER_DAY = 0.02 / 365; // ~2% APY (stgUSDC)
 const HEART_DECAY_MS = 8 * 60 * 60 * 1000; // 8 hours
 const FEED_COOLDOWN_MS = 0; // no cooldown
 const FEED_BONUS = 5;
@@ -78,6 +79,7 @@ export interface GameState {
   nuggetsFloat: number;
   lastTickAt: number;
   depositBalance: number;
+  usdcDepositBalance: number;
   hearts: HeartCount;
   lastFedAt: number;
   feedCooldownEnd: number;
@@ -102,6 +104,7 @@ const INITIAL_STATE: GameState = {
   nuggetsFloat: 0,
   lastTickAt: Date.now(),
   depositBalance: 0,
+  usdcDepositBalance: 0,
   hearts: 0,
   lastFedAt: Date.now(),
   feedCooldownEnd: 0,
@@ -199,27 +202,37 @@ function createGameStore() {
   function accrueYield(now: number): Partial<GameState> {
     const elapsed = (now - state.lastTickAt) / 1000; // seconds
     if (elapsed <= 0) return { lastTickAt: now };
-    const rate = state.depositBalance * YIELD_PER_USD_PER_DAY; // per day
-    const perSecond = rate / 86400;
     const mult = HEART_MULTIPLIERS[state.hearts];
-    const earned = perSecond * elapsed * mult;
-    pendingYield += earned;
+
+    // PYUSD0 yield (~10% APY)
+    const pyusdRate = state.depositBalance * YIELD_PER_USD_PER_DAY;
+    const pyusdEarned = (pyusdRate / 86400) * elapsed * mult;
+
+    // stgUSDC yield (~2% APY)
+    const usdcBalance = state.usdcDepositBalance ?? 0;
+    const usdcRate = usdcBalance * USDC_YIELD_PER_USD_PER_DAY;
+    const usdcEarned = (usdcRate / 86400) * elapsed * mult;
+
+    const totalEarned = pyusdEarned + usdcEarned;
+    pendingYield += totalEarned;
     // Only log a transaction once pendingYield reaches $0.01
     if (pendingYield >= 0.01) {
       pushTx(makeTx("yield", "Yield harvested", pendingYield));
       pendingYield = 0;
     }
     return {
-      depositBalance: state.depositBalance + earned,
-      totalYieldEarned: (state.totalYieldEarned ?? 0) + earned,
+      depositBalance: state.depositBalance + pyusdEarned,
+      usdcDepositBalance: usdcBalance + usdcEarned,
+      totalYieldEarned: (state.totalYieldEarned ?? 0) + totalEarned,
       lastTickAt: now,
     };
   }
 
   // ─── Daily login / streak ─────────────────────────
   function checkDailyLogin(): { bonusAmount: number } | null {
-    // Daily bonus requires at least $200 deposit balance
-    if (state.depositBalance < 200) return null;
+    // Daily bonus requires at least $200 total deposit balance
+    const totalDeposit = state.depositBalance + (state.usdcDepositBalance ?? 0);
+    if (totalDeposit < 200) return null;
 
     const today = todayStr();
     if (state.lastLoginDate === today && state.dailyBonusClaimed) {
@@ -334,8 +347,9 @@ function createGameStore() {
     if (state.ownedFurniture.includes(furnitureId)) return false;
     const item = ALL_FURNITURE.find((f) => f.id === furnitureId);
     if (!item || state.nuggets < item.price) return false;
-    // Exclusives require minimum $200 deposit balance
-    if (EXCLUSIVE_ITEMS.some((e) => e.id === furnitureId) && state.depositBalance < 200) return false;
+    // Exclusives require minimum $200 total deposit balance
+    const totalDeposit = state.depositBalance + (state.usdcDepositBalance ?? 0);
+    if (EXCLUSIVE_ITEMS.some((e) => e.id === furnitureId) && totalDeposit < 200) return false;
     pushTx(makeTx("nuggets_spent", `Bought ${item.name}`, -item.price));
     set({
       nuggets: state.nuggets - item.price,
@@ -369,6 +383,20 @@ function createGameStore() {
     const actual = Math.min(amount, state.depositBalance);
     pushTx(makeTx("withdrawal", "Withdrawal", actual));
     set({ depositBalance: Math.max(0, state.depositBalance - amount) });
+  }
+
+  function depositUsdc(amount: number) {
+    if (amount <= 0) return;
+    pushTx(makeTx("deposit", "USDC Deposit", amount));
+    set({ usdcDepositBalance: (state.usdcDepositBalance ?? 0) + amount });
+  }
+
+  function withdrawUsdc(amount: number) {
+    if (amount <= 0) return;
+    const balance = state.usdcDepositBalance ?? 0;
+    const actual = Math.min(amount, balance);
+    pushTx(makeTx("withdrawal", "USDC Withdrawal", actual));
+    set({ usdcDepositBalance: Math.max(0, balance - amount) });
   }
 
   function setPetName(name: string) {
@@ -407,6 +435,8 @@ function createGameStore() {
     removeFurniture,
     deposit,
     withdraw,
+    depositUsdc,
+    withdrawUsdc,
     setPetName,
     setTrainerName,
     resetState,
@@ -486,10 +516,16 @@ export function useGame() {
     () => INITIAL_STATE
   );
 
-  const yieldPerDay =
+  const pyusdYieldPerDay =
     state.depositBalance *
     YIELD_PER_USD_PER_DAY *
     HEART_MULTIPLIERS[state.hearts];
+  const usdcYieldPerDay =
+    (state.usdcDepositBalance ?? 0) *
+    USDC_YIELD_PER_USD_PER_DAY *
+    HEART_MULTIPLIERS[state.hearts];
+  const yieldPerDay = pyusdYieldPerDay + usdcYieldPerDay;
+  const totalDepositBalance = state.depositBalance + (state.usdcDepositBalance ?? 0);
 
   const feedCooldownRemaining = Math.max(0, state.feedCooldownEnd - Date.now());
   const canFeed = feedCooldownRemaining === 0;
@@ -497,6 +533,9 @@ export function useGame() {
   return {
     ...state,
     yieldPerDay,
+    totalDepositBalance,
+    pyusdYieldPerDay,
+    usdcYieldPerDay,
     feedCooldownRemaining,
     canFeed,
     feed: ctx.store.feed,
@@ -506,6 +545,8 @@ export function useGame() {
     removeFurniture: ctx.store.removeFurniture,
     deposit: ctx.store.deposit,
     withdraw: ctx.store.withdraw,
+    depositUsdc: ctx.store.depositUsdc,
+    withdrawUsdc: ctx.store.withdrawUsdc,
     setPetName: ctx.store.setPetName,
     setTrainerName: ctx.store.setTrainerName,
     resetState: ctx.store.resetState,
