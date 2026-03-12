@@ -42,6 +42,42 @@ export const FOOD_ITEMS: FoodItemDef[] = [
   },
 ];
 
+export const EXCLUSIVE_ITEMS: FurnitureItemDef[] = [
+  {
+    id: "golden_throne",
+    name: "Golden Throne",
+    description: "A majestic seat fit for royalty.",
+    price: 1000,
+    imageUrl: "/furniture/golden_throne.png",
+    positionX: 50,
+    positionY: 45,
+    width: 55,
+    height: 65,
+  },
+  {
+    id: "crystal_ball",
+    name: "Crystal Ball",
+    description: "Peer into the future of your yields.",
+    price: 750,
+    imageUrl: "/furniture/crystal_ball.png",
+    positionX: 35,
+    positionY: 50,
+    width: 35,
+    height: 45,
+  },
+  {
+    id: "rainbow_arch",
+    name: "Rainbow Arch",
+    description: "A dazzling arch of color and light.",
+    price: 1500,
+    imageUrl: "/furniture/rainbow_arch.png",
+    positionX: 50,
+    positionY: 30,
+    width: 90,
+    height: 70,
+  },
+];
+
 export const FURNITURE_ITEMS: FurnitureItemDef[] = [
   {
     id: "rug_pink",

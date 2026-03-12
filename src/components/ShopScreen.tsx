@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useGame } from "@/contexts/GameProvider";
-import { FOOD_ITEMS, FURNITURE_ITEMS } from "@/data/shopItems";
+import { FURNITURE_ITEMS, EXCLUSIVE_ITEMS } from "@/data/shopItems";
 
-type ShopTab = "food" | "furniture";
+type ShopTab = "furniture" | "exclusives";
 
 interface ShopScreenProps {
   onClose: () => void;
@@ -12,16 +12,8 @@ interface ShopScreenProps {
 
 export default function ShopScreen({ onClose }: ShopScreenProps) {
   const game = useGame();
-  const [tab, setTab] = useState<ShopTab>("food");
+  const [tab, setTab] = useState<ShopTab>("furniture");
   const [buyingId, setBuyingId] = useState<string | null>(null);
-
-  const handleBuyFood = (foodId: string) => {
-    const success = game.buyFood(foodId);
-    if (success) {
-      setBuyingId(foodId);
-      setTimeout(() => setBuyingId(null), 600);
-    }
-  };
 
   const handleBuyFurniture = (furnitureId: string) => {
     const success = game.buyFurniture(furnitureId);
@@ -157,7 +149,7 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
             justifyContent: "center",
           }}
         >
-          {(["food", "furniture"] as ShopTab[]).map((t) => (
+          {(["furniture", "exclusives"] as ShopTab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -176,143 +168,10 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
                 transition: "background 120ms ease-out, color 120ms ease-out, border 120ms ease-out",
               }}
             >
-              {t === "food" ? "Food" : "Furniture"}
+              {t === "furniture" ? "Furniture" : "Exclusives"}
             </button>
           ))}
         </div>
-
-        {/* Food Tab */}
-        {tab === "food" && (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            <span style={labelStyle}>Pet Food</span>
-            {FOOD_ITEMS.map((food) => {
-              const inInventory = game.foodInventory[food.id] || 0;
-              const canAfford = game.nuggets >= food.price;
-              const justBought = buyingId === food.id;
-
-              return (
-                <div
-                  key={food.id}
-                  style={{
-                    ...cardStyle,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                  }}
-                >
-                  {/* Food icon */}
-                  <div
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 12,
-                      background: food.id === "kibble"
-                        ? "rgba(160,120,80,0.12)"
-                        : food.id === "premium_meal"
-                          ? "rgba(240,144,152,0.12)"
-                          : "rgba(245,192,48,0.12)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-                      <ellipse cx="13" cy="18" rx="9" ry="4" fill={
-                        food.id === "kibble" ? "#A07850"
-                          : food.id === "premium_meal" ? "#F09098"
-                            : "#F5C030"
-                      } />
-                      <ellipse cx="13" cy="16" rx="7" ry="3" fill={
-                        food.id === "kibble" ? "#C4A880"
-                          : food.id === "premium_meal" ? "#F8B0B8"
-                            : "#F8D868"
-                      } />
-                      {food.heartRestore >= 4 && (
-                        <circle cx="13" cy="14" r="2" fill="#FFFFFF" opacity="0.5" />
-                      )}
-                    </svg>
-                  </div>
-
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 800,
-                        color: "var(--text-primary)",
-                      }}
-                    >
-                      {food.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: "var(--text-secondary)",
-                        marginTop: 2,
-                      }}
-                    >
-                      {food.description}
-                    </div>
-                    {inInventory > 0 && (
-                      <div
-                        style={{
-                          fontSize: 11,
-                          fontWeight: 800,
-                          color: "#5BAF48",
-                          marginTop: 3,
-                        }}
-                      >
-                        Owned: {inInventory}
-                      </div>
-                    )}
-                  </div>
-
-                  <button
-                    onClick={() => handleBuyFood(food.id)}
-                    disabled={!canAfford}
-                    style={{
-                      height: 36,
-                      paddingLeft: 14,
-                      paddingRight: 14,
-                      borderRadius: 999,
-                      border: "none",
-                      background: justBought
-                        ? "#5BAF48"
-                        : canAfford
-                          ? "linear-gradient(180deg, #F8D868 0%, #F5C030 100%)"
-                          : "#E0D8C8",
-                      boxShadow: canAfford && !justBought ? "0 2px 0px #D4A020" : "none",
-                      color: "#FFFFFF",
-                      fontFamily: "inherit",
-                      fontWeight: 800,
-                      fontSize: 13,
-                      cursor: canAfford ? "pointer" : "default",
-                      opacity: canAfford ? 1 : 0.5,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                      flexShrink: 0,
-                      transition: "background 120ms ease-out",
-                    }}
-                  >
-                    {justBought ? (
-                      "Bought!"
-                    ) : (
-                      <>
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                          <circle cx="6" cy="6" r="5" fill="#FFFFFF" opacity="0.3" />
-                          <circle cx="6" cy="6" r="3" fill="#FFFFFF" opacity="0.3" />
-                        </svg>
-                        {food.price}
-                      </>
-                    )}
-                  </button>
-                </div>
-              );
-            })}
-          </div>
-        )}
 
         {/* Furniture Tab */}
         {tab === "furniture" && (
@@ -407,6 +266,129 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
                             ? "linear-gradient(180deg, #F8D868 0%, #F5C030 100%)"
                             : "#E0D8C8",
                         boxShadow: canAfford && !justBought ? "0 2px 0px #D4A020" : "none",
+                        color: "#FFFFFF",
+                        fontFamily: "inherit",
+                        fontWeight: 800,
+                        fontSize: 13,
+                        cursor: canAfford ? "pointer" : "default",
+                        opacity: canAfford ? 1 : 0.5,
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 4,
+                        flexShrink: 0,
+                        transition: "background 120ms ease-out",
+                      }}
+                    >
+                      {justBought ? (
+                        "Bought!"
+                      ) : (
+                        <>
+                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                            <circle cx="6" cy="6" r="5" fill="#FFFFFF" opacity="0.3" />
+                            <circle cx="6" cy="6" r="3" fill="#FFFFFF" opacity="0.3" />
+                          </svg>
+                          {item.price}
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Exclusives Tab */}
+        {tab === "exclusives" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <span style={labelStyle}>Limited Edition</span>
+            {EXCLUSIVE_ITEMS.map((item) => {
+              const owned = game.ownedFurniture.includes(item.id);
+              const canAfford = game.nuggets >= item.price;
+              const justBought = buyingId === item.id;
+
+              return (
+                <div
+                  key={item.id}
+                  style={{
+                    ...cardStyle,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    border: "2px solid #E8C8F0",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: 48,
+                      height: 48,
+                      borderRadius: 12,
+                      background: "linear-gradient(135deg, #F0E0F8 0%, #E8D0F0 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+                      <path d="M14 4l3 6 7 1-5 5 1.2 7L14 20l-6.2 3L9 16l-5-5 7-1z" fill="#C090D8" />
+                      <path d="M14 4l3 6 7 1-5 5 1.2 7L14 20l-6.2 3L9 16l-5-5 7-1z" fill="#D8B0E8" opacity="0.5" />
+                    </svg>
+                  </div>
+
+                  <div style={{ flex: 1 }}>
+                    <div
+                      style={{
+                        fontSize: 15,
+                        fontWeight: 800,
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      {item.name}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 700,
+                        color: "var(--text-secondary)",
+                        marginTop: 2,
+                      }}
+                    >
+                      {item.description}
+                    </div>
+                  </div>
+
+                  {owned ? (
+                    <span
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 800,
+                        color: "#5BAF48",
+                        background: "rgba(91,175,72,0.1)",
+                        padding: "6px 12px",
+                        borderRadius: 999,
+                        flexShrink: 0,
+                      }}
+                    >
+                      Owned
+                    </span>
+                  ) : (
+                    <button
+                      onClick={() => handleBuyFurniture(item.id)}
+                      disabled={!canAfford}
+                      style={{
+                        height: 36,
+                        paddingLeft: 14,
+                        paddingRight: 14,
+                        borderRadius: 999,
+                        border: "none",
+                        background: justBought
+                          ? "#5BAF48"
+                          : canAfford
+                            ? "linear-gradient(180deg, #D8B0E8 0%, #C090D8 100%)"
+                            : "#E0D8C8",
+                        boxShadow: canAfford && !justBought ? "0 2px 0px #A070B8" : "none",
                         color: "#FFFFFF",
                         fontFamily: "inherit",
                         fontWeight: 800,
