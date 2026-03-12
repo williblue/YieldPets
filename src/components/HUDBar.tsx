@@ -106,7 +106,7 @@ export default function HUDBar({ state, onBalanceTap }: HUDBarProps) {
       }}
     >
       {/* Gold Nuggets */}
-      <div style={{ ...pillStyle, minWidth: 80 }}>
+      <div id="hud-nugget-pill" style={{ ...pillStyle, minWidth: 80 }}>
         <CoinIcon />
         <span style={valueStyle}>{loading ? "\u2014" : formatGold(goldNuggets)}</span>
       </div>

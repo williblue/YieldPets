@@ -3,9 +3,16 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { VisualNugget } from "@/hooks/useNuggetCollector";
 
-// HUD counter target (approximate center of nugget pill in fixed coords)
-const HUD_TARGET_X = 52;
-const HUD_TARGET_Y = 18;
+// Get the center of the HUD nugget pill dynamically
+function getHudTarget(): { x: number; y: number } {
+  const el = document.getElementById("hud-nugget-pill");
+  if (el) {
+    const rect = el.getBoundingClientRect();
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  }
+  // Fallback if element not found
+  return { x: 52, y: 18 };
+}
 
 // Jump animation duration
 const JUMP_DURATION = 500; // ms
@@ -19,6 +26,8 @@ interface FlyingNugget {
   id: string;
   startX: number;
   startY: number;
+  endX: number;
+  endY: number;
   variant: number;
 }
 
@@ -58,11 +67,14 @@ export default function RoomNuggets({ nuggets, onCollect }: RoomNuggetsProps) {
 
       const el = e.currentTarget as HTMLElement;
       const rect = el.getBoundingClientRect();
+      const hudTarget = getHudTarget();
 
       flyingDataRef.current.set(nugget.id, {
         id: nugget.id,
         startX: rect.left + rect.width / 2,
         startY: rect.top + rect.height / 2,
+        endX: hudTarget.x,
+        endY: hudTarget.y,
         variant: nugget.variant,
       });
 
@@ -168,8 +180,8 @@ export default function RoomNuggets({ nuggets, onCollect }: RoomNuggetsProps) {
               animation: `nuggetFly 500ms ease-in-out forwards`,
               ["--fly-start-x" as string]: `${data.startX - 14}px`,
               ["--fly-start-y" as string]: `${data.startY - 14}px`,
-              ["--fly-end-x" as string]: `${HUD_TARGET_X - 14}px`,
-              ["--fly-end-y" as string]: `${HUD_TARGET_Y - 14}px`,
+              ["--fly-end-x" as string]: `${data.endX - 14}px`,
+              ["--fly-end-y" as string]: `${data.endY - 14}px`,
             }}
           >
             <img
