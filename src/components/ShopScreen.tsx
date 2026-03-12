@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useGame } from "@/contexts/GameProvider";
-import { FURNITURE_ITEMS, EXCLUSIVE_ITEMS } from "@/data/shopItems";
+import { FURNITURE_ITEMS, EXCLUSIVE_ITEMS, FurnitureItemDef } from "@/data/shopItems";
 
 type ShopTab = "furniture" | "exclusives";
 
@@ -15,11 +15,19 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
   const [tab, setTab] = useState<ShopTab>("furniture");
   const [buyingId, setBuyingId] = useState<string | null>(null);
 
-  const handleBuyFurniture = (furnitureId: string) => {
+  const handleBuy = (furnitureId: string) => {
     const success = game.buyFurniture(furnitureId);
     if (success) {
       setBuyingId(furnitureId);
       setTimeout(() => setBuyingId(null), 600);
+    }
+  };
+
+  const handleToggleEquip = (itemId: string) => {
+    if (game.placedFurniture.includes(itemId)) {
+      game.removeFurniture(itemId);
+    } else {
+      game.placeFurniture(itemId);
     }
   };
 
@@ -37,6 +45,146 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
     padding: 16,
     boxShadow: "var(--shadow-card)",
   };
+
+  function renderItem(item: FurnitureItemDef, isExclusive: boolean) {
+    const owned = game.ownedFurniture.includes(item.id);
+    const equipped = game.placedFurniture.includes(item.id);
+    const canAfford = game.nuggets >= item.price;
+    const justBought = buyingId === item.id;
+
+    return (
+      <div
+        key={item.id}
+        style={{
+          ...cardStyle,
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          ...(isExclusive ? { border: "2px solid #E8C8F0" } : {}),
+        }}
+      >
+        {/* Thumbnail */}
+        <div
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 12,
+            background: isExclusive
+              ? "linear-gradient(135deg, #F0E0F8 0%, #E8D0F0 100%)"
+              : "#F4EDE0",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            overflow: "hidden",
+          }}
+        >
+          <img
+            src={item.thumbnailUrl}
+            alt={item.name}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+            }}
+          />
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div
+            style={{
+              fontSize: 15,
+              fontWeight: 800,
+              color: "var(--text-primary)",
+            }}
+          >
+            {item.name}
+          </div>
+          <div
+            style={{
+              fontSize: 12,
+              fontWeight: 700,
+              color: "var(--text-secondary)",
+              marginTop: 2,
+            }}
+          >
+            {item.description}
+          </div>
+        </div>
+
+        {/* Action button */}
+        {owned ? (
+          <button
+            onClick={() => handleToggleEquip(item.id)}
+            style={{
+              height: 36,
+              paddingLeft: 14,
+              paddingRight: 14,
+              borderRadius: 999,
+              border: equipped ? "2px solid #F09098" : "2px solid #D0D0D0",
+              background: equipped ? "rgba(240,144,152,0.1)" : "transparent",
+              color: equipped ? "#F09098" : "var(--text-secondary)",
+              fontFamily: "inherit",
+              fontWeight: 800,
+              fontSize: 13,
+              cursor: "pointer",
+              flexShrink: 0,
+              transition: "all 120ms ease-out",
+            }}
+          >
+            {equipped ? "Unequip" : "Equip"}
+          </button>
+        ) : (
+          <button
+            onClick={() => handleBuy(item.id)}
+            disabled={!canAfford}
+            style={{
+              height: 36,
+              paddingLeft: 14,
+              paddingRight: 14,
+              borderRadius: 999,
+              border: "none",
+              background: justBought
+                ? "#5BAF48"
+                : canAfford
+                  ? isExclusive
+                    ? "linear-gradient(180deg, #D8B0E8 0%, #C090D8 100%)"
+                    : "linear-gradient(180deg, #F8D868 0%, #F5C030 100%)"
+                  : "#E0D8C8",
+              boxShadow: canAfford && !justBought
+                ? isExclusive
+                  ? "0 2px 0px #A070B8"
+                  : "0 2px 0px #D4A020"
+                : "none",
+              color: "#FFFFFF",
+              fontFamily: "inherit",
+              fontWeight: 800,
+              fontSize: 13,
+              cursor: canAfford ? "pointer" : "default",
+              opacity: canAfford ? 1 : 0.5,
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              flexShrink: 0,
+              transition: "background 120ms ease-out",
+            }}
+          >
+            {justBought ? (
+              "Bought!"
+            ) : (
+              <>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <circle cx="6" cy="6" r="5" fill="#FFFFFF" opacity="0.3" />
+                  <circle cx="6" cy="6" r="3" fill="#FFFFFF" opacity="0.3" />
+                </svg>
+                {item.price}
+              </>
+            )}
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -177,124 +325,7 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
         {tab === "furniture" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <span style={labelStyle}>Room Items</span>
-            {FURNITURE_ITEMS.map((item) => {
-              const owned = game.ownedFurniture.includes(item.id);
-              const canAfford = game.nuggets >= item.price;
-              const justBought = buyingId === item.id;
-
-              return (
-                <div
-                  key={item.id}
-                  style={{
-                    ...cardStyle,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                  }}
-                >
-                  {/* Furniture placeholder icon */}
-                  <div
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 12,
-                      background: "#F4EDE0",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                      <rect x="6" y="10" width="16" height="12" rx="3" fill="#D4B896" />
-                      <rect x="8" y="8" width="12" height="8" rx="2" fill="#C4A880" />
-                      <rect x="10" y="20" width="2" height="3" rx="1" fill="#A08860" />
-                      <rect x="16" y="20" width="2" height="3" rx="1" fill="#A08860" />
-                    </svg>
-                  </div>
-
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 800,
-                        color: "var(--text-primary)",
-                      }}
-                    >
-                      {item.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: "var(--text-secondary)",
-                        marginTop: 2,
-                      }}
-                    >
-                      {item.description}
-                    </div>
-                  </div>
-
-                  {owned ? (
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 800,
-                        color: "#5BAF48",
-                        background: "rgba(91,175,72,0.1)",
-                        padding: "6px 12px",
-                        borderRadius: 999,
-                        flexShrink: 0,
-                      }}
-                    >
-                      Owned
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => handleBuyFurniture(item.id)}
-                      disabled={!canAfford}
-                      style={{
-                        height: 36,
-                        paddingLeft: 14,
-                        paddingRight: 14,
-                        borderRadius: 999,
-                        border: "none",
-                        background: justBought
-                          ? "#5BAF48"
-                          : canAfford
-                            ? "linear-gradient(180deg, #F8D868 0%, #F5C030 100%)"
-                            : "#E0D8C8",
-                        boxShadow: canAfford && !justBought ? "0 2px 0px #D4A020" : "none",
-                        color: "#FFFFFF",
-                        fontFamily: "inherit",
-                        fontWeight: 800,
-                        fontSize: 13,
-                        cursor: canAfford ? "pointer" : "default",
-                        opacity: canAfford ? 1 : 0.5,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 4,
-                        flexShrink: 0,
-                        transition: "background 120ms ease-out",
-                      }}
-                    >
-                      {justBought ? (
-                        "Bought!"
-                      ) : (
-                        <>
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                            <circle cx="6" cy="6" r="5" fill="#FFFFFF" opacity="0.3" />
-                            <circle cx="6" cy="6" r="3" fill="#FFFFFF" opacity="0.3" />
-                          </svg>
-                          {item.price}
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+            {FURNITURE_ITEMS.map((item) => renderItem(item, false))}
           </div>
         )}
 
@@ -302,122 +333,7 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
         {tab === "exclusives" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <span style={labelStyle}>Limited Edition</span>
-            {EXCLUSIVE_ITEMS.map((item) => {
-              const owned = game.ownedFurniture.includes(item.id);
-              const canAfford = game.nuggets >= item.price;
-              const justBought = buyingId === item.id;
-
-              return (
-                <div
-                  key={item.id}
-                  style={{
-                    ...cardStyle,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    border: "2px solid #E8C8F0",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 12,
-                      background: "linear-gradient(135deg, #F0E0F8 0%, #E8D0F0 100%)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      flexShrink: 0,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-                      <path d="M14 4l3 6 7 1-5 5 1.2 7L14 20l-6.2 3L9 16l-5-5 7-1z" fill="#C090D8" />
-                      <path d="M14 4l3 6 7 1-5 5 1.2 7L14 20l-6.2 3L9 16l-5-5 7-1z" fill="#D8B0E8" opacity="0.5" />
-                    </svg>
-                  </div>
-
-                  <div style={{ flex: 1 }}>
-                    <div
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 800,
-                        color: "var(--text-primary)",
-                      }}
-                    >
-                      {item.name}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: "var(--text-secondary)",
-                        marginTop: 2,
-                      }}
-                    >
-                      {item.description}
-                    </div>
-                  </div>
-
-                  {owned ? (
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 800,
-                        color: "#5BAF48",
-                        background: "rgba(91,175,72,0.1)",
-                        padding: "6px 12px",
-                        borderRadius: 999,
-                        flexShrink: 0,
-                      }}
-                    >
-                      Owned
-                    </span>
-                  ) : (
-                    <button
-                      onClick={() => handleBuyFurniture(item.id)}
-                      disabled={!canAfford}
-                      style={{
-                        height: 36,
-                        paddingLeft: 14,
-                        paddingRight: 14,
-                        borderRadius: 999,
-                        border: "none",
-                        background: justBought
-                          ? "#5BAF48"
-                          : canAfford
-                            ? "linear-gradient(180deg, #D8B0E8 0%, #C090D8 100%)"
-                            : "#E0D8C8",
-                        boxShadow: canAfford && !justBought ? "0 2px 0px #A070B8" : "none",
-                        color: "#FFFFFF",
-                        fontFamily: "inherit",
-                        fontWeight: 800,
-                        fontSize: 13,
-                        cursor: canAfford ? "pointer" : "default",
-                        opacity: canAfford ? 1 : 0.5,
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 4,
-                        flexShrink: 0,
-                        transition: "background 120ms ease-out",
-                      }}
-                    >
-                      {justBought ? (
-                        "Bought!"
-                      ) : (
-                        <>
-                          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                            <circle cx="6" cy="6" r="5" fill="#FFFFFF" opacity="0.3" />
-                            <circle cx="6" cy="6" r="3" fill="#FFFFFF" opacity="0.3" />
-                          </svg>
-                          {item.price}
-                        </>
-                      )}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+            {EXCLUSIVE_ITEMS.map((item) => renderItem(item, true))}
           </div>
         )}
       </div>

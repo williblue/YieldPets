@@ -169,6 +169,7 @@ export default function Home() {
             visualNuggets={visualNuggets}
             onCollectNugget={collectNugget}
             sfxEnabled={game.sfxEnabled ?? true}
+            placedFurniture={game.placedFurniture}
           />
         </div>
 

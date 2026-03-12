@@ -5,6 +5,7 @@ import { RoomState, FurnitureItem } from "@/types";
 import PetRadialMenu, { PetAction } from "@/components/PetRadialMenu";
 import RoomNuggets from "@/components/RoomNuggets";
 import { VisualNugget } from "@/hooks/useNuggetCollector";
+import { ALL_FURNITURE } from "@/data/shopItems";
 
 interface IsometricRoomProps {
   room: RoomState;
@@ -15,6 +16,7 @@ interface IsometricRoomProps {
   visualNuggets?: VisualNugget[];
   onCollectNugget?: (id: string) => void;
   sfxEnabled?: boolean;
+  placedFurniture?: string[];
 }
 
 /* ── Walkable floor (isometric diamond) ────────────────────────── */
@@ -82,6 +84,7 @@ export default function IsometricRoom({
   visualNuggets = [],
   onCollectNugget,
   sfxEnabled = true,
+  placedFurniture = [],
 }: IsometricRoomProps) {
   const [failedFurniture, setFailedFurniture] = useState<Set<string>>(
     new Set(),
@@ -324,41 +327,29 @@ export default function IsometricRoom({
         }}
       />
 
-      {/* Furniture items */}
-      {room.furniture.map((item) => {
-        if (failedFurniture.has(item.id)) return null;
+      {/* Placed furniture overlays (same dimensions as iso_room, stacked) */}
+      {placedFurniture.map((fId) => {
+        const def = ALL_FURNITURE.find((f) => f.id === fId);
+        if (!def || failedFurniture.has(fId)) return null;
         return (
-          <button
-            key={item.id}
-            onClick={() => onFurnitureTap(item)}
+          <img
+            key={fId}
+            src={def.imageUrl}
+            alt={def.name}
+            onError={() =>
+              setFailedFurniture((prev) => new Set(prev).add(fId))
+            }
             style={{
               position: "absolute",
-              left: `${item.positionX}%`,
-              top: `${item.positionY}%`,
-              width: Math.max(item.width, 44),
-              height: Math.max(item.height, 44),
-              transform: "translate(-50%, -50%)",
-              background: "transparent",
-              border: "none",
-              cursor: "pointer",
-              padding: 0,
-              zIndex: 10,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              left: "50%",
+              bottom: 200,
+              transform: "translateX(-50%)",
+              width: 400,
+              height: "auto",
+              pointerEvents: "none",
+              zIndex: 2,
             }}
-          >
-            <img
-              src={item.imageUrl}
-              alt={item.name}
-              width={item.width}
-              height={item.height}
-              onError={() =>
-                setFailedFurniture((prev) => new Set(prev).add(item.id))
-              }
-              style={{ pointerEvents: "none" }}
-            />
-          </button>
+          />
         );
       })}
 

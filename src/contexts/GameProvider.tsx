@@ -10,7 +10,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { HeartCount } from "@/types";
-import { FOOD_ITEMS, FURNITURE_ITEMS } from "@/data/shopItems";
+import { FOOD_ITEMS, ALL_FURNITURE } from "@/data/shopItems";
 
 // ─── Constants ───────────────────────────────────────────────
 const STORAGE_KEY = "yieldpets_game";
@@ -315,7 +315,7 @@ function createGameStore() {
 
   function buyFurniture(furnitureId: string) {
     if (state.ownedFurniture.includes(furnitureId)) return false;
-    const item = FURNITURE_ITEMS.find((f) => f.id === furnitureId);
+    const item = ALL_FURNITURE.find((f) => f.id === furnitureId);
     if (!item || state.nuggets < item.price) return false;
     pushTx(makeTx("nuggets_spent", `Bought ${item.name}`, -item.price));
     set({
