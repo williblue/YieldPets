@@ -148,10 +148,20 @@ function createGameStore() {
 
   function save() {
     if (typeof window === "undefined") return;
+    // Cap transactions to the most recent 200 to prevent storage bloat
+    if (state.transactions.length > 200) {
+      state = { ...state, transactions: state.transactions.slice(0, 200) };
+    }
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
-      // storage full — ignore
+      // storage full — trim transactions further and retry once
+      try {
+        state = { ...state, transactions: state.transactions.slice(0, 50) };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        // still full — skip
+      }
     }
   }
 
@@ -185,6 +195,7 @@ function createGameStore() {
   }
 
   // ─── Yield accrual (adds to deposit balance) ─────
+  let pendingYield = 0;
   function accrueYield(now: number): Partial<GameState> {
     const elapsed = (now - state.lastTickAt) / 1000; // seconds
     if (elapsed <= 0) return { lastTickAt: now };
@@ -192,15 +203,15 @@ function createGameStore() {
     const perSecond = rate / 86400;
     const mult = HEART_MULTIPLIERS[state.hearts];
     const earned = perSecond * elapsed * mult;
-    const newFloat = state.nuggetsFloat + earned;
-    const whole = Math.floor(newFloat);
-    if (whole > 0) {
-      pushTx(makeTx("yield", "Yield harvested", whole));
+    pendingYield += earned;
+    // Only log a transaction once pendingYield reaches $0.01
+    if (pendingYield >= 0.01) {
+      pushTx(makeTx("yield", "Yield harvested", pendingYield));
+      pendingYield = 0;
     }
     return {
-      depositBalance: state.depositBalance + whole,
-      totalYieldEarned: (state.totalYieldEarned ?? 0) + whole,
-      nuggetsFloat: newFloat - whole,
+      depositBalance: state.depositBalance + earned,
+      totalYieldEarned: (state.totalYieldEarned ?? 0) + earned,
       lastTickAt: now,
     };
   }
@@ -244,6 +255,15 @@ function createGameStore() {
   // ─── Tick (call periodically) ─────────────────────
   function tick() {
     const now = Date.now();
+    const elapsed = (now - state.lastTickAt) / 1000;
+    console.log("[tick]", {
+      elapsed: elapsed.toFixed(1) + "s",
+      depositBalance: state.depositBalance,
+      hearts: state.hearts,
+      totalYieldEarned: state.totalYieldEarned,
+      pendingYield,
+      txCount: state.transactions.length,
+    });
     const heartChanges = decayHearts(now);
     // Apply heart changes first so accrual uses new heart count
     if (Object.keys(heartChanges).length > 0) {
@@ -433,6 +453,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   void snapshot; // keep subscription active
 
   useEffect(() => {
+    console.log("[GameProvider] effect mounted, starting ticks");
     store.tick(); // catch up on elapsed time
 
     const result = store.checkDailyLogin();
