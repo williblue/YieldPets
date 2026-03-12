@@ -52,6 +52,7 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
     const equipped = game.placedFurniture.includes(item.id);
     const canAfford = game.nuggets >= item.price;
     const justBought = buyingId === item.id;
+    const locked = isExclusive && !exclusivesUnlocked && !owned;
 
     return (
       <div
@@ -62,6 +63,7 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
           alignItems: "center",
           gap: 12,
           ...(isExclusive ? { border: "2px solid #E8C8F0" } : {}),
+          ...(locked ? { opacity: 0.55 } : {}),
         }}
       >
         {/* Thumbnail */}
@@ -114,7 +116,25 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
         </div>
 
         {/* Action button */}
-        {owned ? (
+        {locked ? (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 4,
+              flexShrink: 0,
+              padding: "6px 12px",
+              borderRadius: 999,
+              background: "rgba(192,144,216,0.1)",
+            }}
+          >
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="3" y="6.5" width="8" height="6" rx="1.5" fill="#C090D8" />
+              <path d="M5 6.5V5a2 2 0 014 0v1.5" stroke="#C090D8" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+            </svg>
+            <span style={{ fontSize: 11, fontWeight: 800, color: "#C090D8" }}>$200</span>
+          </div>
+        ) : owned ? (
           <button
             onClick={() => handleToggleEquip(item.id)}
             style={{
@@ -334,39 +354,28 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
         {tab === "exclusives" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <span style={labelStyle}>Limited Edition</span>
-            {exclusivesUnlocked ? (
-              EXCLUSIVE_ITEMS.map((item) => renderItem(item, true))
-            ) : (
+            {!exclusivesUnlocked && (
               <div
                 style={{
-                  background: "#FFFFFF",
-                  borderRadius: 16,
-                  padding: "32px 24px",
-                  boxShadow: "var(--shadow-card)",
-                  border: "2px dashed #E8C8F0",
-                  textAlign: "center",
+                  background: "rgba(192,144,216,0.08)",
+                  borderRadius: 12,
+                  padding: "10px 14px",
                   display: "flex",
-                  flexDirection: "column",
                   alignItems: "center",
-                  gap: 12,
+                  gap: 8,
+                  border: "1.5px solid #E8C8F0",
                 }}
               >
-                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
-                  <rect x="10" y="18" width="20" height="16" rx="3" fill="#E8C8F0" />
-                  <path d="M14 18v-4a6 6 0 0112 0v4" stroke="#C090D8" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                  <circle cx="20" cy="27" r="2" fill="#C090D8" />
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                  <rect x="4" y="7.5" width="8" height="6" rx="1.5" fill="#C090D8" />
+                  <path d="M6 7.5V6a2 2 0 014 0v1.5" stroke="#C090D8" strokeWidth="1.5" fill="none" strokeLinecap="round" />
                 </svg>
-                <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)" }}>
-                  Exclusives Locked
-                </div>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)", lineHeight: 1.4 }}>
-                  Deposit at least <span style={{ color: "#C090D8", fontWeight: 900 }}>$200 USD</span> to unlock exclusive limited edition furniture.
-                </div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", marginTop: 4 }}>
-                  Current balance: ${game.depositBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </div>
+                <span style={{ fontSize: 12, fontWeight: 700, color: "#9070A8", lineHeight: 1.3 }}>
+                  Deposit <span style={{ fontWeight: 900 }}>$200+</span> to unlock purchasing
+                </span>
               </div>
             )}
+            {EXCLUSIVE_ITEMS.map((item) => renderItem(item, true))}
           </div>
         )}
       </div>
