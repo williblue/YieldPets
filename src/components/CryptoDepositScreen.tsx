@@ -5,9 +5,7 @@ import * as fcl from "@onflow/fcl";
 import * as t from "@onflow/types";
 import { useFlowQuery } from "@onflow/kit";
 import { useAuth } from "@/contexts/AuthProvider";
-import { useGame } from "@/contexts/GameProvider";
 import { GET_COA_ADDRESS, CREATE_COA, CHECK_PYUSD_VAULT, SETUP_PYUSD_VAULT } from "@/lib/flow";
-import { useUsdcVault } from "@/hooks/useUsdcVault";
 import QRCode from "qrcode";
 
 type Network = "cadence" | "evm";
@@ -19,8 +17,6 @@ interface CryptoDepositScreenProps {
 
 export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps) {
   const { address, magicAuthz } = useAuth();
-  const game = useGame();
-  const { depositUsdc, getStgUsdcBalance, isLoading: vaultTxLoading } = useUsdcVault();
 
   const [token, setToken] = useState<TokenType>("stgusdc");
   const [network, setNetwork] = useState<Network>("evm");
@@ -32,10 +28,6 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
 
   const [copied, setCopied] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-
-  // stgUSDC balance polling for deposit CTA
-  const [stgBalance, setStgBalance] = useState<number>(0);
-  const [depositStatus, setDepositStatus] = useState<string | null>(null);
 
   // Query COA address via Flow React SDK
   const coaArgs = useCallback(
@@ -154,38 +146,6 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
       setVaultCreating(false);
     }
   }, [magicAuthz, vaultCreating, refetchVault]);
-
-  // Poll stgUSDC balance in COA every 10s; auto-deposit when detected
-  const [autoDepositing, setAutoDepositing] = useState(false);
-  useEffect(() => {
-    if (network !== "evm" || token !== "stgusdc" || !coaAddress) return;
-    let cancelled = false;
-
-    const poll = async () => {
-      const bal = await getStgUsdcBalance();
-      if (cancelled) return;
-      setStgBalance(bal);
-
-      // Auto-deposit if balance detected and not already depositing
-      if (bal > 0 && !autoDepositing && !vaultTxLoading) {
-        setAutoDepositing(true);
-        setDepositStatus("Depositing to earn yield...");
-        const success = await depositUsdc(bal);
-        if (!cancelled) {
-          if (success) {
-            setDepositStatus(`$${bal.toFixed(2)} deposited! Earning ~2% APY`);
-            setStgBalance(0);
-          } else {
-            setDepositStatus("Auto-deposit failed. Retrying...");
-          }
-          setAutoDepositing(false);
-        }
-      }
-    };
-    poll();
-    const interval = setInterval(poll, 10000);
-    return () => { cancelled = true; clearInterval(interval); };
-  }, [network, token, coaAddress, getStgUsdcBalance, depositUsdc, vaultTxLoading, autoDepositing]);
 
   // Reset copied state when switching network
   useEffect(() => {
@@ -634,49 +594,6 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
             </>
           )}
         </div>
-
-        {/* Auto-deposit status card */}
-        {network === "evm" && token === "stgusdc" && depositStatus && (
-          <div
-            style={{
-              ...cardStyle,
-              background: depositStatus.includes("failed") ? "#FFF5E6" : "#E8F5E3",
-              border: depositStatus.includes("failed") ? "2px solid #F5C030" : "2px solid #5BAF48",
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            {/* Spinner or checkmark */}
-            {autoDepositing ? (
-              <div
-                style={{
-                  width: 24,
-                  height: 24,
-                  borderRadius: 999,
-                  border: "3px solid #5BAF48",
-                  borderTopColor: "transparent",
-                  animation: "spin 1s linear infinite",
-                  flexShrink: 0,
-                }}
-              />
-            ) : (
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ flexShrink: 0 }}>
-                <circle cx="12" cy="12" r="10" fill={depositStatus.includes("failed") ? "#F5C030" : "#5BAF48"} />
-                <path d={depositStatus.includes("failed") ? "M12 8v4M12 14.5v.5" : "M7 12.5L10.5 16L17 9"} stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-            <span
-              style={{
-                fontSize: 14,
-                fontWeight: 800,
-                color: depositStatus.includes("failed") ? "#E65100" : "#2E7D32",
-              }}
-            >
-              {depositStatus}
-            </span>
-          </div>
-        )}
 
         {/* Warning Card */}
         <div

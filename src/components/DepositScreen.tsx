@@ -1,13 +1,9 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback } from "react";
-import * as fcl from "@onflow/fcl";
-import * as t from "@onflow/types";
-import { useFlowQuery } from "@onflow/kit";
+import { useState, useMemo, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useGame } from "@/contexts/GameProvider";
 import { useUsdcVault } from "@/hooks/useUsdcVault";
-import { GET_COA_ADDRESS } from "@/lib/flow";
 
 interface DepositScreenProps {
   onClose: () => void;
@@ -48,7 +44,7 @@ const methodCardStyle: React.CSSProperties = {
 export default function DepositScreen({ onClose, onCrypto, petName }: DepositScreenProps) {
   const game = useGame();
   const { address } = useAuth();
-  const { getStgUsdcBalance, depositUsdc, isLoading: vaultTxLoading, getVaultPosition } = useUsdcVault();
+  const { getVaultPosition } = useUsdcVault();
   const [tab, setTab] = useState<Tab>("deposit");
   const [depositMethod, setDepositMethod] = useState<"card" | null>(null);
   const [amount, setAmount] = useState("");
@@ -58,58 +54,21 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
   const [addressType, setAddressType] = useState<AddressType>("evm");
   const [withdrawAddress, setWithdrawAddress] = useState("");
 
-  // stgUSDC balance in COA (not yet deposited to MoreMarkets)
-  const [stgBalance, setStgBalance] = useState<number>(0);
+  // Vault position (earning yield display)
   const [depositedBalance, setDepositedBalance] = useState<number>(0);
-  const [depositStatus, setDepositStatus] = useState<string | null>(null);
 
-  // Query COA address
-  const coaArgs = useCallback(
-    (arg: typeof fcl.arg) => [arg(address!, t.Address)],
-    [address]
-  );
-  const { data: coaAddress = null } = useFlowQuery({
-    cadence: GET_COA_ADDRESS,
-    args: coaArgs,
-    query: { enabled: !!address },
-  }) as { data: string | null };
-
-  // Poll stgUSDC balance and vault position every 10s; auto-deposit when detected
-  const [autoDepositing, setAutoDepositing] = useState(false);
+  // Poll vault position every 15s for the "Earning yield" card
   useEffect(() => {
-    if (!coaAddress || !address) return;
+    if (!address) return;
     let cancelled = false;
     const poll = async () => {
-      const [bal, pos] = await Promise.all([
-        getStgUsdcBalance(),
-        getVaultPosition(),
-      ]);
-      if (cancelled) return;
-      setStgBalance(bal);
-      if (pos) setDepositedBalance(pos.aTokenBalance);
-
-      // Auto-deposit if stgUSDC detected and not already in progress
-      if (bal > 0 && !autoDepositing && !vaultTxLoading) {
-        setAutoDepositing(true);
-        setDepositStatus("Depositing to earn yield...");
-        const success = await depositUsdc(bal);
-        if (!cancelled) {
-          if (success) {
-            setDepositStatus(`$${bal.toFixed(2)} deposited! Earning ~2% APY`);
-            setStgBalance(0);
-            const newPos = await getVaultPosition();
-            if (newPos) setDepositedBalance(newPos.aTokenBalance);
-          } else {
-            setDepositStatus("Auto-deposit failed. Retrying...");
-          }
-          setAutoDepositing(false);
-        }
-      }
+      const pos = await getVaultPosition();
+      if (!cancelled && pos) setDepositedBalance(pos.aTokenBalance);
     };
     poll();
-    const interval = setInterval(poll, 10000);
+    const interval = setInterval(poll, 15000);
     return () => { cancelled = true; clearInterval(interval); };
-  }, [coaAddress, address, getStgUsdcBalance, getVaultPosition, depositUsdc, vaultTxLoading, autoDepositing]);
+  }, [address, getVaultPosition]);
 
   const numAmount = parseFloat(amount || customAmount || "0");
   const hasAmount = numAmount > 0;
@@ -885,59 +844,24 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                     </svg>
                   </button>
 
-                  {/* USDC balance & auto-deposit status */}
-                  {(depositedBalance > 0 || depositStatus) && (
+                  {/* USDC earning yield card */}
+                  {depositedBalance > 0 && (
                     <div
                       style={{
                         ...cardStyle,
                         background: "#E8F5E3",
                         border: "2px solid #5BAF48",
                         display: "flex",
-                        flexDirection: "column",
-                        gap: 10,
+                        justifyContent: "space-between",
+                        alignItems: "center",
                       }}
                     >
-                      {depositedBalance > 0 && (
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)" }}>
-                            Earning yield
-                          </span>
-                          <span style={{ fontSize: 16, fontWeight: 900, color: "#2E7D32" }}>
-                            ${depositedBalance.toFixed(2)} USDC
-                          </span>
-                        </div>
-                      )}
-                      {depositStatus && (
-                        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          {autoDepositing ? (
-                            <div
-                              style={{
-                                width: 20,
-                                height: 20,
-                                borderRadius: 999,
-                                border: "3px solid #5BAF48",
-                                borderTopColor: "transparent",
-                                animation: "spin 1s linear infinite",
-                                flexShrink: 0,
-                              }}
-                            />
-                          ) : (
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style={{ flexShrink: 0 }}>
-                              <circle cx="10" cy="10" r="8" fill={depositStatus.includes("failed") ? "#F5C030" : "#5BAF48"} />
-                              <path d={depositStatus.includes("failed") ? "M10 7v3M10 12.5v.5" : "M6 10.5L9 13.5L14 8"} stroke="#FFFFFF" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          )}
-                          <span
-                            style={{
-                              fontSize: 13,
-                              fontWeight: 800,
-                              color: depositStatus.includes("failed") ? "#E65100" : "#2E7D32",
-                            }}
-                          >
-                            {depositStatus}
-                          </span>
-                        </div>
-                      )}
+                      <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)" }}>
+                        Earning yield
+                      </span>
+                      <span style={{ fontSize: 16, fontWeight: 900, color: "#2E7D32" }}>
+                        ${depositedBalance.toFixed(2)} USDC
+                      </span>
                     </div>
                   )}
                 </>

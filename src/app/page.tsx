@@ -21,6 +21,7 @@ import ImagePreloader from "@/components/ImagePreloader";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useGame } from "@/contexts/GameProvider";
 import { useNuggetCollector } from "@/hooks/useNuggetCollector";
+import { useAutoDeposit } from "@/hooks/useAutoDeposit";
 import { RoomState, FurnitureItem, NavTab } from "@/types";
 import { PetAction } from "@/components/PetRadialMenu";
 
@@ -37,6 +38,7 @@ export default function Home() {
   const { isLoggedIn, isLoading } = useAuth();
   const game = useGame();
   const { visualNuggets, displayedNuggets, collectNugget, updatePetPos } = useNuggetCollector(game.nuggets);
+  useAutoDeposit();
   // Skip start screen when returning from Stripe checkout
   const isStripeReturn = typeof window !== "undefined" &&
     (new URLSearchParams(window.location.search).has("deposit_success") ||
