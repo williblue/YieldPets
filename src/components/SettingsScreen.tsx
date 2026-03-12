@@ -687,6 +687,28 @@ function DeveloperSettings({ onBack }: { onBack: () => void }) {
         </button>
       </div>
 
+      {/* Deposit $10k */}
+      <div style={{ paddingTop: 16 }}>
+        <button
+          onClick={() => game.deposit(10000)}
+          style={{
+            width: "100%",
+            height: 48,
+            borderRadius: 999,
+            border: "none",
+            cursor: "pointer",
+            background: "linear-gradient(180deg, #8CD468 0%, #5BAF48 100%)",
+            boxShadow: "0 3px 0px #3D7A30",
+            color: "#FFFFFF",
+            fontFamily: "inherit",
+            fontWeight: 800,
+            fontSize: 15,
+          }}
+        >
+          Deposit $10,000
+        </button>
+      </div>
+
       {/* Reset game state */}
       <div style={{ paddingTop: 16 }}>
         <button
