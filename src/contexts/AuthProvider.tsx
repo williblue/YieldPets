@@ -10,6 +10,7 @@ import {
 } from "react";
 import * as fcl from "@onflow/fcl";
 import * as t from "@onflow/types";
+import { useFlowAccount } from "@onflow/kit";
 import "@/lib/flow";
 import { GET_COA_ADDRESS, CREATE_COA, CHECK_PYUSD_VAULT, SETUP_PYUSD_VAULT } from "@/lib/flow";
 import { useMagic } from "./MagicProvider";
@@ -68,9 +69,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState<string | null>(cached.email);
   const [address, setAddress] = useState<string | null>(cached.address);
-  const [balance, setBalance] = useState<number | null>(null);
 
   const magicAuthz = magic?.flow?.authorization ?? null;
+
+  // Fetch account (including balance) via Flow React SDK
+  const {
+    data: flowAccount,
+    refetch: refetchAccount,
+  } = useFlowAccount({
+    address: address ?? "",
+    query: { enabled: !!address },
+  });
+  const balance = flowAccount ? Number(flowAccount.balance) / 100_000_000 : null;
 
   // Silently ensure COA and PYUSD0 vault exist
   const ensureWalletSetup = useCallback(
@@ -115,19 +125,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   );
 
-  const refreshBalance = useCallback(
-    async (addr?: string) => {
-      const target = addr || address;
-      if (!target) return;
-      try {
-        const account = await fcl.account(target);
-        setBalance(Number(account.balance) / 100_000_000);
-      } catch (err) {
-        console.error("Failed to fetch balance:", err);
-      }
-    },
-    [address]
-  );
+  const refreshBalance = useCallback(async () => {
+    if (address) refetchAccount();
+  }, [address, refetchAccount]);
 
   // Check existing session on mount
   useEffect(() => {
@@ -156,7 +156,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setIsLoggedIn(true);
           setCachedAuth(true, metadata.email ?? null, flowAddress);
           if (flowAddress) {
-            await refreshBalance(flowAddress);
+            // Balance auto-fetches via useFlowAccount when address is set
             ensureWalletSetup(flowAddress, magic.flow.authorization);
           }
         } else {
@@ -175,7 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
     };
-  }, [magic, refreshBalance, ensureWalletSetup]);
+  }, [magic, ensureWalletSetup]);
 
   const login = useCallback(
     async (emailInput: string) => {
@@ -198,7 +198,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoggedIn(true);
         setCachedAuth(true, metadata.email ?? null, flowAddress);
         if (flowAddress) {
-          await refreshBalance(flowAddress);
+          // Balance auto-fetches via useFlowAccount when address is set
           ensureWalletSetup(flowAddress, magic.flow.authorization);
         }
       } catch (err) {
@@ -207,7 +207,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsLoading(false);
       }
     },
-    [magic, refreshBalance, ensureWalletSetup]
+    [magic, ensureWalletSetup]
   );
 
   const logout = useCallback(async () => {
@@ -219,7 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoggedIn(false);
       setEmail(null);
       setAddress(null);
-      setBalance(null);
+      // balance auto-clears via useFlowAccount when address becomes null
       setIsLoading(false);
       setCachedAuth(false, null, null);
     }

@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import * as fcl from "@onflow/fcl";
 import * as t from "@onflow/types";
+import { useFlowQuery } from "@onflow/kit";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useGame } from "@/contexts/GameProvider";
 import { TRANSFER_FLOW, GET_COA_ADDRESS, CREATE_COA } from "@/lib/flow";
@@ -312,11 +313,24 @@ function DeveloperSettings({ onBack }: { onBack: () => void }) {
   const [txStatus, setTxStatus] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const [coaAddress, setCoaAddress] = useState<string | null>(null);
-  const [coaLoading, setCoaLoading] = useState(true);
   const [coaCreating, setCoaCreating] = useState(false);
   const [coaStatus, setCoaStatus] = useState<string | null>(null);
   const [coaCopied, setCoaCopied] = useState(false);
+
+  // Query COA address via Flow React SDK
+  const coaArgs = useCallback(
+    (arg: typeof fcl.arg) => [arg(address!, t.Address)],
+    [address]
+  );
+  const {
+    data: coaAddress = null,
+    isLoading: coaLoading,
+    refetch: refetchCoa,
+  } = useFlowQuery({
+    cadence: GET_COA_ADDRESS,
+    args: coaArgs,
+    query: { enabled: !!address },
+  }) as { data: string | null; isLoading: boolean; refetch: () => void };
 
   const truncatedAddress = address
     ? `${address.slice(0, 6)}...${address.slice(-4)}`
@@ -331,30 +345,6 @@ function DeveloperSettings({ onBack }: { onBack: () => void }) {
     } catch {
       // Clipboard API may not be available
     }
-  }, [address]);
-
-  useEffect(() => {
-    if (!address) {
-      setCoaLoading(false);
-      return;
-    }
-    let cancelled = false;
-    const fetchCoa = async () => {
-      setCoaLoading(true);
-      try {
-        const result = await fcl.query({
-          cadence: GET_COA_ADDRESS,
-          args: (arg: typeof fcl.arg) => [arg(address, t.Address)],
-        });
-        if (!cancelled) setCoaAddress(result ?? null);
-      } catch {
-        if (!cancelled) setCoaAddress(null);
-      } finally {
-        if (!cancelled) setCoaLoading(false);
-      }
-    };
-    fetchCoa();
-    return () => { cancelled = true; };
   }, [address]);
 
   const handleCreateCoa = useCallback(async () => {
@@ -372,20 +362,14 @@ function DeveloperSettings({ onBack }: { onBack: () => void }) {
       setCoaStatus("Waiting for confirmation...");
       await fcl.tx(txId).onceSealed();
       setCoaStatus(null);
-      if (address) {
-        const result = await fcl.query({
-          cadence: GET_COA_ADDRESS,
-          args: (arg: typeof fcl.arg) => [arg(address, t.Address)],
-        });
-        setCoaAddress(result ?? null);
-      }
+      refetchCoa();
     } catch (err) {
       console.error("COA creation failed:", err);
       setCoaStatus("Setup failed. Please try again.");
     } finally {
       setCoaCreating(false);
     }
-  }, [magicAuthz, coaCreating, address]);
+  }, [magicAuthz, coaCreating, refetchCoa]);
 
   const copyCoaAddress = useCallback(async () => {
     if (!coaAddress) return;

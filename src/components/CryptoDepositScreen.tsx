@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import * as fcl from "@onflow/fcl";
 import * as t from "@onflow/types";
+import { useFlowQuery } from "@onflow/kit";
 import { useAuth } from "@/contexts/AuthProvider";
 import { GET_COA_ADDRESS, CREATE_COA, CHECK_PYUSD_VAULT, SETUP_PYUSD_VAULT } from "@/lib/flow";
 import QRCode from "qrcode";
@@ -17,74 +18,47 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
   const { address, magicAuthz } = useAuth();
 
   const [network, setNetwork] = useState<Network>("evm");
-  const [coaAddress, setCoaAddress] = useState<string | null>(null);
-  const [coaLoading, setCoaLoading] = useState(true);
   const [coaCreating, setCoaCreating] = useState(false);
   const [coaStatus, setCoaStatus] = useState<string | null>(null);
 
-  const [vaultReady, setVaultReady] = useState(false);
-  const [vaultLoading, setVaultLoading] = useState(true);
   const [vaultCreating, setVaultCreating] = useState(false);
   const [vaultStatus, setVaultStatus] = useState<string | null>(null);
 
   const [copied, setCopied] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
 
+  // Query COA address via Flow React SDK
+  const coaArgs = useCallback(
+    (arg: typeof fcl.arg) => [arg(address!, t.Address)],
+    [address]
+  );
+  const {
+    data: coaAddress = null,
+    isLoading: coaLoading,
+    refetch: refetchCoa,
+  } = useFlowQuery({
+    cadence: GET_COA_ADDRESS,
+    args: coaArgs,
+    query: { enabled: !!address },
+  }) as { data: string | null; isLoading: boolean; refetch: () => void };
+
+  // Check PYUSD0 vault via Flow React SDK
+  const vaultArgs = useCallback(
+    (arg: typeof fcl.arg) => [arg(address!, t.Address)],
+    [address]
+  );
+  const {
+    data: vaultRaw,
+    isLoading: vaultLoading,
+    refetch: refetchVault,
+  } = useFlowQuery({
+    cadence: CHECK_PYUSD_VAULT,
+    args: vaultArgs,
+    query: { enabled: !!address },
+  }) as { data: boolean | null; isLoading: boolean; refetch: () => void };
+  const vaultReady = vaultRaw === true;
+
   const displayAddress = network === "cadence" ? address : coaAddress;
-
-  // Query COA address on mount
-  useEffect(() => {
-    if (!address) {
-      setCoaLoading(false);
-      return;
-    }
-    let cancelled = false;
-
-    const fetchCoa = async () => {
-      setCoaLoading(true);
-      try {
-        const result = await fcl.query({
-          cadence: GET_COA_ADDRESS,
-          args: (arg: typeof fcl.arg) => [arg(address, t.Address)],
-        });
-        if (!cancelled) setCoaAddress(result ?? null);
-      } catch {
-        if (!cancelled) setCoaAddress(null);
-      } finally {
-        if (!cancelled) setCoaLoading(false);
-      }
-    };
-
-    fetchCoa();
-    return () => { cancelled = true; };
-  }, [address]);
-
-  // Check PYUSD0 vault on Cadence address
-  useEffect(() => {
-    if (!address) {
-      setVaultLoading(false);
-      return;
-    }
-    let cancelled = false;
-
-    const checkVault = async () => {
-      setVaultLoading(true);
-      try {
-        const result = await fcl.query({
-          cadence: CHECK_PYUSD_VAULT,
-          args: (arg: typeof fcl.arg) => [arg(address, t.Address)],
-        });
-        if (!cancelled) setVaultReady(result === true);
-      } catch {
-        if (!cancelled) setVaultReady(false);
-      } finally {
-        if (!cancelled) setVaultLoading(false);
-      }
-    };
-
-    checkVault();
-    return () => { cancelled = true; };
-  }, [address]);
 
   // Generate QR code when address changes
   useEffect(() => {
@@ -138,21 +112,14 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
       setCoaStatus("Waiting for confirmation...");
       await fcl.tx(txId).onceSealed();
       setCoaStatus(null);
-
-      if (address) {
-        const result = await fcl.query({
-          cadence: GET_COA_ADDRESS,
-          args: (arg: typeof fcl.arg) => [arg(address, t.Address)],
-        });
-        setCoaAddress(result ?? null);
-      }
+      refetchCoa();
     } catch (err) {
       console.error("COA creation failed:", err);
       setCoaStatus("Setup failed. Please try again.");
     } finally {
       setCoaCreating(false);
     }
-  }, [magicAuthz, coaCreating, address]);
+  }, [magicAuthz, coaCreating, refetchCoa]);
 
   const handleSetupVault = useCallback(async () => {
     if (!magicAuthz || vaultCreating) return;
@@ -169,14 +136,14 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
       setVaultStatus("Waiting for confirmation...");
       await fcl.tx(txId).onceSealed();
       setVaultStatus(null);
-      setVaultReady(true);
+      refetchVault();
     } catch (err) {
       console.error("PYUSD0 vault setup failed:", err);
       setVaultStatus("Setup failed. Please try again.");
     } finally {
       setVaultCreating(false);
     }
-  }, [magicAuthz, vaultCreating]);
+  }, [magicAuthz, vaultCreating, refetchVault]);
 
   // Reset copied state when switching network
   useEffect(() => {
