@@ -100,7 +100,7 @@ const INITIAL_STATE: GameState = {
   nuggets: 0,
   nuggetsFloat: 0,
   lastTickAt: Date.now(),
-  depositBalance: 50,
+  depositBalance: 0,
   hearts: 0,
   lastFedAt: Date.now(),
   feedCooldownEnd: 0,
