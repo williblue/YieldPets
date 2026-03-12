@@ -281,6 +281,24 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
               }}
             >
               Pocket Pile
+              {game.onChainMode && (
+                <span
+                  style={{
+                    marginLeft: 8,
+                    fontSize: 9,
+                    fontWeight: 800,
+                    textTransform: "uppercase",
+                    letterSpacing: 0.5,
+                    padding: "2px 6px",
+                    borderRadius: 999,
+                    background: "#E8F5E3",
+                    color: "#2E7D32",
+                    verticalAlign: "middle",
+                  }}
+                >
+                  On-Chain
+                </span>
+              )}
             </div>
             <div
               style={{

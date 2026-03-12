@@ -697,14 +697,30 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                       </svg>
                     </div>
                     <div>
-                      <div
-                        style={{
-                          fontSize: 16,
-                          fontWeight: 800,
-                          color: "var(--text-primary)",
-                        }}
-                      >
-                        Credit Card
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 16,
+                            fontWeight: 800,
+                            color: "var(--text-primary)",
+                          }}
+                        >
+                          Credit Card
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 800,
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                            padding: "2px 8px",
+                            borderRadius: 999,
+                            background: "#FFF3E0",
+                            color: "#E65100",
+                          }}
+                        >
+                          Demo
+                        </span>
                       </div>
                       <div
                         style={{
@@ -714,7 +730,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                           marginTop: 2,
                         }}
                       >
-                        Add money with card
+                        Simulated balance (no real funds)
                       </div>
                     </div>
                     <svg
@@ -755,14 +771,30 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                       </svg>
                     </div>
                     <div>
-                      <div
-                        style={{
-                          fontSize: 16,
-                          fontWeight: 800,
-                          color: "var(--text-primary)",
-                        }}
-                      >
-                        Stablecoin
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <span
+                          style={{
+                            fontSize: 16,
+                            fontWeight: 800,
+                            color: "var(--text-primary)",
+                          }}
+                        >
+                          USDC Stablecoin
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontWeight: 800,
+                            textTransform: "uppercase",
+                            letterSpacing: 0.5,
+                            padding: "2px 8px",
+                            borderRadius: 999,
+                            background: "#E8F5E3",
+                            color: "#2E7D32",
+                          }}
+                        >
+                          On-Chain
+                        </span>
                       </div>
                       <div
                         style={{
@@ -772,7 +804,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                           marginTop: 2,
                         }}
                       >
-                        Send USDC or PYUSD0 from a wallet
+                        Deposit stgUSDC to earn ~2% APY
                       </div>
                     </div>
                     <svg

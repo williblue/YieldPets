@@ -7,6 +7,7 @@ import { useFlowQuery } from "@onflow/kit";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useGame } from "@/contexts/GameProvider";
 import { TRANSFER_FLOW, GET_COA_ADDRESS, CREATE_COA } from "@/lib/flow";
+import { useOnChainGame, profileToGameState } from "@/hooks/useOnChainGame";
 import TransactionHistory from "@/components/TransactionHistory";
 
 // ─── Shared UI helpers ──────────────────────────────────────
@@ -306,6 +307,7 @@ function NameEditModal({
 function DeveloperSettings({ onBack }: { onBack: () => void }) {
   const { address, balance, magicAuthz, refreshBalance } = useAuth();
   const game = useGame();
+  const onChainGame = useOnChainGame();
 
   const [recipient, setRecipient] = useState("");
   const [amount, setAmount] = useState("");
@@ -316,6 +318,39 @@ function DeveloperSettings({ onBack }: { onBack: () => void }) {
   const [coaCreating, setCoaCreating] = useState(false);
   const [coaStatus, setCoaStatus] = useState<string | null>(null);
   const [coaCopied, setCoaCopied] = useState(false);
+
+  const [onChainToggling, setOnChainToggling] = useState(false);
+  const [onChainStatus, setOnChainStatus] = useState<string | null>(null);
+
+  const handleToggleOnChainMode = useCallback(async () => {
+    if (onChainToggling) return;
+    const newMode = !game.onChainMode;
+
+    if (newMode) {
+      // Enabling on-chain mode: setup profile + load state from chain
+      setOnChainToggling(true);
+      setOnChainStatus("Setting up profile...");
+      try {
+        await onChainGame.setupProfile();
+        setOnChainStatus("Loading on-chain state...");
+        const profile = await onChainGame.getProfile();
+        if (profile) {
+          game.loadFromChain(profileToGameState(profile));
+        }
+        game.setOnChainMode(true);
+        setOnChainStatus(null);
+      } catch (err) {
+        console.error("On-chain mode setup failed:", err);
+        setOnChainStatus("Setup failed. Check FLOW balance.");
+      } finally {
+        setOnChainToggling(false);
+      }
+    } else {
+      // Disabling: just flip the flag, keep local state
+      game.setOnChainMode(false);
+      setOnChainStatus(null);
+    }
+  }, [game, onChainGame, onChainToggling]);
 
   // Query COA address via Flow React SDK
   const coaArgs = useCallback(
@@ -467,6 +502,74 @@ function DeveloperSettings({ onBack }: { onBack: () => void }) {
         >
           Developer
         </span>
+      </div>
+
+      {/* On-Chain Mode */}
+      <div style={cardStyle}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            minHeight: 44,
+          }}
+        >
+          <div style={{ flex: 1, marginRight: 12 }}>
+            <span
+              style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: "var(--text-primary)",
+                display: "block",
+              }}
+            >
+              On-Chain Mode
+            </span>
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: "var(--text-secondary)",
+                marginTop: 2,
+                display: "block",
+              }}
+            >
+              Store game data on Flow blockchain. Each action requires a transaction. Requires FLOW for gas.
+            </span>
+          </div>
+          <Toggle
+            on={game.onChainMode}
+            onToggle={handleToggleOnChainMode}
+          />
+        </div>
+        {onChainStatus && (
+          <p
+            style={{
+              margin: "8px 0 0",
+              fontSize: 13,
+              fontWeight: 700,
+              color: onChainStatus.includes("failed") ? "#E85878" : "var(--text-secondary)",
+            }}
+          >
+            {onChainToggling ? "..." : ""} {onChainStatus}
+          </p>
+        )}
+        <div
+          style={{
+            marginTop: 8,
+            display: "inline-block",
+            padding: "2px 10px",
+            borderRadius: 999,
+            fontSize: 11,
+            fontWeight: 800,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            background: game.onChainMode ? "#E8F5E3" : "#FFF3E0",
+            color: game.onChainMode ? "#2E7D32" : "#E65100",
+          }}
+        >
+          {game.onChainMode ? "On-Chain" : "Demo"}
+        </div>
       </div>
 
       {/* Flow Address */}

@@ -5,7 +5,9 @@ import * as fcl from "@onflow/fcl";
 import * as t from "@onflow/types";
 import { useFlowQuery } from "@onflow/kit";
 import { useAuth } from "@/contexts/AuthProvider";
+import { useGame } from "@/contexts/GameProvider";
 import { GET_COA_ADDRESS, CREATE_COA, CHECK_PYUSD_VAULT, SETUP_PYUSD_VAULT } from "@/lib/flow";
+import { useUsdcVault } from "@/hooks/useUsdcVault";
 import QRCode from "qrcode";
 
 type Network = "cadence" | "evm";
@@ -17,6 +19,8 @@ interface CryptoDepositScreenProps {
 
 export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps) {
   const { address, magicAuthz } = useAuth();
+  const game = useGame();
+  const { depositUsdc, getStgUsdcBalance, isLoading: vaultTxLoading } = useUsdcVault();
 
   const [token, setToken] = useState<TokenType>("stgusdc");
   const [network, setNetwork] = useState<Network>("evm");
@@ -28,6 +32,10 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
 
   const [copied, setCopied] = useState(false);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
+
+  // stgUSDC balance polling for deposit CTA
+  const [stgBalance, setStgBalance] = useState<number>(0);
+  const [depositStatus, setDepositStatus] = useState<string | null>(null);
 
   // Query COA address via Flow React SDK
   const coaArgs = useCallback(
@@ -146,6 +154,32 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
       setVaultCreating(false);
     }
   }, [magicAuthz, vaultCreating, refetchVault]);
+
+  // Poll stgUSDC balance in COA every 15s when on EVM + stgusdc
+  useEffect(() => {
+    if (network !== "evm" || token !== "stgusdc" || !coaAddress) return;
+    let cancelled = false;
+
+    const poll = async () => {
+      const bal = await getStgUsdcBalance();
+      if (!cancelled) setStgBalance(bal);
+    };
+    poll();
+    const interval = setInterval(poll, 15000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [network, token, coaAddress, getStgUsdcBalance]);
+
+  const handleDepositToEarn = useCallback(async () => {
+    if (stgBalance <= 0 || vaultTxLoading) return;
+    setDepositStatus("Depositing to earn yield...");
+    const success = await depositUsdc(stgBalance);
+    if (success) {
+      setDepositStatus("Deposited! Earning ~2% APY");
+      setStgBalance(0);
+    } else {
+      setDepositStatus("Deposit failed. Please try again.");
+    }
+  }, [stgBalance, vaultTxLoading, depositUsdc]);
 
   // Reset copied state when switching network
   useEffect(() => {
@@ -594,6 +628,74 @@ export default function CryptoDepositScreen({ onBack }: CryptoDepositScreenProps
             </>
           )}
         </div>
+
+        {/* Deposit to Earn CTA — shown when stgUSDC balance detected in COA */}
+        {network === "evm" && token === "stgusdc" && coaAddress && stgBalance > 0 && (
+          <div
+            style={{
+              ...cardStyle,
+              background: "#E8F5E3",
+              border: "2px solid #5BAF48",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 12,
+            }}
+          >
+            <span
+              style={{
+                fontSize: 14,
+                fontWeight: 800,
+                color: "#2E7D32",
+              }}
+            >
+              ${stgBalance.toFixed(2)} stgUSDC available
+            </span>
+            <span
+              style={{
+                fontSize: 13,
+                fontWeight: 700,
+                color: "var(--text-secondary)",
+                textAlign: "center",
+              }}
+            >
+              Deposit to More Markets to earn ~2% APY
+            </span>
+            {depositStatus && (
+              <span
+                style={{
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: depositStatus.includes("failed") ? "#E85878" : "#2E7D32",
+                }}
+              >
+                {depositStatus}
+              </span>
+            )}
+            <button
+              onClick={handleDepositToEarn}
+              disabled={vaultTxLoading}
+              style={{
+                width: "100%",
+                height: 48,
+                borderRadius: 999,
+                border: "none",
+                cursor: vaultTxLoading ? "default" : "pointer",
+                background: vaultTxLoading
+                  ? "#E0D8C8"
+                  : "linear-gradient(180deg, #6DC95A 0%, #5BAF48 100%)",
+                boxShadow: vaultTxLoading ? "none" : "0 3px 0px #3D8A30",
+                color: "#FFFFFF",
+                fontFamily: "inherit",
+                fontWeight: 800,
+                fontSize: 16,
+                opacity: vaultTxLoading ? 0.6 : 1,
+              }}
+            >
+              {vaultTxLoading ? "Depositing..." : `Deposit $${stgBalance.toFixed(2)} to Earn`}
+            </button>
+          </div>
+        )}
 
         {/* Warning Card */}
         <div

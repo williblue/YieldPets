@@ -96,6 +96,7 @@ export interface GameState {
   totalYieldEarned: number;
   sfxEnabled: boolean;
   balanceVisible: boolean;
+  onChainMode: boolean;
   createdAt: number;
 }
 
@@ -121,6 +122,7 @@ const INITIAL_STATE: GameState = {
   totalYieldEarned: 0,
   sfxEnabled: true,
   balanceVisible: true,
+  onChainMode: false,
   createdAt: Date.now(),
 };
 
@@ -421,6 +423,15 @@ function createGameStore() {
     set({ balanceVisible: !(state.balanceVisible ?? true) });
   }
 
+  function setOnChainMode(enabled: boolean) {
+    set({ onChainMode: enabled });
+  }
+
+  /** Overwrite local state with on-chain profile data */
+  function loadFromChain(profileState: Partial<GameState>) {
+    set({ ...profileState, lastTickAt: Date.now() });
+  }
+
   return {
     get,
     set,
@@ -442,6 +453,8 @@ function createGameStore() {
     resetState,
     toggleSfx,
     toggleBalanceVisible,
+    setOnChainMode,
+    loadFromChain,
   };
 }
 
@@ -552,6 +565,8 @@ export function useGame() {
     resetState: ctx.store.resetState,
     toggleSfx: ctx.store.toggleSfx,
     toggleBalanceVisible: ctx.store.toggleBalanceVisible,
+    setOnChainMode: ctx.store.setOnChainMode,
+    loadFromChain: ctx.store.loadFromChain,
     dailyBonus: ctx.dailyBonus,
     dismissDailyBonus: ctx.dismissDailyBonus,
   };

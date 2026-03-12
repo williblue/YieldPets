@@ -234,6 +234,255 @@ access(all) fun main(address: Address): UInt256 {
 }
 `;
 
+// ─── YieldPetsProfile (on-chain game state) ──────
+
+const PROFILE_CONTRACT_ADDRESS = "0x73fa40543604c4aa";
+
+export const SETUP_PROFILE = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction {
+    prepare(signer: auth(Storage, Capabilities) &Account) {
+        if signer.storage.borrow<&YieldPetsProfile.Profile>(from: YieldPetsProfile.ProfileStoragePath) != nil {
+            return
+        }
+
+        let profile <- YieldPetsProfile.createProfile()
+        signer.storage.save(<-profile, to: YieldPetsProfile.ProfileStoragePath)
+
+        let cap = signer.capabilities.storage.issue<&{YieldPetsProfile.ProfilePublic}>(
+            YieldPetsProfile.ProfileStoragePath
+        )
+        signer.capabilities.publish(cap, at: YieldPetsProfile.ProfilePublicPath)
+    }
+}
+`;
+
+export const GET_PROFILE = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+access(all) fun main(address: Address): {String: AnyStruct}? {
+    let account = getAccount(address)
+    let cap = account.capabilities.get<&{YieldPetsProfile.ProfilePublic}>(
+        YieldPetsProfile.ProfilePublicPath
+    )
+    if let profile = cap.borrow() {
+        return profile.getFullState()
+    }
+    return nil
+}
+`;
+
+export const PROFILE_FEED = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(foodId: String, heartRestore: UInt8) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        let food: String? = foodId.length > 0 ? foodId : nil
+        profile.feed(foodId: food, heartRestore: heartRestore)
+    }
+}
+`;
+
+export const PROFILE_BUY_FOOD = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(foodId: String, price: UInt64) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.buyFood(foodId: foodId, price: price)
+    }
+}
+`;
+
+export const PROFILE_BUY_FURNITURE = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(furnitureId: String, price: UInt64) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.buyFurniture(furnitureId: furnitureId, price: price)
+    }
+}
+`;
+
+export const PROFILE_PLACE_FURNITURE = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(furnitureId: String) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.placeFurniture(furnitureId: furnitureId)
+    }
+}
+`;
+
+export const PROFILE_REMOVE_FURNITURE = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(furnitureId: String) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.removeFurniture(furnitureId: furnitureId)
+    }
+}
+`;
+
+export const PROFILE_SET_PET_NAME = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(name: String) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.setPetName(name: name)
+    }
+}
+`;
+
+export const PROFILE_SET_TRAINER_NAME = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(name: String) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.setTrainerName(name: name)
+    }
+}
+`;
+
+export const PROFILE_DAILY_LOGIN = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(today: String, yesterday: String, bonusAmount: UInt64) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.checkDailyLogin(today: today, yesterday: yesterday, bonusAmount: bonusAmount)
+    }
+}
+`;
+
+export const PROFILE_ACCRUE_YIELD = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(pyusdEarned: UFix64, usdcEarned: UFix64) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.accrueYield(pyusdEarned: pyusdEarned, usdcEarned: usdcEarned)
+    }
+}
+`;
+
+export const PROFILE_DEPOSIT = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(amount: UFix64) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.deposit(amount: amount)
+    }
+}
+`;
+
+export const PROFILE_DEPOSIT_USDC = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(amount: UFix64) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.depositUsdc(amount: amount)
+    }
+}
+`;
+
+export const PROFILE_WITHDRAW = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(amount: UFix64) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.withdraw(amount: amount)
+    }
+}
+`;
+
+export const PROFILE_WITHDRAW_USDC = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(amount: UFix64) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.withdrawUsdc(amount: amount)
+    }
+}
+`;
+
+export const PROFILE_SET_HEARTS = `
+import YieldPetsProfile from ${PROFILE_CONTRACT_ADDRESS}
+
+transaction(hearts: UInt8) {
+    prepare(signer: auth(Storage) &Account) {
+        let profile = signer.storage.borrow<auth(YieldPetsProfile.Manage) &YieldPetsProfile.Profile>(
+            from: YieldPetsProfile.ProfileStoragePath
+        ) ?? panic("Profile not found")
+
+        profile.setHearts(hearts: hearts)
+    }
+}
+`;
+
+export const GET_USDC_DEPOSIT_HISTORY = `
+import YieldPetsUSDCVault from ${USDC_VAULT_CONTRACT_ADDRESS}
+
+access(all) fun main(account: Address): [YieldPetsUSDCVault.DepositRecord] {
+    let acct = getAccount(account)
+    let vault = acct.capabilities.borrow<&{YieldPetsUSDCVault.VaultPositionPublic}>(
+        YieldPetsUSDCVault.VaultPublicPath
+    )
+    if vault == nil { return [] }
+    return vault!.getDeposits()
+}
+`;
+
 export const TRANSFER_FLOW = `
 import FungibleToken from 0xFungibleToken
 import FlowToken from 0xFlowToken
