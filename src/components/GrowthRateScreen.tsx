@@ -295,8 +295,8 @@ export default function GrowthRateScreen({ onClose, onDeposit }: GrowthRateScree
   const [projectionRange, setProjectionRange] = useState<ProjectionRange>("5Y");
   const [selectedBar, setSelectedBar] = useState<number | null>(null);
 
-  const currentApy = game.depositBalance > 0
-    ? (game.yieldPerDay / game.depositBalance) * 365 * 100
+  const currentApy = game.totalDepositBalance > 0
+    ? (game.yieldPerDay / game.totalDepositBalance) * 365 * 100
     : 0;
 
   const apyHistory = useMemo(
@@ -306,12 +306,12 @@ export default function GrowthRateScreen({ onClose, onDeposit }: GrowthRateScree
 
   const projectionYears = { "5Y": 5, "10Y": 10, "20Y": 20, "30Y": 30 }[projectionRange];
   const projection = useMemo(
-    () => calculateProjection(game.depositBalance, currentApy, projectionYears),
-    [game.depositBalance, currentApy, projectionYears]
+    () => calculateProjection(game.totalDepositBalance, currentApy, projectionYears),
+    [game.totalDepositBalance, currentApy, projectionYears]
   );
 
-  const projectedValue = projection.length > 0 ? projection[projection.length - 1].value : game.depositBalance;
-  const projectedEarnings = projectedValue - game.depositBalance;
+  const projectedValue = projection.length > 0 ? projection[projection.length - 1].value : game.totalDepositBalance;
+  const projectedEarnings = projectedValue - game.totalDepositBalance;
 
   const cardStyle: React.CSSProperties = {
     background: "#FFFFFF",

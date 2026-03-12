@@ -108,8 +108,8 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
   const hidden = !(game.balanceVisible ?? true);
 
   const deposits = useMemo(
-    () => getDepositHistory(game.transactions, game.depositBalance),
-    [game.transactions, game.depositBalance],
+    () => getDepositHistory(game.transactions, game.totalDepositBalance),
+    [game.transactions, game.totalDepositBalance],
   );
 
   const monthlyData = useMemo(() => getMonthlyData(deposits), [deposits]);
@@ -185,8 +185,8 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
     return entries;
   }, [deposits, mostRecent, biggest, firstEver, game.petName]);
 
-  const apyRate = game.depositBalance > 0
-    ? ((game.yieldPerDay / game.depositBalance) * 365 * 100).toFixed(1)
+  const apyRate = game.totalDepositBalance > 0
+    ? ((game.yieldPerDay / game.totalDepositBalance) * 365 * 100).toFixed(1)
     : "0.0";
 
   const cardStyle: React.CSSProperties = {
@@ -310,7 +310,7 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
               }}
             >
               <span onClick={() => game.toggleBalanceVisible()} style={{ cursor: "pointer" }}>
-                {hidden ? "••••••" : fmtUSD(game.depositBalance)}{" "}
+                {hidden ? "••••••" : fmtUSD(game.totalDepositBalance)}{" "}
                 <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)" }}>USD</span>
               </span>
             </div>
@@ -329,7 +329,7 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
 
             {/* Status badges */}
             <div style={{ display: "flex", gap: 6, marginTop: 16, flexWrap: "wrap" }}>
-              {game.depositBalance > 0 && (
+              {game.totalDepositBalance > 0 && (
                 <div
                   style={{
                     background: "rgba(91,175,72,0.12)",
@@ -343,7 +343,7 @@ export default function PocketPileScreen({ onClose, onDeposit }: PocketPileScree
                   Actively Growing
                 </div>
               )}
-              {game.depositBalance > 0 && (
+              {game.totalDepositBalance > 0 && (
                 <div
                   style={{
                     background: "rgba(91,175,72,0.12)",

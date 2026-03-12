@@ -81,8 +81,8 @@ export default function HarvestedScreen({ onClose, onDeposit }: HarvestedScreenP
   const recentHarvests = useMemo(() => getYieldByDay(game.transactions), [game.transactions]);
 
   const totalYield = game.totalYieldEarned ?? 0;
-  const apyRate = game.depositBalance > 0
-    ? ((game.yieldPerDay / game.depositBalance) * 365 * 100).toFixed(1)
+  const apyRate = game.totalDepositBalance > 0
+    ? ((game.yieldPerDay / game.totalDepositBalance) * 365 * 100).toFixed(1)
     : "0.0";
 
   const cardStyle: React.CSSProperties = {
@@ -227,7 +227,7 @@ export default function HarvestedScreen({ onClose, onDeposit }: HarvestedScreenP
                 {hidden ? "••••" : `+${fmtYield(game.yieldPerDay * 7)} /week`}
               </div>
             )}
-            {game.depositBalance > 0 && (
+            {game.totalDepositBalance > 0 && (
               <div
                 style={{
                   background: "rgba(91,175,72,0.12)",

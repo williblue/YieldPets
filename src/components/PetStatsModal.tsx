@@ -130,10 +130,10 @@ export default function PetStatsModal({
     return () => clearTimeout(timer);
   }, [clickFrame]);
 
-  const personality = computePersonality(game.depositBalance, game.currentStreak, game.hearts);
+  const personality = computePersonality(game.totalDepositBalance, game.currentStreak, game.hearts);
 
-  const growthRate = game.depositBalance > 0
-    ? ((game.yieldPerDay / game.depositBalance) * 365 * 100).toFixed(1)
+  const growthRate = game.totalDepositBalance > 0
+    ? ((game.yieldPerDay / game.totalDepositBalance) * 365 * 100).toFixed(1)
     : "0.0";
 
   const labelStyle: React.CSSProperties = {
@@ -340,7 +340,7 @@ export default function PetStatsModal({
                       marginTop: 1,
                     }}
                   >
-                    {stashStatus(game.depositBalance)}
+                    {stashStatus(game.totalDepositBalance)}
                   </div>
                 </div>
               </div>
@@ -445,7 +445,7 @@ export default function PetStatsModal({
                       marginTop: 2,
                     }}
                   >
-                    {balanceVisible ? game.depositBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "****"}{" "}
+                    {balanceVisible ? game.totalDepositBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "****"}{" "}
                     <span style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)" }}>
                       (USD)
                     </span>

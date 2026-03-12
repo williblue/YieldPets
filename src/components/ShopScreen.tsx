@@ -14,7 +14,7 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
   const game = useGame();
   const [tab, setTab] = useState<ShopTab>("furniture");
   const [buyingId, setBuyingId] = useState<string | null>(null);
-  const exclusivesUnlocked = game.depositBalance >= 200;
+  const exclusivesUnlocked = game.totalDepositBalance >= 200;
 
   const handleBuy = (furnitureId: string) => {
     const success = game.buyFurniture(furnitureId);
