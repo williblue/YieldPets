@@ -14,13 +14,13 @@ import { FOOD_ITEMS, ALL_FURNITURE, EXCLUSIVE_ITEMS } from "@/data/shopItems";
 
 // ─── Constants ───────────────────────────────────────────────
 const STORAGE_KEY = "yieldpets_game";
-const YIELD_PER_USD_PER_DAY = 0.10 / 365; // ~10% APY (PYUSD0)
-const USDC_YIELD_PER_USD_PER_DAY = 0.02 / 365; // ~2% APY (stgUSDC)
-const HEART_DECAY_MS = 8 * 60 * 60 * 1000; // 8 hours
+export const YIELD_PER_USD_PER_DAY = 0.10 / 365; // ~10% APY (PYUSD0)
+export const USDC_YIELD_PER_USD_PER_DAY = 0.02 / 365; // ~2% APY (stgUSDC)
+export const HEART_DECAY_MS = 8 * 60 * 60 * 1000; // 8 hours
 const FEED_COOLDOWN_MS = 0; // no cooldown
-const FEED_BONUS = 5;
+export const FEED_BONUS = 5;
 const TICK_INTERVAL_MS = 10_000; // 10 seconds
-const HEART_MULTIPLIERS: Record<HeartCount, number> = {
+export const HEART_MULTIPLIERS: Record<HeartCount, number> = {
   4: 1.0,
   3: 0.75,
   2: 0.5,
@@ -28,7 +28,7 @@ const HEART_MULTIPLIERS: Record<HeartCount, number> = {
   0: 0,
 };
 
-function dailyBonus(streak: number): number {
+export function dailyBonus(streak: number): number {
   return 50 + Math.min(streak, 15) * 10;
 }
 
@@ -129,7 +129,7 @@ const INITIAL_STATE: GameState = {
 // ─── Store (external, mutable, subscription-based) ───────────
 type Listener = () => void;
 
-function createGameStore() {
+export function createGameStore() {
   let state: GameState = INITIAL_STATE;
   const listeners = new Set<Listener>();
 
