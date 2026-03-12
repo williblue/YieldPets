@@ -94,6 +94,7 @@ export interface GameState {
   totalYieldEarned: number;
   sfxEnabled: boolean;
   balanceVisible: boolean;
+  createdAt: number;
 }
 
 const INITIAL_STATE: GameState = {
@@ -117,6 +118,7 @@ const INITIAL_STATE: GameState = {
   totalYieldEarned: 0,
   sfxEnabled: true,
   balanceVisible: true,
+  createdAt: Date.now(),
 };
 
 // ─── Store (external, mutable, subscription-based) ───────────

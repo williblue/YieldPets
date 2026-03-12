@@ -231,29 +231,6 @@ export default function IsometricRoom({
     setClickFrame(0);
   }, [clicking, walking, showRadial, sfxEnabled]);
 
-  /* ── JS-driven click animation: step through 6 frames ─────────── */
-  useEffect(() => {
-    if (clickFrame < 0) return;
-    if (clickFrame >= CLICK_FRAMES) {
-      if (walkLayerRef.current) walkLayerRef.current.style.visibility = "visible";
-      setClickFrame(-1);
-
-      if (feedAnimRef.current) {
-        // Feed animation — skip radial, fire callback
-        feedAnimRef.current = false;
-        onFeedAnimDone?.();
-        // Idle timer will restart via the walking/clicking/showRadial effect
-      } else {
-        // [DISABLED] Radial menu on pet click — do NOT remove, will be re-enabled later
-        // setRadialPos({ x: posRef.current.x, y: posRef.current.y });
-        // setShowRadial(true);
-      }
-      return;
-    }
-    const timer = setTimeout(() => setClickFrame((f) => f + 1), 150);
-    return () => clearTimeout(timer);
-  }, [clickFrame, onFeedAnimDone]);
-
   /* ── Resume walk/idle after radial menu closes ──────────────── */
   const resumeAfterMenu = useCallback(() => {
     setShowRadial(false);
@@ -309,6 +286,30 @@ export default function IsometricRoom({
       rafRef.current = requestAnimationFrame(step);
     }
   }, [onPetPosUpdate]);
+
+  /* ── JS-driven click animation: step through 6 frames ─────────── */
+  useEffect(() => {
+    if (clickFrame < 0) return;
+    if (clickFrame >= CLICK_FRAMES) {
+      if (walkLayerRef.current) walkLayerRef.current.style.visibility = "visible";
+      setClickFrame(-1);
+
+      if (feedAnimRef.current) {
+        // Feed animation — skip radial, fire callback
+        feedAnimRef.current = false;
+        onFeedAnimDone?.();
+        resumeAfterMenu(); // resume walk/idle after feed animation
+      } else {
+        // [DISABLED] Radial menu on pet click — do NOT remove, will be re-enabled later
+        // setRadialPos({ x: posRef.current.x, y: posRef.current.y });
+        // setShowRadial(true);
+        resumeAfterMenu(); // resume walk/idle since radial menu is disabled
+      }
+      return;
+    }
+    const timer = setTimeout(() => setClickFrame((f) => f + 1), 150);
+    return () => clearTimeout(timer);
+  }, [clickFrame, onFeedAnimDone, resumeAfterMenu]);
 
   const handleRadialAction = useCallback((action: PetAction) => {
     resumeAfterMenu();

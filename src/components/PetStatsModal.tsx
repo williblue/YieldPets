@@ -15,7 +15,17 @@ interface PetStatsModalProps {
 
 type Tab = "about" | "personality";
 
-const MOCK_AGE = "4 months old";
+function formatAge(createdAt: number): string {
+  const ms = Date.now() - createdAt;
+  const days = Math.max(1, Math.floor(ms / (1000 * 60 * 60 * 24)));
+  if (days < 30) return `${days} day${days === 1 ? "" : "s"} old`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} month${months === 1 ? "" : "s"} old`;
+  const years = Math.floor(months / 12);
+  const rem = months % 12;
+  if (rem === 0) return `${years} year${years === 1 ? "" : "s"} old`;
+  return `${years}y ${rem}m old`;
+}
 
 function stashStatus(balance: number): string {
   if (balance >= 10000) return "Stash Legend";
@@ -317,7 +327,7 @@ export default function PetStatsModal({
                       marginTop: 1,
                     }}
                   >
-                    {MOCK_AGE}
+                    {formatAge(game.createdAt)}
                   </div>
                 </div>
                 <div>
