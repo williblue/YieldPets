@@ -35,6 +35,12 @@ src/
     index.ts          — shared TypeScript types
 ```
 
+## Flow Blockchain
+- **Always use `@onflow/kit` hooks** (`useFlowQuery`, `useFlowAccount`, `useFlowMutate`, `useFlowTransactionStatus`) over raw `@onflow/fcl` calls in React components
+- `FlowProvider` is configured in `src/app/providers.tsx`
+- Auth uses Magic SDK — pass `magicAuthz` as authorizer/payer/proposer for transactions
+- Only use raw `fcl.query()`/`fcl.mutate()` for imperative logic inside callbacks where hooks can't be used
+
 ## Commands
 - `cd src && npm run dev` — start dev server
 - `cd src && npm run build` — production build

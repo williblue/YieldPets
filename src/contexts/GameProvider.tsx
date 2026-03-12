@@ -256,14 +256,6 @@ function createGameStore() {
   function tick() {
     const now = Date.now();
     const elapsed = (now - state.lastTickAt) / 1000;
-    console.log("[tick]", {
-      elapsed: elapsed.toFixed(1) + "s",
-      depositBalance: state.depositBalance,
-      hearts: state.hearts,
-      totalYieldEarned: state.totalYieldEarned,
-      pendingYield,
-      txCount: state.transactions.length,
-    });
     const heartChanges = decayHearts(now);
     // Apply heart changes first so accrual uses new heart count
     if (Object.keys(heartChanges).length > 0) {
@@ -453,7 +445,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
   void snapshot; // keep subscription active
 
   useEffect(() => {
-    console.log("[GameProvider] effect mounted, starting ticks");
     store.tick(); // catch up on elapsed time
 
     const result = store.checkDailyLogin();
