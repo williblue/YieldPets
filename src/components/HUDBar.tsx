@@ -136,7 +136,7 @@ export default function HUDBar({ state, onBalanceTap }: HUDBarProps) {
               lineHeight: 1,
             }}
           >
-            {(game.balanceVisible ?? true) ? `${formatYield(yieldPerDay)}/day` : "••••"}
+            {(game.balanceVisible ?? true) ? `${formatYield(yieldPerDay * 7)}/week` : "••••"}
           </span>
         )}
       </div>

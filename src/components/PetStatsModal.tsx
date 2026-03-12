@@ -1001,7 +1001,7 @@ export default function PetStatsModal({
             <div style={{ fontSize: 14, fontWeight: 700, color: "var(--text-secondary)", lineHeight: 1.5 }}>
               {tip === "pocketPile" && "Your total savings balance. Deposit more to grow your pocket pile and earn higher yield over time."}
               {tip === "harvested" && "The total yield your deposits have earned. Keep your pet happy with full hearts to maximize earnings."}
-              {tip === "growthRate" && "Your current daily yield rate based on your deposit balance and pet happiness. More hearts = faster growth."}
+              {tip === "growthRate" && "Your current weekly yield rate based on your deposit balance and pet happiness. More hearts = faster growth."}
             </div>
             <button
               onClick={() => { setTip(null); onDeposit(); }}

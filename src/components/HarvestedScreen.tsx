@@ -224,7 +224,7 @@ export default function HarvestedScreen({ onClose, onDeposit }: HarvestedScreenP
                   color: "#5BAF48",
                 }}
               >
-                {hidden ? "••••" : `+${fmtYield(game.yieldPerDay)} today`}
+                {hidden ? "••••" : `+${fmtYield(game.yieldPerDay * 7)} /week`}
               </div>
             )}
             {game.depositBalance > 0 && (
@@ -308,7 +308,7 @@ export default function HarvestedScreen({ onClose, onDeposit }: HarvestedScreenP
             </div>
           ))}
 
-          {/* Daily Rate */}
+          {/* Weekly Rate */}
           <div
             style={{
               display: "flex",
@@ -325,7 +325,7 @@ export default function HarvestedScreen({ onClose, onDeposit }: HarvestedScreenP
                 color: "var(--text-primary)",
               }}
             >
-              Daily Rate
+              Weekly Rate
             </span>
             <span
               style={{
@@ -334,7 +334,7 @@ export default function HarvestedScreen({ onClose, onDeposit }: HarvestedScreenP
                 color: "var(--text-secondary)",
               }}
             >
-              {hidden ? "••••" : `~${fmtYield(game.yieldPerDay)} / day`}
+              {hidden ? "••••" : `~${fmtYield(game.yieldPerDay * 7)} / week`}
             </span>
           </div>
         </div>

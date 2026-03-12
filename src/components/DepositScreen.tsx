@@ -55,7 +55,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
 
   const hidden = !(game.balanceVisible ?? true);
   const currentBalance = game.depositBalance;
-  const dailyYield = currentBalance * (YEARLY_RATE / 365);
+  const weeklyYield = currentBalance * (YEARLY_RATE / 365) * 7;
   const newBalance =
     tab === "deposit"
       ? currentBalance + numAmount
@@ -650,7 +650,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                     </div>
                   </div>
                   <div style={{ textAlign: "right" }}>
-                    <span style={labelStyle}>Daily Yield</span>
+                    <span style={labelStyle}>Weekly Yield</span>
                     <div
                       style={{
                         fontSize: 16,
@@ -659,7 +659,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                         marginTop: 4,
                       }}
                     >
-                      {hidden ? "••••" : `+$${fmtUSD(dailyYield)}/day`}
+                      {hidden ? "••••" : `+$${fmtUSD(weeklyYield)}/week`}
                     </div>
                   </div>
                 </div>
