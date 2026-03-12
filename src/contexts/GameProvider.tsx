@@ -10,7 +10,7 @@ import {
   useSyncExternalStore,
 } from "react";
 import { HeartCount } from "@/types";
-import { FOOD_ITEMS, ALL_FURNITURE } from "@/data/shopItems";
+import { FOOD_ITEMS, ALL_FURNITURE, EXCLUSIVE_ITEMS } from "@/data/shopItems";
 
 // ─── Constants ───────────────────────────────────────────────
 const STORAGE_KEY = "yieldpets_game";
@@ -317,6 +317,8 @@ function createGameStore() {
     if (state.ownedFurniture.includes(furnitureId)) return false;
     const item = ALL_FURNITURE.find((f) => f.id === furnitureId);
     if (!item || state.nuggets < item.price) return false;
+    // Exclusives require minimum $200 deposit balance
+    if (EXCLUSIVE_ITEMS.some((e) => e.id === furnitureId) && state.depositBalance < 200) return false;
     pushTx(makeTx("nuggets_spent", `Bought ${item.name}`, -item.price));
     set({
       nuggets: state.nuggets - item.price,

@@ -14,6 +14,7 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
   const game = useGame();
   const [tab, setTab] = useState<ShopTab>("furniture");
   const [buyingId, setBuyingId] = useState<string | null>(null);
+  const exclusivesUnlocked = game.depositBalance >= 200;
 
   const handleBuy = (furnitureId: string) => {
     const success = game.buyFurniture(furnitureId);
@@ -333,7 +334,39 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
         {tab === "exclusives" && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <span style={labelStyle}>Limited Edition</span>
-            {EXCLUSIVE_ITEMS.map((item) => renderItem(item, true))}
+            {exclusivesUnlocked ? (
+              EXCLUSIVE_ITEMS.map((item) => renderItem(item, true))
+            ) : (
+              <div
+                style={{
+                  background: "#FFFFFF",
+                  borderRadius: 16,
+                  padding: "32px 24px",
+                  boxShadow: "var(--shadow-card)",
+                  border: "2px dashed #E8C8F0",
+                  textAlign: "center",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+                  <rect x="10" y="18" width="20" height="16" rx="3" fill="#E8C8F0" />
+                  <path d="M14 18v-4a6 6 0 0112 0v4" stroke="#C090D8" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                  <circle cx="20" cy="27" r="2" fill="#C090D8" />
+                </svg>
+                <div style={{ fontSize: 16, fontWeight: 800, color: "var(--text-primary)" }}>
+                  Exclusives Locked
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                  Deposit at least <span style={{ color: "#C090D8", fontWeight: 900 }}>$200 USD</span> to unlock exclusive limited edition furniture.
+                </div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--text-secondary)", marginTop: 4 }}>
+                  Current balance: ${game.depositBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
