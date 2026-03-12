@@ -207,6 +207,9 @@ function createGameStore() {
 
   // ─── Daily login / streak ─────────────────────────
   function checkDailyLogin(): { bonusAmount: number } | null {
+    // Daily bonus requires at least $200 deposit balance
+    if (state.depositBalance < 200) return null;
+
     const today = todayStr();
     if (state.lastLoginDate === today && state.dailyBonusClaimed) {
       return null; // already claimed
