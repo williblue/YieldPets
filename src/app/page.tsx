@@ -53,6 +53,7 @@ export default function Home() {
   const [showGrowthRate, setShowGrowthRate] = useState(false);
   const [piggyPressed, setPiggyPressed] = useState(false);
   const [petHeadPressed, setPetHeadPressed] = useState(false);
+  const [feedTrigger, setFeedTrigger] = useState(0);
   const debounceRef = useRef(false);
 
   const hudState = {
@@ -106,6 +107,10 @@ export default function Home() {
   };
 
   const handleFeed = () => {
+    setFeedTrigger((n) => n + 1);
+  };
+
+  const handleFeedAnimDone = () => {
     game.feed();
   };
 
@@ -171,6 +176,8 @@ export default function Home() {
             sfxEnabled={game.sfxEnabled ?? true}
             placedFurniture={game.placedFurniture}
             onPetPosUpdate={updatePetPos}
+            feedTrigger={feedTrigger}
+            onFeedAnimDone={handleFeedAnimDone}
           />
         </div>
 

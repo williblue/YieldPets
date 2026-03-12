@@ -18,6 +18,8 @@ interface IsometricRoomProps {
   sfxEnabled?: boolean;
   placedFurniture?: string[];
   onPetPosUpdate?: (x: number, y: number) => void;
+  feedTrigger?: number;
+  onFeedAnimDone?: () => void;
 }
 
 /* ── Walkable floor (isometric diamond) ────────────────────────── */
@@ -87,6 +89,8 @@ export default function IsometricRoom({
   sfxEnabled = true,
   placedFurniture = [],
   onPetPosUpdate,
+  feedTrigger = 0,
+  onFeedAnimDone,
 }: IsometricRoomProps) {
   const [failedFurniture, setFailedFurniture] = useState<Set<string>>(
     new Set(),
@@ -107,6 +111,8 @@ export default function IsometricRoom({
   const idleRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const spriteRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const wasWalkingRef = useRef(false);
+  const feedAnimRef = useRef(false); // true when click anim is for feed (skip radial)
+  const prevFeedTriggerRef = useRef(feedTrigger);
   const petElRef = useRef<HTMLDivElement>(null);
   const walkLayerRef = useRef<HTMLDivElement>(null);
 
@@ -118,6 +124,30 @@ export default function IsometricRoom({
   useEffect(() => {
     onPetPosUpdate?.(posRef.current.x, posRef.current.y);
   }, [onPetPosUpdate]);
+
+  // Feed trigger: play click animation then call onFeedAnimDone
+  useEffect(() => {
+    if (feedTrigger === prevFeedTriggerRef.current) return;
+    prevFeedTriggerRef.current = feedTrigger;
+    if (clicking || showRadial) return;
+
+    feedAnimRef.current = true;
+    wasWalkingRef.current = walking;
+
+    if (walking) {
+      cancelAnimationFrame(rafRef.current);
+      if (spriteRef.current) clearInterval(spriteRef.current);
+    }
+    if (idleRef.current) clearTimeout(idleRef.current);
+
+    if (sfxEnabled && popSfx.current) {
+      popSfx.current.currentTime = 0;
+      popSfx.current.play();
+    }
+
+    if (walkLayerRef.current) walkLayerRef.current.style.visibility = "hidden";
+    setClickFrame(0);
+  }, [feedTrigger, clicking, showRadial, walking, sfxEnabled]);
 
   const startWalk = useCallback(() => {
     const target = randFloor(posRef.current);
@@ -205,16 +235,24 @@ export default function IsometricRoom({
   useEffect(() => {
     if (clickFrame < 0) return;
     if (clickFrame >= CLICK_FRAMES) {
-      // Animation done — show radial menu
       if (walkLayerRef.current) walkLayerRef.current.style.visibility = "visible";
       setClickFrame(-1);
-      setRadialPos({ x: posRef.current.x, y: posRef.current.y });
-      setShowRadial(true);
+
+      if (feedAnimRef.current) {
+        // Feed animation — skip radial, fire callback
+        feedAnimRef.current = false;
+        onFeedAnimDone?.();
+        // Idle timer will restart via the walking/clicking/showRadial effect
+      } else {
+        // Normal pet click — show radial menu
+        setRadialPos({ x: posRef.current.x, y: posRef.current.y });
+        setShowRadial(true);
+      }
       return;
     }
     const timer = setTimeout(() => setClickFrame((f) => f + 1), 150);
     return () => clearTimeout(timer);
-  }, [clickFrame]);
+  }, [clickFrame, onFeedAnimDone]);
 
   /* ── Resume walk/idle after radial menu closes ──────────────── */
   const resumeAfterMenu = useCallback(() => {
