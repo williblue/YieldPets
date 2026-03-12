@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import HUDBar from "@/components/HUDBar";
 import IsometricRoom from "@/components/IsometricRoom";
 import ActionBar from "@/components/ActionBar";
@@ -63,6 +63,25 @@ export default function Home() {
     yieldPerDay: game.yieldPerDay,
     loading: false,
   } as const;
+
+  // Handle Stripe checkout success redirect
+  const stripeHandled = useRef(false);
+  useEffect(() => {
+    if (stripeHandled.current) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("deposit_success") === "1") {
+      stripeHandled.current = true;
+      const cents = parseInt(params.get("amount") || "0", 10);
+      if (cents > 0) {
+        game.deposit(cents / 100);
+      }
+      // Clean URL without reload
+      window.history.replaceState({}, "", window.location.pathname);
+    } else if (params.get("deposit_cancelled") === "1") {
+      stripeHandled.current = true;
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
 
   // When login succeeds, hide the login screen
   useEffect(() => {

@@ -47,6 +47,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
   const [amount, setAmount] = useState("");
   const [customAmount, setCustomAmount] = useState("");
   const [pressed, setPressed] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [addressType, setAddressType] = useState<AddressType>("evm");
   const [withdrawAddress, setWithdrawAddress] = useState("");
 
@@ -946,12 +947,27 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
 
                   {/* CTA Button */}
                   <button
-                    disabled={!hasAmount}
-                    onClick={() => {
-                      if (!hasAmount) return;
-                      game.deposit(numAmount);
-                      setAmount("");
-                      setCustomAmount("");
+                    disabled={!hasAmount || checkoutLoading}
+                    onClick={async () => {
+                      if (!hasAmount || checkoutLoading) return;
+                      setCheckoutLoading(true);
+                      try {
+                        const res = await fetch("/api/checkout", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ amount: numAmount }),
+                        });
+                        const data = await res.json();
+                        if (data.url) {
+                          window.location.href = data.url;
+                        } else {
+                          alert(data.error || "Failed to start checkout");
+                          setCheckoutLoading(false);
+                        }
+                      } catch {
+                        alert("Failed to connect to payment server");
+                        setCheckoutLoading(false);
+                      }
                     }}
                     onMouseDown={() => setPressed(true)}
                     onMouseUp={() => setPressed(false)}
@@ -988,7 +1004,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                       opacity: hasAmount ? 1 : 0.5,
                     }}
                   >
-                    {ctaLabel}
+                    {checkoutLoading ? "Opening checkout..." : ctaLabel}
                   </button>
 
                   {/* Footer note */}
