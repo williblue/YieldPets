@@ -244,9 +244,9 @@ export default function IsometricRoom({
         onFeedAnimDone?.();
         // Idle timer will restart via the walking/clicking/showRadial effect
       } else {
-        // Normal pet click — show radial menu
-        setRadialPos({ x: posRef.current.x, y: posRef.current.y });
-        setShowRadial(true);
+        // [DISABLED] Radial menu on pet click — do NOT remove, will be re-enabled later
+        // setRadialPos({ x: posRef.current.x, y: posRef.current.y });
+        // setShowRadial(true);
       }
       return;
     }
