@@ -12,7 +12,6 @@ interface DepositScreenProps {
 type Tab = "deposit" | "withdraw";
 type AddressType = "flow" | "evm";
 
-const NUGGETS_PER_USD_PER_DAY = 0.8;
 const YEARLY_RATE = 0.10; // 10% yearly
 
 function fmtUSD(value: number): string {
@@ -61,7 +60,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
     tab === "deposit"
       ? currentBalance + numAmount
       : Math.max(0, currentBalance - numAmount);
-  const newNuggets = Math.round(newBalance * NUGGETS_PER_USD_PER_DAY);
+  const newWeeklyYield = newBalance * (YEARLY_RATE / 365) * 7;
 
   // Calculate unwithdrawn yield
   const totalWithdrawn = useMemo(() => {
@@ -75,7 +74,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
   // Potential yield they'd miss (1yr and 3yr projections based on withdrawal amount)
   const missedYield1Y = numAmount * YEARLY_RATE;
   const missedYield3Y = numAmount * Math.pow(1 + YEARLY_RATE / 12, 36) - numAmount;
-  const missedNuggetsDay = Math.round(numAmount * NUGGETS_PER_USD_PER_DAY);
+  const missedYieldWeek = numAmount * (YEARLY_RATE / 365) * 7;
 
   const ctaLabel = hasAmount
     ? `${tab === "deposit" ? "Deposit" : "Withdraw"} $${fmtUSD(numAmount)} USD`
@@ -548,18 +547,15 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                       >
                         {hidden ? "••••" : `-${fmtUSD(Math.round(missedYield1Y))}`}
                       </span>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <img src="/gold nuggets/gold_nugget_icon.png" alt="" width={14} height={14} style={{ objectFit: "contain" }} />
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            color: "var(--text-secondary)",
-                          }}
-                        >
-                          -{missedNuggetsDay} nuggets/day
-                        </span>
-                      </div>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        {hidden ? "••••" : `-$${fmtUSD(missedYieldWeek)}/week`}
+                      </span>
                     </div>
 
                     {/* 3 Year estimate */}
@@ -594,18 +590,15 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                       >
                         {hidden ? "••••" : `-${fmtUSD(Math.round(missedYield3Y))}`}
                       </span>
-                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <img src="/gold nuggets/gold_nugget_icon.png" alt="" width={14} height={14} style={{ objectFit: "contain" }} />
-                        <span
-                          style={{
-                            fontSize: 11,
-                            fontWeight: 700,
-                            color: "var(--text-secondary)",
-                          }}
-                        >
-                          -{missedNuggetsDay * 3} nuggets/day
-                        </span>
-                      </div>
+                      <span
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color: "var(--text-secondary)",
+                        }}
+                      >
+                        {hidden ? "••••" : `-$${fmtUSD(missedYieldWeek * 3)}/week`}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -930,7 +923,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                             color: "var(--text-secondary)",
                           }}
                         >
-                          Nuggets/day
+                          Yield/week
                         </span>
                         <span
                           style={{
@@ -939,7 +932,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                             color: "var(--text-primary)",
                           }}
                         >
-                          ~{newNuggets}
+                          {hidden ? "••••" : `+$${fmtUSD(newWeeklyYield)}`}
                         </span>
                       </div>
                     </div>

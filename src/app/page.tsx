@@ -37,8 +37,12 @@ export default function Home() {
   const { isLoggedIn, isLoading } = useAuth();
   const game = useGame();
   const { visualNuggets, displayedNuggets, collectNugget, updatePetPos } = useNuggetCollector(game.nuggets);
-  const [showStart, setShowStart] = useState(true);
-  const [startVisible, setStartVisible] = useState(true);
+  // Skip start screen when returning from Stripe checkout
+  const isStripeReturn = typeof window !== "undefined" &&
+    (new URLSearchParams(window.location.search).has("deposit_success") ||
+     new URLSearchParams(window.location.search).has("deposit_cancelled"));
+  const [showStart, setShowStart] = useState(!isStripeReturn);
+  const [startVisible, setStartVisible] = useState(!isStripeReturn);
   const [showLogin, setShowLogin] = useState(false);
   const [loginVisible, setLoginVisible] = useState(false);
   const [roomState] = useState<RoomState>(MOCK_ROOM);

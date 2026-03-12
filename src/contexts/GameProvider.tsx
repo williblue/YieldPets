@@ -419,6 +419,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const storeRef = useRef<GameStore | null>(null);
   if (!storeRef.current) {
     storeRef.current = createGameStore();
+    storeRef.current.load(); // Load from localStorage synchronously so state is ready before child effects
   }
   const store = storeRef.current;
 
@@ -432,7 +433,6 @@ export function GameProvider({ children }: { children: ReactNode }) {
   void snapshot; // keep subscription active
 
   useEffect(() => {
-    store.load();
     store.tick(); // catch up on elapsed time
 
     const result = store.checkDailyLogin();
