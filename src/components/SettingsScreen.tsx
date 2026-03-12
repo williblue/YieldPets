@@ -335,7 +335,15 @@ function DeveloperSettings({ onBack }: { onBack: () => void }) {
         setOnChainStatus("Loading on-chain state...");
         const profile = await onChainGame.getProfile();
         if (profile) {
-          game.loadFromChain(profileToGameState(profile));
+          // Only load from chain if profile has real data (not freshly created)
+          const hasData = profile.nuggets > 0
+            || profile.depositBalance > 0
+            || profile.usdcDepositBalance > 0
+            || profile.ownedFurniture.length > 0
+            || profile.transactions.length > 0;
+          if (hasData) {
+            game.loadFromChain(profileToGameState(profile));
+          }
         }
         game.setOnChainMode(true);
         setOnChainStatus(null);

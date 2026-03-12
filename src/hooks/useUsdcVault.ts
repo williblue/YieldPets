@@ -7,8 +7,11 @@ import {
   DEPOSIT_STGUSDC,
   WITHDRAW_STGUSDC,
   GET_USDC_VAULT_POSITION,
-  CHECK_STGUSDC_BALANCE,
+  GET_COA_ADDRESS,
 } from "@/lib/flow";
+
+const FLOW_EVM_RPC = "https://mainnet.evm.nodes.onflow.org";
+const STGUSDC_ADDRESS = "0xf1815bd50389c46847f0bda824ec8da914045d14";
 import { useAuth } from "@/contexts/AuthProvider";
 import { useGame } from "@/contexts/GameProvider";
 
@@ -46,15 +49,35 @@ export function useUsdcVault() {
     }
   }, [address]);
 
-  /** Query stgUSDC balance in the COA (available to deposit) */
+  /** Query stgUSDC balance in the COA via Flow EVM JSON-RPC */
   const getStgUsdcBalance = useCallback(async (): Promise<number> => {
     if (!address) return 0;
     try {
-      const result = await fcl.query({
-        cadence: CHECK_STGUSDC_BALANCE,
+      // First get the COA's EVM address from Cadence
+      const coaAddr = await fcl.query({
+        cadence: GET_COA_ADDRESS,
         args: (arg: typeof fcl.arg) => [arg(address, t.Address)],
       });
-      return Number(result) / 1_000_000; // 6 decimals → human-readable
+      if (!coaAddr) return 0;
+
+      // Query balanceOf via eth_call on Flow EVM gateway
+      // balanceOf(address) selector = 0x70a08231 + address padded to 32 bytes
+      const paddedAddr = coaAddr.replace("0x", "").padStart(64, "0");
+      const callData = "0x70a08231" + paddedAddr;
+
+      const resp = await fetch(FLOW_EVM_RPC, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "eth_call",
+          params: [{ to: STGUSDC_ADDRESS, data: callData }, "latest"],
+        }),
+      });
+      const json = await resp.json();
+      if (json.error || !json.result) return 0;
+      return Number(BigInt(json.result)) / 1_000_000; // 6 decimals
     } catch {
       return 0;
     }

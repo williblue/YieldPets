@@ -1,7 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import * as fcl from "@onflow/fcl";
+import * as t from "@onflow/types";
+import { useFlowQuery } from "@onflow/kit";
+import { useAuth } from "@/contexts/AuthProvider";
 import { useGame } from "@/contexts/GameProvider";
+import { useUsdcVault } from "@/hooks/useUsdcVault";
+import { GET_COA_ADDRESS } from "@/lib/flow";
 
 interface DepositScreenProps {
   onClose: () => void;
@@ -41,6 +47,8 @@ const methodCardStyle: React.CSSProperties = {
 
 export default function DepositScreen({ onClose, onCrypto, petName }: DepositScreenProps) {
   const game = useGame();
+  const { address } = useAuth();
+  const { getStgUsdcBalance, depositUsdc, isLoading: vaultTxLoading, getVaultPosition } = useUsdcVault();
   const [tab, setTab] = useState<Tab>("deposit");
   const [depositMethod, setDepositMethod] = useState<"card" | null>(null);
   const [amount, setAmount] = useState("");
@@ -49,6 +57,56 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [addressType, setAddressType] = useState<AddressType>("evm");
   const [withdrawAddress, setWithdrawAddress] = useState("");
+
+  // stgUSDC balance in COA (not yet deposited to MoreMarkets)
+  const [stgBalance, setStgBalance] = useState<number>(0);
+  const [depositedBalance, setDepositedBalance] = useState<number>(0);
+  const [depositStatus, setDepositStatus] = useState<string | null>(null);
+
+  // Query COA address
+  const coaArgs = useCallback(
+    (arg: typeof fcl.arg) => [arg(address!, t.Address)],
+    [address]
+  );
+  const { data: coaAddress = null } = useFlowQuery({
+    cadence: GET_COA_ADDRESS,
+    args: coaArgs,
+    query: { enabled: !!address },
+  }) as { data: string | null };
+
+  // Poll stgUSDC balance and vault position every 15s
+  useEffect(() => {
+    if (!coaAddress || !address) return;
+    let cancelled = false;
+    const poll = async () => {
+      const [bal, pos] = await Promise.all([
+        getStgUsdcBalance(),
+        getVaultPosition(),
+      ]);
+      if (!cancelled) {
+        setStgBalance(bal);
+        if (pos) setDepositedBalance(pos.aTokenBalance);
+      }
+    };
+    poll();
+    const interval = setInterval(poll, 15000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [coaAddress, address, getStgUsdcBalance, getVaultPosition]);
+
+  const handleDepositToEarn = useCallback(async () => {
+    if (stgBalance <= 0 || vaultTxLoading) return;
+    setDepositStatus("Depositing to earn yield...");
+    const success = await depositUsdc(stgBalance);
+    if (success) {
+      setDepositStatus("Deposited! Earning ~2% APY");
+      setStgBalance(0);
+      // Refresh vault position
+      const pos = await getVaultPosition();
+      if (pos) setDepositedBalance(pos.aTokenBalance);
+    } else {
+      setDepositStatus("Deposit failed. Please try again.");
+    }
+  }, [stgBalance, vaultTxLoading, depositUsdc, getVaultPosition]);
 
   const numAmount = parseFloat(amount || customAmount || "0");
   const hasAmount = numAmount > 0;
@@ -823,6 +881,90 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                       />
                     </svg>
                   </button>
+
+                  {/* stgUSDC COA Balance + Deposited Balance Card */}
+                  {(stgBalance > 0 || depositedBalance > 0) && (
+                    <div
+                      style={{
+                        ...cardStyle,
+                        background: stgBalance > 0 ? "#E8F5E3" : "#F8F4EC",
+                        border: stgBalance > 0 ? "2px solid #5BAF48" : "2px solid #ECD8A0",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 12,
+                      }}
+                    >
+                      {/* Deposited balance (earning yield) */}
+                      {depositedBalance > 0 && (
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)" }}>
+                            Earning yield
+                          </span>
+                          <span style={{ fontSize: 16, fontWeight: 900, color: "#2E7D32" }}>
+                            ${depositedBalance.toFixed(2)} USDC
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Pending stgUSDC in COA (not yet deposited) */}
+                      {stgBalance > 0 && (
+                        <>
+                          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--text-secondary)" }}>
+                              Available in wallet
+                            </span>
+                            <span style={{ fontSize: 16, fontWeight: 900, color: "#2E7D32" }}>
+                              ${stgBalance.toFixed(2)} stgUSDC
+                            </span>
+                          </div>
+                          <span
+                            style={{
+                              fontSize: 13,
+                              fontWeight: 700,
+                              color: "var(--text-secondary)",
+                              textAlign: "center",
+                            }}
+                          >
+                            Deposit to More Markets to earn ~2% APY
+                          </span>
+                          {depositStatus && (
+                            <span
+                              style={{
+                                fontSize: 13,
+                                fontWeight: 700,
+                                color: depositStatus.includes("failed") ? "#E85878" : "#2E7D32",
+                                textAlign: "center",
+                              }}
+                            >
+                              {depositStatus}
+                            </span>
+                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDepositToEarn(); }}
+                            disabled={vaultTxLoading}
+                            style={{
+                              width: "100%",
+                              height: 48,
+                              borderRadius: 999,
+                              border: "none",
+                              cursor: vaultTxLoading ? "default" : "pointer",
+                              background: vaultTxLoading
+                                ? "#E0D8C8"
+                                : "linear-gradient(180deg, #6DC95A 0%, #5BAF48 100%)",
+                              boxShadow: vaultTxLoading ? "none" : "0 3px 0px #3D8A30",
+                              color: "#FFFFFF",
+                              fontFamily: "inherit",
+                              fontWeight: 800,
+                              fontSize: 16,
+                              opacity: vaultTxLoading ? 0.6 : 1,
+                            }}
+                          >
+                            {vaultTxLoading ? "Depositing..." : `Deposit $${stgBalance.toFixed(2)} to Earn`}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
                 </>
               )}
 
