@@ -7,13 +7,13 @@ interface NavItem {
   label: string;
 }
 
-const disabledTabs: NavTab[] = ["build", "friends"];
+const disabledTabs: NavTab[] = [];
 
 const navItems: NavItem[] = [
   { key: "pet", label: "Pet" },
-  { key: "build", label: "Build" },
+  { key: "build", label: "Stats" },
   { key: "shop", label: "Shop" },
-  { key: "friends", label: "Friends" },
+  { key: "friends", label: "Add Money" },
   { key: "settings", label: "Settings" },
 ];
 
@@ -30,14 +30,12 @@ function PetIcon() {
   );
 }
 
-function BuildIcon() {
+function StatsIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <rect x="6" y="12" width="16" height="12" rx="2" fill="currentColor" opacity="0.3" />
-      <path d="M8 12V8a6 6 0 0112 0v4" stroke="currentColor" strokeWidth="2" fill="none" />
-      <path d="M10 18l4 4 8-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" opacity="0" />
-      <rect x="11" y="6" width="6" height="8" rx="1" fill="currentColor" opacity="0.5" />
-      <path d="M14 22l-4-6h8z" fill="currentColor" opacity="0.6" />
+      <rect x="4" y="16" width="5" height="8" rx="1.5" fill="currentColor" opacity="0.5" />
+      <rect x="11.5" y="11" width="5" height="13" rx="1.5" fill="currentColor" opacity="0.7" />
+      <rect x="19" y="6" width="5" height="18" rx="1.5" fill="currentColor" />
     </svg>
   );
 }
@@ -52,12 +50,12 @@ function ShopIcon() {
   );
 }
 
-function FriendsIcon() {
+function AddMoneyIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-      <circle cx="10" cy="10" r="4" fill="currentColor" opacity="0.5" />
-      <circle cx="18" cy="10" r="4" fill="currentColor" opacity="0.5" />
-      <ellipse cx="14" cy="22" rx="10" ry="5" fill="currentColor" opacity="0.3" />
+      <circle cx="14" cy="14" r="10" fill="currentColor" opacity="0.15" />
+      <circle cx="14" cy="14" r="10" stroke="currentColor" strokeWidth="1.5" fill="none" opacity="0.6" />
+      <path d="M14 9v10M9 14h10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -85,9 +83,9 @@ function SettingsIcon() {
 
 const iconMap: Record<NavTab, React.FC> = {
   pet: PetIcon,
-  build: BuildIcon,
+  build: StatsIcon,
   shop: ShopIcon,
-  friends: FriendsIcon,
+  friends: AddMoneyIcon,
   settings: SettingsIcon,
 };
 

@@ -179,20 +179,33 @@ export default function Home() {
           />
         )}
 
-        <BottomNavBar activeTab={activeTab} onTabChange={(tab) => {
-          if (tab === "settings" && !isLoggedIn) {
-            handleEggTap();
-            return;
-          }
-          // Close any open modals/overlays when switching tabs
-          setDepositView(null);
-          setShowStats(false);
-          setShowPocketPile(false);
-          setShowHarvested(false);
-          setShowGrowthRate(false);
-          setSelectedFurniture(null);
-          setActiveTab(tab);
-        }} />
+        <BottomNavBar
+          activeTab={showStats || showPocketPile || showHarvested || showGrowthRate ? "build" : depositView ? "friends" : activeTab}
+          onTabChange={(tab) => {
+            if ((tab === "settings" || tab === "build" || tab === "friends") && !isLoggedIn) {
+              handleEggTap();
+              return;
+            }
+            // Close any open modals/overlays when switching tabs
+            setDepositView(null);
+            setShowStats(false);
+            setShowPocketPile(false);
+            setShowHarvested(false);
+            setShowGrowthRate(false);
+            setSelectedFurniture(null);
+            if (tab === "build") {
+              setActiveTab("pet");
+              setShowStats(true);
+              return;
+            }
+            if (tab === "friends") {
+              setActiveTab("pet");
+              setDepositView("deposit");
+              return;
+            }
+            setActiveTab(tab);
+          }}
+        />
 
         <FurnitureModal item={selectedFurniture} onClose={handleModalClose} />
 
