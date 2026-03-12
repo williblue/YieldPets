@@ -55,6 +55,16 @@ access(all) contract YieldPetsUSDCVault {
         }
     }
 
+    access(all) struct WithdrawalRecord {
+        access(all) let amount: UFix64
+        access(all) let timestamp: UFix64
+
+        init(amount: UFix64) {
+            self.amount = amount
+            self.timestamp = getCurrentBlock().timestamp
+        }
+    }
+
     // ========================================
     // Public Interface (readable by anyone)
     // ========================================
@@ -67,6 +77,8 @@ access(all) contract YieldPetsUSDCVault {
         access(all) view fun getGrowthScore(): UFix64
         access(all) fun queryATokenBalance(): UInt256
         access(all) fun getEVMAddressHex(): String
+        access(all) view fun getDeposits(): [DepositRecord]
+        access(all) view fun getWithdrawals(): [WithdrawalRecord]
     }
 
     // ========================================
@@ -80,11 +92,13 @@ access(all) contract YieldPetsUSDCVault {
         /// Cadence-side tracking
         access(all) var totalDeposited: UFix64
         access(all) var deposits: [DepositRecord]
+        access(all) var withdrawals: [WithdrawalRecord]
 
         init(evmCap: Capability<auth(EVM.Call) &EVM.CadenceOwnedAccount>) {
             self.evmCap = evmCap
             self.totalDeposited = 0.0
             self.deposits = []
+            self.withdrawals = []
         }
 
         // ============================
@@ -189,6 +203,8 @@ access(all) contract YieldPetsUSDCVault {
                 self.totalDeposited = 0.0
             }
 
+            self.withdrawals.append(WithdrawalRecord(amount: amount))
+
             emit Withdrawn(
                 account: self.owner!.address,
                 amount: amount,
@@ -229,6 +245,8 @@ access(all) contract YieldPetsUSDCVault {
 
             let previousTotal = self.totalDeposited
             self.totalDeposited = 0.0
+
+            self.withdrawals.append(WithdrawalRecord(amount: previousTotal))
 
             emit Withdrawn(
                 account: self.owner!.address,
@@ -333,6 +351,14 @@ access(all) contract YieldPetsUSDCVault {
 
             let decoded = EVM.decodeABI(types: [Type<UInt256>()], data: balanceRes.data)
             return decoded[0] as! UInt256
+        }
+
+        access(all) view fun getDeposits(): [DepositRecord] {
+            return self.deposits
+        }
+
+        access(all) view fun getWithdrawals(): [WithdrawalRecord] {
+            return self.withdrawals
         }
 
         /// Returns the COA's EVM address as hex string.
