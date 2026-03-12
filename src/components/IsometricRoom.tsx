@@ -17,6 +17,7 @@ interface IsometricRoomProps {
   onCollectNugget?: (id: string) => void;
   sfxEnabled?: boolean;
   placedFurniture?: string[];
+  onPetPosUpdate?: (x: number, y: number) => void;
 }
 
 /* ── Walkable floor (isometric diamond) ────────────────────────── */
@@ -85,6 +86,7 @@ export default function IsometricRoom({
   onCollectNugget,
   sfxEnabled = true,
   placedFurniture = [],
+  onPetPosUpdate,
 }: IsometricRoomProps) {
   const [failedFurniture, setFailedFurniture] = useState<Set<string>>(
     new Set(),
@@ -112,6 +114,11 @@ export default function IsometricRoom({
 
   const canvasHeight = 702;
 
+  // Report pet position on mount and whenever it changes
+  useEffect(() => {
+    onPetPosUpdate?.(posRef.current.x, posRef.current.y);
+  }, [onPetPosUpdate]);
+
   const startWalk = useCallback(() => {
     const target = randFloor(posRef.current);
     targetRef.current = target;
@@ -138,6 +145,7 @@ export default function IsometricRoom({
         if (spriteRef.current) clearInterval(spriteRef.current);
         setFrame(0);
         setWalking(false);
+        onPetPosUpdate?.(t.x, t.y);
         if (petElRef.current) {
           petElRef.current.style.left = `${t.x}px`;
           petElRef.current.style.bottom = `${t.y}px`;
@@ -150,6 +158,7 @@ export default function IsometricRoom({
         x: pos.x + (dx / dist) * move,
         y: pos.y + (dy / dist) * move,
       };
+      onPetPosUpdate?.(posRef.current.x, posRef.current.y);
 
       if (petElRef.current) {
         petElRef.current.style.left = `${posRef.current.x}px`;
@@ -160,7 +169,7 @@ export default function IsometricRoom({
     };
 
     rafRef.current = requestAnimationFrame(step);
-  }, []);
+  }, [onPetPosUpdate]);
 
   /* ── Preload click sprite sheet + sound ────────────────────── */
   useEffect(() => {
@@ -236,6 +245,7 @@ export default function IsometricRoom({
           if (spriteRef.current) clearInterval(spriteRef.current);
           setFrame(0);
           setWalking(false);
+          onPetPosUpdate?.(t.x, t.y);
           if (petElRef.current) {
             petElRef.current.style.left = `${t.x}px`;
             petElRef.current.style.bottom = `${t.y}px`;
@@ -248,6 +258,7 @@ export default function IsometricRoom({
           x: pos.x + (dx / dist) * move,
           y: pos.y + (dy / dist) * move,
         };
+        onPetPosUpdate?.(posRef.current.x, posRef.current.y);
 
         if (petElRef.current) {
           petElRef.current.style.left = `${posRef.current.x}px`;
@@ -259,7 +270,7 @@ export default function IsometricRoom({
 
       rafRef.current = requestAnimationFrame(step);
     }
-  }, []);
+  }, [onPetPosUpdate]);
 
   const handleRadialAction = useCallback((action: PetAction) => {
     resumeAfterMenu();

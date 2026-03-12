@@ -36,7 +36,7 @@ const MOCK_ROOM: RoomState = {
 export default function Home() {
   const { isLoggedIn, isLoading } = useAuth();
   const game = useGame();
-  const { visualNuggets, displayedNuggets, collectNugget } = useNuggetCollector(game.nuggets);
+  const { visualNuggets, displayedNuggets, collectNugget, updatePetPos } = useNuggetCollector(game.nuggets);
   const [showStart, setShowStart] = useState(true);
   const [startVisible, setStartVisible] = useState(true);
   const [showLogin, setShowLogin] = useState(false);
@@ -170,6 +170,7 @@ export default function Home() {
             onCollectNugget={collectNugget}
             sfxEnabled={game.sfxEnabled ?? true}
             placedFurniture={game.placedFurniture}
+            onPetPosUpdate={updatePetPos}
           />
         </div>
 

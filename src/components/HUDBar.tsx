@@ -23,10 +23,13 @@ function formatYield(value: number): string {
 
 function CoinIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <circle cx="10" cy="10" r="9" fill="#F5C030" stroke="#D4A020" strokeWidth="1.5" />
-      <circle cx="10" cy="10" r="5" fill="#F8D868" />
-    </svg>
+    <img
+      src="/gold nuggets/gold_nugget_icon.png"
+      alt="Gold nugget"
+      width={20}
+      height={20}
+      style={{ objectFit: "contain" }}
+    />
   );
 }
 

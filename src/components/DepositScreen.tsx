@@ -548,7 +548,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                         {hidden ? "••••" : `-${fmtUSD(Math.round(missedYield1Y))}`}
                       </span>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#F5C030" stroke="#D4A020" strokeWidth="1.5" /><circle cx="10" cy="10" r="5" fill="#F8D868" /></svg>
+                        <img src="/gold nuggets/gold_nugget_icon.png" alt="" width={14} height={14} style={{ objectFit: "contain" }} />
                         <span
                           style={{
                             fontSize: 11,
@@ -594,7 +594,7 @@ export default function DepositScreen({ onClose, onCrypto, petName }: DepositScr
                         {hidden ? "••••" : `-${fmtUSD(Math.round(missedYield3Y))}`}
                       </span>
                       <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-                        <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" fill="#F5C030" stroke="#D4A020" strokeWidth="1.5" /><circle cx="10" cy="10" r="5" fill="#F8D868" /></svg>
+                        <img src="/gold nuggets/gold_nugget_icon.png" alt="" width={14} height={14} style={{ objectFit: "contain" }} />
                         <span
                           style={{
                             fontSize: 11,

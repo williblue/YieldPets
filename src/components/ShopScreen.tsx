@@ -194,10 +194,7 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
               "Bought!"
             ) : (
               <>
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <circle cx="6" cy="6" r="5" fill="#FFFFFF" opacity="0.3" />
-                  <circle cx="6" cy="6" r="3" fill="#FFFFFF" opacity="0.3" />
-                </svg>
+                <img src="/gold nuggets/gold_nugget_icon.png" alt="" width={14} height={14} style={{ objectFit: "contain" }} />
                 {item.price}
               </>
             )}
@@ -270,10 +267,7 @@ export default function ShopScreen({ onClose }: ShopScreenProps) {
           padding: "6px 14px",
         }}
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <circle cx="8" cy="8" r="7" fill="#F5C030" stroke="#D4A020" strokeWidth="1" />
-          <circle cx="8" cy="8" r="4" fill="#F8D868" />
-        </svg>
+        <img src="/gold nuggets/gold_nugget_icon.png" alt="" width={16} height={16} style={{ objectFit: "contain" }} />
         <span
           style={{
             fontSize: 14,

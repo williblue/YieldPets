@@ -13,22 +13,28 @@ const MAX_VISUAL = 12;
 const AUTO_COLLECT_MS = 5 * 60 * 1000; // 5 minutes
 const CHECK_INTERVAL_MS = 10_000; // check expiry every 10s
 
+// Gold nugget image variants (1-6)
+const NUGGET_VARIANTS = 6;
+
 export interface VisualNugget {
   id: string;
   x: number;
   y: number;
   value: number;
   spawnedAt: number;
+  variant: number; // 1-6, which gold nugget image to use
+  // Jump animation: start position (pet) -> land position (floor)
+  startX: number;
+  startY: number;
+  jumpDelay: number; // stagger delay in ms
 }
 
 let nuggetIdCounter = 0;
 
 function randomFloorPoint(): { x: number; y: number } {
-  // Sample uniformly within the diamond
   for (let i = 0; i < 20; i++) {
     const x = FLOOR_CX + (Math.random() * 2 - 1) * FLOOR_HW * SHRINK;
     const y = FLOOR_CY + (Math.random() * 2 - 1) * FLOOR_HH * SHRINK;
-    // Check diamond bounds
     if (
       Math.abs(x - FLOOR_CX) / FLOOR_HW +
         Math.abs(y - FLOOR_CY) / FLOOR_HH <=
@@ -37,29 +43,38 @@ function randomFloorPoint(): { x: number; y: number } {
       return { x, y };
     }
   }
-  // Fallback: center
   return { x: FLOOR_CX, y: FLOOR_CY };
 }
 
 export function useNuggetCollector(gameNuggets: number) {
   const prevNuggetsRef = useRef(gameNuggets);
   const [visualNuggets, setVisualNuggets] = useState<VisualNugget[]>([]);
-  const spawnQueueRef = useRef<number>(0);
   const spawnTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const petPosRef = useRef<{ x: number; y: number }>({ x: FLOOR_CX, y: FLOOR_CY });
 
   // Displayed nuggets = actual total minus uncollected visual nuggets
   const pendingValue = visualNuggets.reduce((sum, n) => sum + n.value, 0);
   const displayedNuggets = gameNuggets - pendingValue;
 
-  // Spawn a single nugget
-  const spawnOne = useCallback(() => {
-    const pos = randomFloorPoint();
+  // Update pet position (called from IsometricRoom)
+  const updatePetPos = useCallback((x: number, y: number) => {
+    petPosRef.current = { x, y };
+  }, []);
+
+  // Spawn a single nugget from the pet's position
+  const spawnOne = useCallback((delay: number) => {
+    const landPos = randomFloorPoint();
+    const petPos = petPosRef.current;
     const nugget: VisualNugget = {
       id: `vn_${++nuggetIdCounter}`,
-      x: pos.x,
-      y: pos.y,
+      x: landPos.x,
+      y: landPos.y,
       value: 1,
       spawnedAt: Date.now(),
+      variant: Math.floor(Math.random() * NUGGET_VARIANTS) + 1,
+      startX: petPos.x,
+      startY: petPos.y,
+      jumpDelay: delay,
     };
     setVisualNuggets((prev) => {
       if (prev.length >= MAX_VISUAL) return prev;
@@ -73,7 +88,7 @@ export function useNuggetCollector(gameNuggets: number) {
       if (count <= 0) return;
       const toSpawn = Math.min(count, MAX_VISUAL);
       // Spawn first one immediately
-      spawnOne();
+      spawnOne(0);
       // Stagger the rest
       let spawned = 1;
       if (spawnTimerRef.current) clearTimeout(spawnTimerRef.current);
@@ -81,10 +96,10 @@ export function useNuggetCollector(gameNuggets: number) {
       function spawnNext() {
         if (spawned >= toSpawn) return;
         spawnTimerRef.current = setTimeout(() => {
-          spawnOne();
+          spawnOne(spawned * 80);
           spawned++;
           spawnNext();
-        }, 100);
+        }, 80);
       }
       spawnNext();
     },
@@ -131,5 +146,6 @@ export function useNuggetCollector(gameNuggets: number) {
     visualNuggets,
     displayedNuggets,
     collectNugget,
+    updatePetPos,
   };
 }

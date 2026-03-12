@@ -7,6 +7,9 @@ import { VisualNugget } from "@/hooks/useNuggetCollector";
 const HUD_TARGET_X = 52;
 const HUD_TARGET_Y = 18;
 
+// Jump animation duration
+const JUMP_DURATION = 500; // ms
+
 interface RoomNuggetsProps {
   nuggets: VisualNugget[];
   onCollect: (id: string) => void;
@@ -16,6 +19,7 @@ interface FlyingNugget {
   id: string;
   startX: number;
   startY: number;
+  variant: number;
 }
 
 export default function RoomNuggets({ nuggets, onCollect }: RoomNuggetsProps) {
@@ -36,7 +40,6 @@ export default function RoomNuggets({ nuggets, onCollect }: RoomNuggetsProps) {
     });
     if (removed.size > 0) {
       setFadingIds((prev) => new Set([...prev, ...removed]));
-      // Clean up fading after animation
       setTimeout(() => {
         setFadingIds((prev) => {
           const next = new Set(prev);
@@ -53,19 +56,18 @@ export default function RoomNuggets({ nuggets, onCollect }: RoomNuggetsProps) {
       e.stopPropagation();
       if (flyingIds.has(nugget.id)) return;
 
-      // Get the nugget element's position for the fly animation
-      const el = (e.currentTarget as HTMLElement);
+      const el = e.currentTarget as HTMLElement;
       const rect = el.getBoundingClientRect();
 
       flyingDataRef.current.set(nugget.id, {
         id: nugget.id,
         startX: rect.left + rect.width / 2,
         startY: rect.top + rect.height / 2,
+        variant: nugget.variant,
       });
 
       setFlyingIds((prev) => new Set([...prev, nugget.id]));
 
-      // After fly animation, collect
       setTimeout(() => {
         onCollect(nugget.id);
         setFlyingIds((prev) => {
@@ -79,10 +81,6 @@ export default function RoomNuggets({ nuggets, onCollect }: RoomNuggetsProps) {
     [flyingIds, onCollect]
   );
 
-  // Room-relative coordinates: nugget positions use room coordinate system
-  // where (0,0) is top-left of the IsometricRoom container
-  // The room container has paddingTop 52px in page.tsx, so room top = 52px from viewport
-
   return (
     <>
       {/* In-room nuggets */}
@@ -92,14 +90,20 @@ export default function RoomNuggets({ nuggets, onCollect }: RoomNuggetsProps) {
           position: "absolute",
           inset: 0,
           pointerEvents: "none",
-          zIndex: 6,
+          zIndex: 3,
         }}
       >
         {nuggets.map((nugget) => {
           if (flyingIds.has(nugget.id)) return null;
 
           const age = Date.now() - nugget.spawnedAt;
-          const isNew = age < 350;
+          const isJumping = age < JUMP_DURATION + nugget.jumpDelay;
+          const hasLanded = !isJumping;
+
+          // Calculate jump offset from pet to land position
+          // Coordinates use the same system as the pet: left/bottom
+          const dx = nugget.x - nugget.startX;
+          const dy = nugget.y - nugget.startY; // bottom-based, so positive = upward
 
           return (
             <button
@@ -107,34 +111,38 @@ export default function RoomNuggets({ nuggets, onCollect }: RoomNuggetsProps) {
               onClick={(e) => handleClick(nugget, e)}
               style={{
                 position: "absolute",
-                left: nugget.x - 10,
-                top: nugget.y - 10,
-                width: 20,
-                height: 20,
+                left: nugget.x - 16,
+                bottom: nugget.y - 16,
+                width: 32,
+                height: 32,
                 padding: 0,
                 border: "none",
                 background: "transparent",
                 cursor: "pointer",
-                pointerEvents: "auto",
-                zIndex: 6,
-                animation: isNew
-                  ? "nuggetSpawn 300ms ease-out forwards"
-                  : "nuggetBob 2s ease-in-out infinite",
-                animationDelay: isNew ? "0ms" : `${Math.random() * 2000}ms`,
+                pointerEvents: hasLanded ? "auto" : "none",
+                zIndex: 3,
+                ["--jump-start-x" as string]: `${-dx}px`,
+                ["--jump-start-y" as string]: `${dy}px`,
+                ["--jump-delay" as string]: `${nugget.jumpDelay}ms`,
+                animation: isJumping
+                  ? `nuggetJump ${JUMP_DURATION}ms ease-out ${nugget.jumpDelay}ms forwards`
+                  : "nuggetGlow 2s ease-in-out infinite",
+                opacity: isJumping ? 0 : 1,
               }}
             >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <circle
-                  cx="10"
-                  cy="10"
-                  r="8"
-                  fill="#F5C030"
-                  stroke="#D4A020"
-                  strokeWidth="1.5"
-                />
-                <circle cx="10" cy="10" r="5" fill="#F8D868" />
-                <circle cx="8" cy="8" r="2" fill="#FFFFFF" opacity="0.35" />
-              </svg>
+              <img
+                src={`/gold nuggets/gold nuggets ${nugget.variant}.png`}
+                alt="Gold nugget"
+                style={{
+                  width: 32,
+                  height: 32,
+                  objectFit: "contain",
+                  pointerEvents: "none",
+                  filter: hasLanded
+                    ? "drop-shadow(0 0 6px rgba(245, 192, 48, 0.6))"
+                    : "none",
+                }}
+              />
             </button>
           );
         })}
@@ -152,30 +160,27 @@ export default function RoomNuggets({ nuggets, onCollect }: RoomNuggetsProps) {
               position: "fixed",
               left: 0,
               top: 0,
-              width: 20,
-              height: 20,
+              width: 28,
+              height: 28,
               zIndex: 200,
               pointerEvents: "none",
-              transform: `translate(${data.startX - 10}px, ${data.startY - 10}px)`,
+              transform: `translate(${data.startX - 14}px, ${data.startY - 14}px)`,
               animation: `nuggetFly 500ms ease-in-out forwards`,
-              ["--fly-start-x" as string]: `${data.startX - 10}px`,
-              ["--fly-start-y" as string]: `${data.startY - 10}px`,
-              ["--fly-end-x" as string]: `${HUD_TARGET_X - 10}px`,
-              ["--fly-end-y" as string]: `${HUD_TARGET_Y - 10}px`,
+              ["--fly-start-x" as string]: `${data.startX - 14}px`,
+              ["--fly-start-y" as string]: `${data.startY - 14}px`,
+              ["--fly-end-x" as string]: `${HUD_TARGET_X - 14}px`,
+              ["--fly-end-y" as string]: `${HUD_TARGET_Y - 14}px`,
             }}
           >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <circle
-                cx="10"
-                cy="10"
-                r="8"
-                fill="#F5C030"
-                stroke="#D4A020"
-                strokeWidth="1.5"
-              />
-              <circle cx="10" cy="10" r="5" fill="#F8D868" />
-              <circle cx="8" cy="8" r="2" fill="#FFFFFF" opacity="0.35" />
-            </svg>
+            <img
+              src={`/gold nuggets/gold nuggets ${data.variant}.png`}
+              alt=""
+              style={{
+                width: 28,
+                height: 28,
+                objectFit: "contain",
+              }}
+            />
           </div>
         );
       })}

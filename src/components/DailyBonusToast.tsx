@@ -53,35 +53,13 @@ export default function DailyBonusToast({ amount, streak, onDismiss }: DailyBonu
       }}
     >
       {/* Coin icon */}
-      <div
-        style={{
-          width: 44,
-          height: 44,
-          borderRadius: 999,
-          background: "linear-gradient(180deg, #F8D868 0%, #F5C030 100%)",
-          border: "2px solid #D4A020",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-        }}
-      >
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <circle cx="11" cy="11" r="8" fill="#F5C030" />
-          <circle cx="11" cy="11" r="5.5" fill="#F8D868" />
-          <text
-            x="11"
-            y="15"
-            textAnchor="middle"
-            fill="#D4A020"
-            fontSize="11"
-            fontWeight="bold"
-            fontFamily="inherit"
-          >
-            N
-          </text>
-        </svg>
-      </div>
+      <img
+        src="/gold nuggets/gold_nugget_icon.png"
+        alt="Gold nugget"
+        width={44}
+        height={44}
+        style={{ objectFit: "contain", flexShrink: 0 }}
+      />
 
       <div style={{ flex: 1 }}>
         <div
