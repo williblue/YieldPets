@@ -99,33 +99,33 @@ access(all) contract YieldPetsProfile {
 
     access(all) resource Profile: ProfilePublic {
         // ── Pet ──
-        access(all) var petName: String
-        access(all) var trainerName: String
-        access(all) var hearts: UInt8
-        access(all) var lastFedAt: UFix64
+        access(self) var petName: String
+        access(self) var trainerName: String
+        access(self) var hearts: UInt8
+        access(self) var lastFedAt: UFix64
 
         // ── Economy ──
-        access(all) var nuggets: UInt64
-        access(all) var depositBalance: UFix64
-        access(all) var usdcDepositBalance: UFix64
-        access(all) var totalYieldEarned: UFix64
+        access(self) var nuggets: UInt64
+        access(self) var depositBalance: UFix64
+        access(self) var usdcDepositBalance: UFix64
+        access(self) var totalYieldEarned: UFix64
 
         // ── Streaks ──
-        access(all) var currentStreak: UInt64
-        access(all) var longestStreak: UInt64
-        access(all) var lastLoginDate: String
-        access(all) var dailyBonusClaimed: Bool
+        access(self) var currentStreak: UInt64
+        access(self) var longestStreak: UInt64
+        access(self) var lastLoginDate: String
+        access(self) var dailyBonusClaimed: Bool
 
         // ── Inventory ──
-        access(all) var ownedFurniture: [String]
-        access(all) var placedFurniture: [String]
-        access(all) var foodInventory: {String: UInt64}
+        access(self) var ownedFurniture: [String]
+        access(self) var placedFurniture: [String]
+        access(self) var foodInventory: {String: UInt64}
 
         // ── History ──
-        access(all) var transactions: [TransactionRecord]
+        access(self) var transactions: [TransactionRecord]
 
         // ── Meta ──
-        access(all) let createdAt: UFix64
+        access(self) let createdAt: UFix64
 
         init() {
             self.petName = "Sprout"
@@ -169,20 +169,27 @@ access(all) contract YieldPetsProfile {
         /// Feed the pet. If foodId is provided and in inventory, consume it and
         /// restore hearts based on heartRestore param. Otherwise free feed (+1 heart).
         access(Manage) fun feed(foodId: String?, heartRestore: UInt8) {
-            if foodId != nil && foodId! != "" {
-                // Consume food from inventory
-                let count = self.foodInventory[foodId!] ?? 0
-                assert(count > 0, message: "Food not in inventory")
-                if count <= 1 {
-                    self.foodInventory.remove(key: foodId!)
+            if let id = foodId {
+                if id != "" {
+                    // Consume food from inventory
+                    let count = self.foodInventory[id] ?? 0
+                    assert(count > 0, message: "Food not in inventory")
+                    if count <= 1 {
+                        self.foodInventory.remove(key: id)
+                    } else {
+                        self.foodInventory[id] = count - 1
+                    }
+                    let restore: UInt8 = heartRestore > 0 ? heartRestore : 1
+                    // Cap restore to avoid UInt8 overflow before addition
+                    let maxRestore = YieldPetsProfile.MAX_HEARTS - self.hearts
+                    let effectiveRestore = restore > maxRestore ? maxRestore : restore
+                    self.hearts = self.hearts + effectiveRestore
                 } else {
-                    self.foodInventory[foodId!] = count - 1
+                    // Empty string: treat as free feed
+                    if self.hearts < YieldPetsProfile.MAX_HEARTS {
+                        self.hearts = self.hearts + 1
+                    }
                 }
-                let restore: UInt8 = heartRestore > 0 ? heartRestore : 1
-                let newHearts: UInt8 = self.hearts + restore
-                self.hearts = newHearts > YieldPetsProfile.MAX_HEARTS
-                    ? YieldPetsProfile.MAX_HEARTS
-                    : newHearts
             } else {
                 // Free feed: +1 heart
                 if self.hearts < YieldPetsProfile.MAX_HEARTS {
@@ -238,9 +245,8 @@ access(all) contract YieldPetsProfile {
 
         /// Remove placed furniture from the room
         access(Manage) fun removeFurniture(furnitureId: String) {
-            let idx = self.placedFurniture.firstIndex(of: furnitureId)
-            if idx != nil {
-                self.placedFurniture.remove(at: idx!)
+            if let idx = self.placedFurniture.firstIndex(of: furnitureId) {
+                self.placedFurniture.remove(at: idx)
             }
         }
 
@@ -262,24 +268,22 @@ access(all) contract YieldPetsProfile {
 
         /// Record a PYUSD0 withdrawal (demo credits)
         access(Manage) fun withdraw(amount: UFix64) {
-            pre { amount > 0.0: "Amount must be positive" }
-            if amount <= self.depositBalance {
-                self.depositBalance = self.depositBalance - amount
-            } else {
-                self.depositBalance = 0.0
+            pre {
+                amount > 0.0: "Amount must be positive"
+                amount <= self.depositBalance: "Insufficient deposit balance"
             }
+            self.depositBalance = self.depositBalance - amount
             self.pushTx(txType: "withdrawal", label: "Withdrawal", amount: Fix64(amount))
             emit Withdrawn(account: self.owner!.address, amount: amount, isUsdc: false)
         }
 
         /// Record a stgUSDC withdrawal
         access(Manage) fun withdrawUsdc(amount: UFix64) {
-            pre { amount > 0.0: "Amount must be positive" }
-            if amount <= self.usdcDepositBalance {
-                self.usdcDepositBalance = self.usdcDepositBalance - amount
-            } else {
-                self.usdcDepositBalance = 0.0
+            pre {
+                amount > 0.0: "Amount must be positive"
+                amount <= self.usdcDepositBalance: "Insufficient USDC deposit balance"
             }
+            self.usdcDepositBalance = self.usdcDepositBalance - amount
             self.pushTx(txType: "withdrawal", label: "USDC Withdrawal", amount: Fix64(amount))
             emit Withdrawn(account: self.owner!.address, amount: amount, isUsdc: true)
         }
@@ -332,12 +336,18 @@ access(all) contract YieldPetsProfile {
         }
 
         access(Manage) fun setPetName(name: String) {
-            pre { name.length > 0: "Name cannot be empty" }
+            pre {
+                name.length > 0: "Name cannot be empty"
+                name.length <= 32: "Name too long (max 32 characters)"
+            }
             self.petName = name
         }
 
         access(Manage) fun setTrainerName(name: String) {
-            pre { name.length > 0: "Name cannot be empty" }
+            pre {
+                name.length > 0: "Name cannot be empty"
+                name.length <= 32: "Name too long (max 32 characters)"
+            }
             self.trainerName = name
         }
 

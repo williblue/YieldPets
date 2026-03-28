@@ -24,6 +24,11 @@ access(all) contract YieldPetsUSDCVault {
     access(all) let POOL_DATA_PROVIDER: String     // 0x79e71e3c0EDF2B88b0aB38E9A1eF0F6a230e56bf
     access(all) let STGUSDC: String                // 0xf1815bd50389c46847f0bda824ec8da914045d14
     access(all) let STGUSDC_DECIMALS: UInt8        // 6
+    access(self) let MAX_UINT256: UInt256           // type(uint256).max for Aave V3 full withdrawal / max approval
+    access(self) let SECONDS_PER_DAY: UFix64
+    access(self) let GAS_LIMIT_SUPPLY: UInt64
+    access(self) let GAS_LIMIT_QUERY: UInt64
+    access(self) let GAS_LIMIT_APPROVE: UInt64
 
     // ========================================
     // Paths
@@ -79,8 +84,8 @@ access(all) contract YieldPetsUSDCVault {
         access(self) let evmCap: Capability<auth(EVM.Call) &EVM.CadenceOwnedAccount>
 
         /// Cadence-side tracking
-        access(all) var totalDeposited: UFix64
-        access(all) var deposits: [DepositRecord]
+        access(self) var totalDeposited: UFix64
+        access(self) var deposits: [DepositRecord]
 
         init(evmCap: Capability<auth(EVM.Call) &EVM.CadenceOwnedAccount>) {
             self.evmCap = evmCap
@@ -126,7 +131,7 @@ access(all) contract YieldPetsUSDCVault {
             let res = coa.call(
                 to: pool,
                 data: supplyPayload,
-                gasLimit: 500000,
+                gasLimit: YieldPetsUSDCVault.GAS_LIMIT_SUPPLY,
                 value: EVM.Balance(attoflow: 0)
             )
 
@@ -173,7 +178,7 @@ access(all) contract YieldPetsUSDCVault {
             let res = coa.call(
                 to: pool,
                 data: withdrawPayload,
-                gasLimit: 500000,
+                gasLimit: YieldPetsUSDCVault.GAS_LIMIT_SUPPLY,
                 value: EVM.Balance(attoflow: 0)
             )
 
@@ -207,18 +212,15 @@ access(all) contract YieldPetsUSDCVault {
             let pool = EVM.addressFromString(YieldPetsUSDCVault.MOREMARKETS_POOL)
             let stgusdc = EVM.addressFromString(YieldPetsUSDCVault.STGUSDC)
 
-            // type(uint256).max signals "withdraw everything" to Aave V3
-            let maxUint256: UInt256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935
-
             let withdrawPayload = EVM.encodeABIWithSignature(
                 "withdraw(address,uint256,address)",
-                [stgusdc, maxUint256, coa.address()]
+                [stgusdc, YieldPetsUSDCVault.MAX_UINT256, coa.address()]
             )
 
             let res = coa.call(
                 to: pool,
                 data: withdrawPayload,
-                gasLimit: 500000,
+                gasLimit: YieldPetsUSDCVault.GAS_LIMIT_SUPPLY,
                 value: EVM.Balance(attoflow: 0)
             )
 
@@ -273,7 +275,7 @@ access(all) contract YieldPetsUSDCVault {
             }
             let now = getCurrentBlock().timestamp
             let firstDeposit = self.deposits[0].timestamp
-            let daysLocked = (now - firstDeposit) / 86400.0
+            let daysLocked = (now - firstDeposit) / YieldPetsUSDCVault.SECONDS_PER_DAY
 
             let logApprox = YieldPetsUSDCVault.approxLog10(1.0 + self.totalDeposited)
             return logApprox * daysLocked
@@ -297,7 +299,7 @@ access(all) contract YieldPetsUSDCVault {
             let tokensRes = coa.call(
                 to: dataProvider,
                 data: getTokensPayload,
-                gasLimit: 200000,
+                gasLimit: YieldPetsUSDCVault.GAS_LIMIT_QUERY,
                 value: EVM.Balance(attoflow: 0)
             )
 
@@ -324,7 +326,7 @@ access(all) contract YieldPetsUSDCVault {
             let balanceRes = coa.call(
                 to: aToken,
                 data: balancePayload,
-                gasLimit: 200000,
+                gasLimit: YieldPetsUSDCVault.GAS_LIMIT_QUERY,
                 value: EVM.Balance(attoflow: 0)
             )
 
@@ -355,7 +357,7 @@ access(all) contract YieldPetsUSDCVault {
 
     /// Convert UFix64 to UInt256 with the specified number of decimals.
     /// e.g. ufix64ToUInt256(value: 100.5, decimals: 6) → 100500000
-    access(all) fun ufix64ToUInt256(value: UFix64, decimals: UInt8): UInt256 {
+    access(contract) fun ufix64ToUInt256(value: UFix64, decimals: UInt8): UInt256 {
         let intPart = UInt256(UInt64(value))
         let fracPart = value - UFix64(UInt64(value))
 
@@ -397,7 +399,7 @@ access(all) contract YieldPetsUSDCVault {
     }
 
     /// Ensure ERC-20 allowance for a spender, approving max if insufficient
-    access(all) fun ensureAllowance(
+    access(contract) fun ensureAllowance(
         coa: auth(EVM.Call) &EVM.CadenceOwnedAccount,
         token: EVM.EVMAddress,
         spender: EVM.EVMAddress,
@@ -411,7 +413,7 @@ access(all) contract YieldPetsUSDCVault {
         let allowanceRes = coa.call(
             to: token,
             data: allowanceCalldata,
-            gasLimit: 100000,
+            gasLimit: YieldPetsUSDCVault.GAS_LIMIT_APPROVE,
             value: EVM.Balance(attoflow: 0)
         )
 
@@ -420,16 +422,15 @@ access(all) contract YieldPetsUSDCVault {
             let currentAllowance = decoded[0] as! UInt256
 
             if currentAllowance < amount {
-                let maxApproval: UInt256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935
                 let approveCalldata = EVM.encodeABIWithSignature(
                     "approve(address,uint256)",
-                    [spender, maxApproval]
+                    [spender, YieldPetsUSDCVault.MAX_UINT256]
                 )
 
                 let approveRes = coa.call(
                     to: token,
                     data: approveCalldata,
-                    gasLimit: 100000,
+                    gasLimit: YieldPetsUSDCVault.GAS_LIMIT_APPROVE,
                     value: EVM.Balance(attoflow: 0)
                 )
 
@@ -442,7 +443,7 @@ access(all) contract YieldPetsUSDCVault {
     }
 
     /// Piecewise linear approximation of log10 for growth score
-    access(all) view fun approxLog10(_ x: UFix64): UFix64 {
+    access(contract) view fun approxLog10(_ x: UFix64): UFix64 {
         if x <= 1.0 { return 0.0 }
         if x <= 10.0 { return (x - 1.0) / 9.0 }
         if x <= 100.0 { return 1.0 + (x - 10.0) / 90.0 }
@@ -471,6 +472,11 @@ access(all) contract YieldPetsUSDCVault {
         self.POOL_DATA_PROVIDER = "0x79e71e3c0EDF2B88b0aB38E9A1eF0F6a230e56bf"
         self.STGUSDC = "0xf1815bd50389c46847f0bda824ec8da914045d14"
         self.STGUSDC_DECIMALS = 6
+        self.MAX_UINT256 = 115792089237316195423570985008687907853269984665640564039457584007913129639935
+        self.SECONDS_PER_DAY = 86400.0
+        self.GAS_LIMIT_SUPPLY = 500000
+        self.GAS_LIMIT_QUERY = 200000
+        self.GAS_LIMIT_APPROVE = 100000
 
         self.VaultStoragePath = /storage/YieldPetsUSDCVault
         self.VaultPublicPath = /public/YieldPetsUSDCVault
